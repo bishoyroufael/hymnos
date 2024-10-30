@@ -23,6 +23,10 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bunder": "metro"
-    }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-router"
+    ]
   }
 }

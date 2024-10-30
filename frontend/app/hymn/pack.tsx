@@ -50,36 +50,38 @@ export default function HymnPack() {
   }
 
   return (
-    <View className="flex p-4 gap-y-4 w-3/4 border-2">
-      <ScrollView className="flex p-4">
-        {/* Hymn Pack Information */}
-        <View className="mb-8">
-          <Text className="text-2xl font-bold">{hymnPackDetails.name}</Text>
-          <Text className="text-gray-700 mt-2">
-            {hymnPackDetails.description}
-          </Text>
-          <Text className="text-gray-500 mt-4">
-            Created by: {hymnPackDetails.creator}
-          </Text>
-          <Text className="text-gray-500">
-            Date: {hymnPackDetails.dateCreated}
-          </Text>
-        </View>
+    <View className="flex justify-center items-center h-full w-full">
+      <View className="flex p-4 gap-y-4 w-3/4 border-2">
+        <ScrollView className="flex p-4">
+          {/* Hymn Pack Information */}
+          <View className="mb-8">
+            <Text className="text-2xl font-bold">{hymnPackDetails.name}</Text>
+            <Text className="text-gray-700 mt-2">
+              {hymnPackDetails.description}
+            </Text>
+            <Text className="text-gray-500 mt-4">
+              Created by: {hymnPackDetails.creator}
+            </Text>
+            <Text className="text-gray-500">
+              Date: {hymnPackDetails.dateCreated}
+            </Text>
+          </View>
 
-        {/* Hymn Titles */}
-        <View>
-          <Text className="text-xl font-bold mb-4">Hymns in this Pack</Text>
-          <FlatList
-            data={hymnPackDetails.hymns}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View className="mb-2 p-4 bg-gray-100 rounded-lg">
-                <Text className="font-semibold">{item.title}</Text>
-              </View>
-            )}
-          />
-        </View>
-      </ScrollView>
+          {/* Hymn Titles */}
+          <View>
+            <Text className="text-xl font-bold mb-4">Hymns in this Pack</Text>
+            <FlatList
+              data={hymnPackDetails.hymns}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View className="mb-2 p-4 bg-gray-100 rounded-lg">
+                  <Text className="font-semibold">{item.title}</Text>
+                </View>
+              )}
+            />
+          </View>
+        </ScrollView>
+      </View>
     </View>
   );
 }
