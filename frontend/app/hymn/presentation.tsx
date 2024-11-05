@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Pressable } from "react-native";
 import PresentationSettingsMenu from "../../components/PresentationSettingsMenu";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import useHymnosState from "../../global";
+import useColorStore from "../../useColorStore";
 
 interface Hymn {
   id: string;
@@ -50,7 +51,10 @@ export default function HymnPresentation() {
   };
 
   const verses = [...hymn.verses, hymn.chorus]; // Combine verses and chorus for easier navigation
-
+  
+  // Zustand store color
+   const backgroundColor = useColorStore((state) => state.backgroundColor);
+  const fontColor =useColorStore((state)=>state.fontColor);
   //   Auto-hide the menu after a few seconds
   useEffect(() => {
     if (isPresentationSettingsIconShown && !isSettingsMenuOpen) {
@@ -64,10 +68,16 @@ export default function HymnPresentation() {
 
   return (
     <View
-      className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
-      onPointerMove={(e) => {
-        setIsPresentationSettingsIconShown(true);
+      //className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+        padding: 8,
+        backgroundColor, // Apply background color from Zustand
       }}
+      onPointerMove={(e) => {
+        setIsPresentationSettingsIconShown(true);}}
     >
       {/* Hamburger Menu Icon */}
       {isPresentationSettingsIconShown && (
@@ -95,8 +105,14 @@ export default function HymnPresentation() {
         }}
       >
         <Text
-          className={`text-center text-4xl text-${presentationSettings.fontColor}`}
-          style={{ fontFamily: "Amiri_400Regular" }}
+          /*className={`text-center text-4xl text-${presentationSettings.fontColor}`}
+          style={{ fontFamily: "Amiri_400Regular" }}*/
+          style={{
+            textAlign: "center",
+            fontSize: 32,
+            color: fontColor , // Apply font color from Zustand
+            fontFamily: "Amiri_400Regular",
+          }}
         >
           {/* {verses[currentVerseIndex]} */}
           الوطن هو السماء
