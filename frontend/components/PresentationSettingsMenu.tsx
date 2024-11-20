@@ -40,9 +40,9 @@ export default function PresentationSettingsMenu() {
     <View className="rounded-md bg-slate-200 p-2 w-52">
       <MenuNestedItem
         title={"Background Color"}
-        nestedList={<ColorPickerMenu />}
+        nestedList={<ColorPickerMenu type="background"/>}
       />
-      <MenuNestedItem title={"Font Color"} nestedList={<ColorPickerMenu />} />
+      <MenuNestedItem title={"Font Color"} nestedList={<ColorPickerMenu type="font"/>} />
       <MenuNestedItem title={"Font Family"} nestedList={<FontMenu />} />
     </View>
   );

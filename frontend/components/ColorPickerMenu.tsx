@@ -1,76 +1,98 @@
 import React from "react";
-import { View ,TouchableOpacity} from "react-native";
-import useColorStore from "../useColorStore";
+import { View } from "react-native";
+import useHymnosState from "../global";
 // https://stackoverflow.com/questions/71818458/why-wont-tailwind-find-my-dynamic-class
-function ColorRow({ color }) {
-  const setBackgroundColor = useColorStore((state) => state.setBackgroundColor);
-  const setFontColor = useColorStore((state) => state.setFontColor);
 
+function ColorRow({ color, onSelectColor }: { color: string; onSelectColor: (color: string) => void }) {
   return (
-    <View style={{ flexDirection: "row", gap: 4 }}>
-      {color.map((colorCode) => (
-        <TouchableOpacity
-          key={colorCode}
-          onPress={() => {setBackgroundColor(colorCode);
-            //setFontColor(colorCode) // Set font color too
-          }}
-          style={{
-            backgroundColor: colorCode,
-            width: 20,
-            height: 20,
-            borderRadius: 5,
-            borderWidth: 1,
-            borderColor: "#4B5563", // gray-700
-          }}
+    <View className="flex flex-row gap-x-1">
+      {["100", "300", "500", "700", "900"].map((shade) => (
+        <View
+          key={shade}
+          className={`bg-${color}-${shade} w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
+          onStartShouldSetResponder={() => true} // Enables interaction for View
+          onResponderRelease={() => onSelectColor(`${color}-${shade}`)} // Handles color selection
         />
       ))}
     </View>
   );
-  /*return (
-    <View className="flex flex-row gap-x-1">
-      <View
-        className={`bg-${color}-100 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
-      />
-      <View
-        className={`bg-${color}-300 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
-      />
-      <View
-        className={`bg-${color}-500 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
-      />
-      <View
-        className={`bg-${color}-700 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
-      />
-      <View
-        className={`bg-${color}-900 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
-      />
-    </View>
-  );*/
 }
 
-export default function ColorPickerMenu() {
-  const backgroundColor = useColorStore((state) => state.backgroundColor);
- // const fontColor = useColorStore((state) => state.fontColor);
+export default function ColorPickerMenu({ type }: { type: "background" | "font" }) {
+  const { setPresentationSettings } = useHymnosState();
+
+  const handleColorSelect = (color: string) => {
+    //console.log(`Selected color: ${color}`);
+    if (type === "background") {
+      setPresentationSettings({ backgroundColor: color });
+    } else if (type === "font") {
+      setPresentationSettings({ fontColor: color });
+    }
+  };
+
   return (
-    <View style={{ backgroundColor, padding: 8, borderRadius: 8 }}>
-      <ColorRow color={["#bfdbfe", "#93c5fd", "#60a5fa", "#3b82f6", "#1e40af"]} /> {/* Blue shades */}
-      <ColorRow color={["#cffafe", "#a5f3fc", "#67e8f9", "#22d3ee", "#06b6d4"]} /> {/* Cyan shades */}
-      <ColorRow color={["#bbf7d0", "#86efac", "#4ade80", "#22c55e", "#15803d"]} /> {/* Green shades */}
-      <ColorRow color={["#fecaca", "#fca5a5", "#f87171", "#ef4444", "#991b1b"]} /> {/* Red shades */}
-      <ColorRow color={["#fef9c3", "#fef08a", "#fde047", "#facc15", "#ca8a04"]} /> {/* Yellow shades */}
-      <ColorRow color={["#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#1e293b"]} /> {/* Slate shades */}
-      <ColorRow color={["#f3f4f6", "#e5e7eb", "#d1d5db", "#9ca3af", "#374151"]} /> {/* Gray shades */}
+    <View className="p-3 bg-slate-200 rounded-md space-y-3">
+      <ColorRow color="blue" onSelectColor={handleColorSelect} />
+      <ColorRow color="cyan" onSelectColor={handleColorSelect} />
+      <ColorRow color="green" onSelectColor={handleColorSelect} />
+      <ColorRow color="red" onSelectColor={handleColorSelect} />
+      <ColorRow color="yellow" onSelectColor={handleColorSelect} />
+      <ColorRow color="slate" onSelectColor={handleColorSelect} />
+      <ColorRow color="gray" onSelectColor={handleColorSelect} />
     </View>
   );
-  /*
-  return (
-    <View className="rounded-md bg-slate-200 p-2 flex-col gap-y-1">
-      <ColorRow color={"blue"} />
-      <ColorRow color={"cyan"} />
-      <ColorRow color={"green"} />
-      <ColorRow color={"red"} />
-      <ColorRow color={"yellow"} />
-      <ColorRow color={"slate"} />
-      <ColorRow color={"gray"} />
-    </View>
-  );*/
 }
+
+
+/*
+function ColorRow({ color, onSelectColor }: { color: string; onSelectColor: (color: string) => void }) {
+    return(
+    <View className="flex flex-row gap-x-1">
+      <Pressable
+        className={`bg-${color}-100 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
+        onPress={() => onSelectColor(`${color}-100`)}
+      />
+      <Pressable
+        className={`bg-${color}-300 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
+        onPress={() => onSelectColor(`${color}-300`)}
+      />
+      <Pressable
+        className={`bg-${color}-500 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
+        onPress={() => onSelectColor(`${color}-500`)}
+      />
+      <Pressable
+        className={`bg-${color}-700 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
+        onPress={() => onSelectColor(`${color}-700`)}
+      />
+      <Pressable
+        className={`bg-${color}-900 w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
+        onPress={() => onSelectColor(`${color}-900`)}
+      />
+    </View>
+  );
+}
+
+export default function ColorPickerMenu({ type }: { type: "background" | "font" }) {
+  const { setPresentationSettings } = useHymnosState();
+
+  const handleColorSelect = (color: string) => {
+    // Based on the type ('background' or 'font'), update the respective color
+    if (type === "background") {
+      setPresentationSettings({ backgroundColor: color });
+    } else if (type === "font") {
+      setPresentationSettings({ fontColor: color });
+    }
+  };
+
+  return (
+    <View className="p-3 bg-slate-200 rounded-md space-y-3">
+      <ColorRow color="blue" onSelectColor={handleColorSelect} />
+      <ColorRow color="cyan" onSelectColor={handleColorSelect} />
+      <ColorRow color="green" onSelectColor={handleColorSelect} />
+      <ColorRow color="red" onSelectColor={handleColorSelect} />
+      <ColorRow color="yellow" onSelectColor={handleColorSelect} />
+      <ColorRow color="slate" onSelectColor={handleColorSelect} />
+      <ColorRow color="gray" onSelectColor={handleColorSelect} />
+    </View>
+  );
+}*/
