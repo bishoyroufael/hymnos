@@ -12,9 +12,7 @@ interface HymnosState {
   isPresentationSettingsIconShown: boolean;
   isSettingsMenuOpen: boolean;
   presentationSettings: PresentationSettings;
-  setPresentationSettings: (
-    newPresentationSettings: PresentationSettings
-  ) => void;
+  setPresentationSettings: (newPresentationSettings: Partial<PresentationSettings>) => void; // Allow partial updates
   setIsPresentationSettingsIconShown: (isShown: boolean) => void;
   setIsSettingsMenuOpen: (isOpen: boolean) => void;
 }
@@ -27,17 +25,18 @@ const useHymnosState = create<HymnosState>((set) => ({
     fontColor: "slate-900",
     font: "Amiri_400Regular",
   },
-  setPresentationSettings: (newPresentationSettings: any) =>
-    set((state: any) => ({
+  setPresentationSettings: (newPresentationSettings: Partial<PresentationSettings>) =>
+    set((state) => ({
       presentationSettings: {
         ...state.presentationSettings,
-        newPresentationSettings,
+        ...newPresentationSettings, // Merge new settings with existing ones
       },
     })),
   setIsPresentationSettingsIconShown: (isShown: boolean) =>
-    set((_: any) => ({ isPresentationSettingsIconShown: isShown })),
+    set(() => ({ isPresentationSettingsIconShown: isShown })),
   setIsSettingsMenuOpen: (isOpen: boolean) =>
-    set((_: any) => ({ isSettingsMenuOpen: isOpen })),
+    set(() => ({ isSettingsMenuOpen: isOpen })),
 }));
+
 
 export default useHymnosState;
