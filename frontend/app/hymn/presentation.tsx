@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import PresentationSettingsMenu from "../../components/PresentationSettingsMenu";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import useHymnosState from "../../global";
@@ -19,24 +19,6 @@ export default function HymnPresentation() {
     presentationSettings,
     setPresentationSettings,
   } = useHymnosState();
-  //   const isSettingsMenuOpen = useHymnosState(
-  //     (state) => state.isSettingsMenuOpen
-  //   );
-  //   const setIsSettingsMenuOpen = useHymnosState(
-  //     (state) => state.setIsSettingsMenuOpen
-  //   );
-  //   const isPresentationSettingsIconShown = useHymnosState(
-  //     (state) => state.isPresentationSettingsIconShown
-  //   );
-  //   const setIsPresentationSettingsIconShown = useHymnosState(
-  //     (state) => state.setIsPresentationSettingsIconShown
-  //   );
-  //   const presentationSettings = useHymnosState(
-  //     (state) => state.presentationSettings
-  //   );
-  //   const setPresentationSettings = useHymnosState(
-  //     (state) => state.setPresentationSettings
-  //   );
 
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
 
@@ -51,24 +33,31 @@ export default function HymnPresentation() {
 
   const verses = [...hymn.verses, hymn.chorus]; // Combine verses and chorus for easier navigation
 
-  //   Auto-hide the menu after a few seconds
+  // Auto-hide the menu after a few seconds
   useEffect(() => {
     if (isPresentationSettingsIconShown && !isSettingsMenuOpen) {
       const timer = setTimeout(
-        () => setIsPresentationSettingsIconShown(false),3000);
+        () => setIsPresentationSettingsIconShown(false),
+        3000
+      );
       return () => clearTimeout(timer);
     }
   }, [isPresentationSettingsIconShown, isSettingsMenuOpen]);
-  
+
   const handleMenuInteraction = (e: any) => {
     e.stopPropagation(); // Prevent parent interactions from hiding the menu
+  };
+
+  // Handle font selection
+  const handleFontSelect = (fontFamily: string) => {
+    setPresentationSettings({ font: fontFamily });
   };
 
   return (
     <View
       className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
       onPointerMove={() => {
-        setIsPresentationSettingsIconShown(true);// Show menu icon on pointer move
+        setIsPresentationSettingsIconShown(true); // Show menu icon on pointer move
       }}
     >
       {/* Hamburger Menu Icon */}
@@ -78,7 +67,7 @@ export default function HymnPresentation() {
             className="p-2 rounded-full w-auto h-auto"
             onPress={(e) => {
               e.stopPropagation(); // Prevent hiding on menu interaction
-              setIsSettingsMenuOpen(!isSettingsMenuOpen);// Toggle settings menu
+              setIsSettingsMenuOpen(!isSettingsMenuOpen); // Toggle settings menu
               console.log("Settings Menu Open:", !isSettingsMenuOpen);
             }}
           >
@@ -88,18 +77,19 @@ export default function HymnPresentation() {
               className={`text-${presentationSettings.fontColor}`}
             />
           </Pressable>
-          {/*isSettingsMenuOpen && <PresentationSettingsMenu />*/}
+
+          {/* Settings Menu */}
           {isSettingsMenuOpen && (
-          <View
-          onStartShouldSetResponder={() => true} // Capture touch events for menu
-          onTouchStart={(e) => {
-            e.stopPropagation(); // Stop propagation to avoid closing
-            e.preventDefault(); // Prevent closing the menu when interacting
-          }}
-        >
-            <PresentationSettingsMenu />
-          </View>
-        )}
+            <View
+              onStartShouldSetResponder={() => true} // Capture touch events for menu
+              onTouchStart={(e) => {
+                e.stopPropagation(); // Stop propagation to avoid closing
+                e.preventDefault(); // Prevent closing the menu when interacting
+              }}
+            >
+              <PresentationSettingsMenu />
+            </View>
+          )}
         </View>
       )}
 
@@ -115,8 +105,7 @@ export default function HymnPresentation() {
           className={`text-center text-4xl text-${presentationSettings.fontColor}`}
           style={{ fontFamily: presentationSettings.font }}
         >
-          {/* {verses[currentVerseIndex]} */}
-          الوطن هو السماء
+          الوطن هو السماء {/* Displaying the fixed text */}
         </Text>
       </Pressable>
     </View>
