@@ -55,18 +55,20 @@ export default function HymnPresentation() {
   useEffect(() => {
     if (isPresentationSettingsIconShown && !isSettingsMenuOpen) {
       const timer = setTimeout(
-        () => setIsPresentationSettingsIconShown(false),
-        3000
-      );
+        () => setIsPresentationSettingsIconShown(false),3000);
       return () => clearTimeout(timer);
     }
   }, [isPresentationSettingsIconShown, isSettingsMenuOpen]);
+  
+  const handleMenuInteraction = (e: any) => {
+    e.stopPropagation(); // Prevent parent interactions from hiding the menu
+  };
 
   return (
     <View
       className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
-      onPointerMove={(e) => {
-        setIsPresentationSettingsIconShown(true);
+      onPointerMove={() => {
+        setIsPresentationSettingsIconShown(true);// Show menu icon on pointer move
       }}
     >
       {/* Hamburger Menu Icon */}
@@ -74,7 +76,11 @@ export default function HymnPresentation() {
         <View className="absolute top-4 left-4 z-10 w-auto">
           <Pressable
             className="p-2 rounded-full w-auto h-auto"
-            onPress={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
+            onPress={(e) => {
+              e.stopPropagation(); // Prevent hiding on menu interaction
+              setIsSettingsMenuOpen(!isSettingsMenuOpen);// Toggle settings menu
+              console.log("Settings Menu Open:", !isSettingsMenuOpen);
+            }}
           >
             <Ionicons
               name="settings"
@@ -82,7 +88,18 @@ export default function HymnPresentation() {
               className={`text-${presentationSettings.fontColor}`}
             />
           </Pressable>
-          {isSettingsMenuOpen && <PresentationSettingsMenu />}
+          {/*isSettingsMenuOpen && <PresentationSettingsMenu />*/}
+          {isSettingsMenuOpen && (
+          <View
+          onStartShouldSetResponder={() => true} // Capture touch events for menu
+          onTouchStart={(e) => {
+            e.stopPropagation(); // Stop propagation to avoid closing
+            e.preventDefault(); // Prevent closing the menu when interacting
+          }}
+        >
+            <PresentationSettingsMenu />
+          </View>
+        )}
         </View>
       )}
 
@@ -96,7 +113,7 @@ export default function HymnPresentation() {
       >
         <Text
           className={`text-center text-4xl text-${presentationSettings.fontColor}`}
-          style={{ fontFamily: "Amiri_400Regular" }}
+          style={{ fontFamily: presentationSettings.font }}
         >
           {/* {verses[currentVerseIndex]} */}
           الوطن هو السماء

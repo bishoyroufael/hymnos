@@ -44,10 +44,14 @@ export default function PresentationSettingsMenu() {
     setPresentationSettings({ backgroundColor: color }); // Update background color in global state
     };
 
-    const handleFontColorSelect = (color: string) => 
-      {
+  const handleFontColorSelect = (color: string) => 
+    {
       setPresentationSettings({ fontColor: color }); // Update font color in global state
-      };
+    };
+
+    const handleFontSelect = (font: string) => {
+      setPresentationSettings({ font }); // Update font in global state
+    };
 
   return (
     <View className="rounded-md bg-slate-200 p-2 w-52">
@@ -56,7 +60,7 @@ export default function PresentationSettingsMenu() {
         nestedList={<ColorPickerMenu onColorSelect={handleBackgroundColorSelect}/>}
       />
       <MenuNestedItem title={"Font Color"} nestedList={<ColorPickerMenu onColorSelect={handleFontColorSelect}/>} />
-      <MenuNestedItem title={"Font Family"} nestedList={<FontMenu />} />
+      <MenuNestedItem title={"Font Family"} nestedList={<FontMenu onFontSelect={handleFontSelect}/>} />
     </View>
   );
 }
