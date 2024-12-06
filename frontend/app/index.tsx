@@ -8,14 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Link } from "expo-router";
-// Load fonts
-import { useFonts } from "expo-font";
-import * as SplashScreen from "expo-splash-screen";
-import { Amiri_400Regular } from "@expo-google-fonts/amiri";
-import { Rubik_400Regular } from "@expo-google-fonts/rubik";
-import { BalooBhaijaan2_400Regular } from "@expo-google-fonts/baloo-bhaijaan-2";
 
-SplashScreen.preventAutoHideAsync();
 
 interface HymnPack {
   id: string;
@@ -29,11 +22,11 @@ interface Hymn {
 }
 
 export default function HomePage() {
-  const [loaded, error] = useFonts({
+  /*const [loaded, error] = useFonts({
     Amiri_400Regular,
     Rubik_400Regular,
     BalooBhaijaan2_400Regular,
-  });
+  });*/
   const [searchQuery, setSearchQuery] = useState("");
   const [hymnPacks, setHymnPacks] = useState<HymnPack[]>([]);
   const [lastViewedHymns, setLastViewedHymns] = useState<Hymn[]>([]);
@@ -65,17 +58,10 @@ export default function HomePage() {
   };
   // Fetch hymn packs from backend
   useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-    // Example fetching hymn packs from a backend
     fetchHymnPacks();
     fetchLastViewedHymns();
-  }, [loaded, error]);
-
-  if (!loaded && !error) {
-    return null;
-  }
+  },[] 
+);
 
   return (
     <View className="flex justify-center items-center h-full w-full">

@@ -3,7 +3,12 @@ import { View, Text, Pressable } from "react-native";
 import PresentationSettingsMenu from "../../components/PresentationSettingsMenu";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import useHymnosState from "../../global";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 
+import { Amiri_400Regular } from "@expo-google-fonts/amiri";
+import { Rubik_400Regular } from "@expo-google-fonts/rubik";
+import { BalooBhaijaan2_400Regular } from "@expo-google-fonts/baloo-bhaijaan-2";
 interface Hymn {
   id: string;
   verses: string[];
@@ -53,6 +58,23 @@ export default function HymnPresentation() {
     setPresentationSettings({ font: fontFamily });
   };
 
+  const [loaded, error] = useFonts({
+    Amiri_400Regular,
+    Rubik_400Regular,
+    BalooBhaijaan2_400Regular,
+  });
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+    // Example fetching hymn packs from a backend
+    //fetchHymnPacks();
+    //fetchLastViewedHymns();
+  }, [loaded, error]);
+
+  if (!loaded && !error) {
+    return null;
+  }
   return (
     <View
       className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
