@@ -90,7 +90,7 @@ export default function HymnPresentation() {
             onPress={(e) => {
               e.stopPropagation(); // Prevent hiding on menu interaction
               setIsSettingsMenuOpen(!isSettingsMenuOpen); // Toggle settings menu
-              console.log("Settings Menu Open:", !isSettingsMenuOpen);
+              //console.log("Settings Menu Open:", !isSettingsMenuOpen);
             }}
           >
             <Ionicons
@@ -125,7 +125,9 @@ export default function HymnPresentation() {
       >
         <Text
           className={`text-center text-4xl text-${presentationSettings.fontColor}`}
-          style={{ fontFamily: presentationSettings.font }}
+          style={{ fontFamily: presentationSettings.font,
+            fontSize:presentationSettings.fontSize||45
+           }}
         >
           الوطن هو السماء {/* Displaying the fixed text */}
         </Text>

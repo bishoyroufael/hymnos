@@ -3,6 +3,7 @@ import { View, Text, Pressable, SafeAreaView } from "react-native";
 import ColorPickerMenu from "./ColorPickerMenu";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import FontMenu from "./FontMenu";
+import FontSizeAdjuster from "./FontSizeAdjuster";
 import useHymnosState from "../global";
 
 function MenuNestedItem({ title, nestedList }: { title: string; nestedList: JSX.Element }) {
@@ -61,6 +62,10 @@ export default function PresentationSettingsMenu() {
       />
       <MenuNestedItem title={"Font Color"} nestedList={<ColorPickerMenu onColorSelect={handleFontColorSelect}/>} />
       <MenuNestedItem title={"Font Family"} nestedList={<FontMenu onFontSelect={handleFontSelect}/>} />
+      <View className="flex-row items-center justify-between">
+        <Text className="font">Font Size</Text>
+        <FontSizeAdjuster />
+      </View>
     </View>
   );
 }
