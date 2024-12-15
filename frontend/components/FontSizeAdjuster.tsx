@@ -6,7 +6,9 @@ interface FontSizeAdjusterProps {
   onFontSizeChange?: (size: number) => void; // callback
 }
 
-const FontSizeAdjuster: React.FC<FontSizeAdjusterProps> = ({ onFontSizeChange }) => {
+const FontSizeAdjuster: React.FC<FontSizeAdjusterProps> = ({
+  onFontSizeChange,
+}) => {
   const { presentationSettings, setPresentationSettings } = useHymnosState();
   const [fontSize, setFontSize] = useState(presentationSettings.fontSize || 16); // Default size
 
@@ -27,13 +29,19 @@ const FontSizeAdjuster: React.FC<FontSizeAdjusterProps> = ({ onFontSizeChange })
   };
 
   return (
-    <View className="flex-row items-center space-x-2 p-2">
-      <Pressable onPress={handleDecrease} className="px-2 py-1 bg-gray-300 rounded">
-        <Text>-</Text>
+    <View className="flex-row items-center space-x-2">
+      <Pressable
+        onPress={handleDecrease}
+        className="px-2 py-1 bg-gray-300 rounded select-none"
+      >
+        -
       </Pressable>
       <Text>{fontSize}</Text>
-      <Pressable onPress={handleIncrease} className="px-2 py-1 bg-gray-300 rounded">
-        <Text>+</Text>
+      <Pressable
+        onPress={handleIncrease}
+        className="px-2 py-1 bg-gray-300 rounded select-none"
+      >
+        +
       </Pressable>
     </View>
   );
