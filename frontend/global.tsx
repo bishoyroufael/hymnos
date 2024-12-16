@@ -6,6 +6,7 @@ interface PresentationSettings {
   backgroundColor: string;
   fontColor: string;
   font: string;
+  fontSize: number; // Add fontSize
 }
 
 interface HymnosState {
@@ -24,6 +25,7 @@ const useHymnosState = create<HymnosState>((set) => ({
     backgroundColor: "sky-100",
     fontColor: "slate-900",
     font: "Amiri_400Regular",
+    fontSize: 45, // Default font size
   },
   setPresentationSettings: (newPresentationSettings: Partial<PresentationSettings>) =>
     set((state) => ({
