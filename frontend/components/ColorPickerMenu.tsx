@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 
 // https://stackoverflow.com/questions/71818458/why-wont-tailwind-find-my-dynamic-class
 
-function ColorRow({ color, onSelectColor }: { color: string; onSelectColor: (color: string) => void }) {
+function ColorRow({
+  color,
+  onSelectColor,
+}: {
+  color: string;
+  onSelectColor: (color: string) => void;
+}) {
   return (
     <View className="flex flex-row gap-x-1">
       {["100", "300", "500", "700", "900"].map((shade) => (
@@ -18,10 +24,11 @@ function ColorRow({ color, onSelectColor }: { color: string; onSelectColor: (col
   );
 }
 
-export default function ColorPickerMenu({ onColorSelect, }: { onColorSelect: (color: string) => void; }) {
-  
-
-
+export default function ColorPickerMenu({
+  onColorSelect,
+}: {
+  onColorSelect: (color: string) => void;
+}) {
   return (
     <View className="p-3 bg-slate-200 rounded-md space-y-3">
       <ColorRow color="blue" onSelectColor={onColorSelect} />
@@ -34,4 +41,3 @@ export default function ColorPickerMenu({ onColorSelect, }: { onColorSelect: (co
     </View>
   );
 }
-

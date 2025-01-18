@@ -13,7 +13,9 @@ interface HymnosState {
   isPresentationSettingsIconShown: boolean;
   isSettingsMenuOpen: boolean;
   presentationSettings: PresentationSettings;
-  setPresentationSettings: (newPresentationSettings: Partial<PresentationSettings>) => void; // Allow partial updates
+  setPresentationSettings: (
+    newPresentationSettings: Partial<PresentationSettings>
+  ) => void; // Allow partial updates
   setIsPresentationSettingsIconShown: (isShown: boolean) => void;
   setIsSettingsMenuOpen: (isOpen: boolean) => void;
 }
@@ -22,12 +24,14 @@ const useHymnosState = create<HymnosState>((set) => ({
   isPresentationSettingsIconShown: false,
   isSettingsMenuOpen: false,
   presentationSettings: {
-    backgroundColor: "sky-100",
-    fontColor: "slate-900",
+    backgroundColor: "slate-900",
+    fontColor: "blue-100",
     font: "Amiri_400Regular",
-    fontSize: 45, // Default font size
+    fontSize: 60, // Default font size
   },
-  setPresentationSettings: (newPresentationSettings: Partial<PresentationSettings>) =>
+  setPresentationSettings: (
+    newPresentationSettings: Partial<PresentationSettings>
+  ) =>
     set((state) => ({
       presentationSettings: {
         ...state.presentationSettings,
@@ -39,6 +43,5 @@ const useHymnosState = create<HymnosState>((set) => ({
   setIsSettingsMenuOpen: (isOpen: boolean) =>
     set(() => ({ isSettingsMenuOpen: isOpen })),
 }));
-
 
 export default useHymnosState;

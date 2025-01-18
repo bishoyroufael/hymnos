@@ -125,9 +125,10 @@ export default function HymnPresentation() {
       >
         <Text
           className={`text-center text-4xl text-${presentationSettings.fontColor}`}
-          style={{ fontFamily: presentationSettings.font,
-            fontSize:presentationSettings.fontSize||45
-           }}
+          style={{
+            fontFamily: presentationSettings.font,
+            fontSize: presentationSettings.fontSize || 60,
+          }}
         >
           الوطن هو السماء {/* Displaying the fixed text */}
         </Text>

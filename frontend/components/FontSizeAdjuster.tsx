@@ -21,11 +21,11 @@ const FontSizeAdjuster: React.FC<FontSizeAdjusterProps> = ({
   };
 
   const handleIncrease = () => {
-    updateFontSize(fontSize + 1);
+    updateFontSize(fontSize + 5);
   };
 
   const handleDecrease = () => {
-    if (fontSize > 1) updateFontSize(fontSize - 1); // Prevent size <= 1
+    if (fontSize > 5) updateFontSize(fontSize - 5); // Prevent size <= 1
   };
 
   return (
