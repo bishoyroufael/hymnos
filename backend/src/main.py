@@ -7,7 +7,7 @@ from routers import auth, data
 # Start the scheduler on app startup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    data.start_scheduler()
+    # data.start_background_jobs()
     yield
 
 app = FastAPI(lifespan=lifespan)

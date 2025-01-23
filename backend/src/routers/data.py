@@ -7,8 +7,10 @@ from utils.io import *
 router = APIRouter(prefix='/data')
 
 # Define the folder for saving assets
-TASBE7NA_ASSETS_FOLDER = Path("assets/tasbe7na")
+PACKS_FOLDER = Path("assets/packs")
+TASBE7NA_ASSETS_FOLDER = Path("assets/.tasbe7na")
 TASBE7NA_ASSETS_FOLDER.mkdir(parents=True, exist_ok=True)
+PACKS_FOLDER.mkdir(parents=True, exist_ok=True)
 
 # Define the URL of the file to download
 FILE_URL = "https://tasbe7na.com/tasbe7naDB.zip"
@@ -48,6 +50,6 @@ async def download_latest_json():
     return json.loads(latest_json_file.read_text())
 
 # Schedule the job to run daily
-def start_scheduler():
-    scheduler.add_job(handle_file_download, "interval", minutes=1, args=(TASBE7NA_ASSETS_FOLDER, FILE_URL))
-    scheduler.start()
+# def start_background_jobs():
+#     scheduler.add_job(handle_tasbe7na_data_download, "interval", minutes=1, args=(TASBE7NA_ASSETS_FOLDER, FILE_URL))
+#     scheduler.start()
