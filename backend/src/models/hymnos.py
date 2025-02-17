@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import List
-
-class HymnosSlide(BaseModel):
+class Slide(BaseModel):
     '''
     Example:
                         
@@ -17,26 +16,31 @@ class HymnosSlide(BaseModel):
         Was blind, but now I see.              |
                                               --
     '''
+    uuid: str
+    hymn_uuid: str
     lines: List[str] # list of lines
+    linesWords: List[str] = [] # used on frontend for indexing and searching
     chords: List[list[str]] | None = None # list of chords for each line
     chords_pos: List[list[int]] | None = None # position described as where the chord is letter-wise in the line
 
+class Tag(BaseModel):
+    uuid: str
+    name: str
 
-class HymnosHymn(BaseModel):
-    id: str
+class Hymn(BaseModel):
+    uuid: str
     title: str | None
     author_words: str | None
     author_music: str | None
-    verses: List[HymnosSlide] = [] 
-    chorus: List[HymnosSlide] = []
-    chorusFirst: bool | None
+    verses: List[str] = [] # store slide uuid
+    chorus: List[str] = [] # store slide uuid
+    chorusFirst: bool
+    tags: list[str] = [] # tags ids
 
-class HymnosPack(BaseModel):
-    id: str
+class HymnsPack(BaseModel):
+    uuid: str
     title: str | None
     author: str | None
     version: str 
-    hymns: List[HymnosHymn]
+    hymns_uuid: List[str] # hymns ids
     description: str | None
-
-
