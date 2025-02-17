@@ -119,7 +119,7 @@ export default function HymnPresentation() {
       <Pressable
         className="flex-1 justify-center items-center cursor-default"
         onPress={() => {
-          setIsPresentationSettingsIconShown(false);
+          setIsPresentationSettingsIconShown(!isPresentationSettingsIconShown);
           setIsSettingsMenuOpen(false);
         }}
       >
