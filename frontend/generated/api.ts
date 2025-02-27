@@ -67,10 +67,10 @@ export interface Hymn {
     'chorus'?: Array<string>;
     /**
      * 
-     * @type {boolean}
+     * @type {Array<string>}
      * @memberof Hymn
      */
-    'chorusFirst': boolean;
+    'slides_order'?: Array<string>;
     /**
      * 
      * @type {Array<string>}

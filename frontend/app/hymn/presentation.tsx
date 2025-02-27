@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Dimensions, ScrollView, SafeAreaView } from "react-native";
 import PresentationSettingsMenu from "../../components/PresentationSettingsMenu";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import useHymnosState from "../../global";
@@ -9,13 +9,20 @@ import * as SplashScreen from "expo-splash-screen";
 import { Amiri_400Regular } from "@expo-google-fonts/amiri";
 import { Rubik_400Regular } from "@expo-google-fonts/rubik";
 import { BalooBhaijaan2_400Regular } from "@expo-google-fonts/baloo-bhaijaan-2";
-interface Hymn {
-  id: string;
-  verses: string[];
-  chorus: string;
-}
+import { router, useLocalSearchParams} from "expo-router";
+import { get_slides_of_hymn } from "../../db/dexie";
+import { Slide } from "../../db/models";
+import { useKeyEvent } from "expo-key-event";
+
+const screenWidth = Dimensions.get('screen').width;
 
 export default function HymnPresentation() {
+  const { uuid } = useLocalSearchParams<{uuid: string }>();
+  if (uuid == null){
+    router.navigate("/notfound");
+    return null;
+  }
+
   const {
     isSettingsMenuOpen,
     setIsSettingsMenuOpen,
@@ -25,18 +32,40 @@ export default function HymnPresentation() {
     setPresentationSettings,
   } = useHymnosState();
 
-  const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [currSlideIdx, setCurrSlideIdx] = useState<number>(0);
+  const { keyEvent } = useKeyEvent();
 
-  const hymn: Hymn = {
-    id: "1",
-    verses: [
-      "Amazing grace! How sweet the sound That saved a wretch like me!",
-      "I once was lost, but now am found; Was blind, but now I see.",
-    ],
-    chorus: "Praise the Lord! He is great and worthy of praise!",
-  };
 
-  const verses = [...hymn.verses, hymn.chorus]; // Combine verses and chorus for easier navigation
+  // Handling key events
+  // re-runs on keyEvent change
+  useEffect(()=>{
+    if (keyEvent && keyEvent.key === "Escape") {
+        router.navigate("/");
+    }
+
+    setCurrSlideIdx((prevIdx) => {
+      if (!slides || slides.length === 0 || !keyEvent) return prevIdx; // Handle edge case
+
+      if (keyEvent.key === "ArrowRight") {
+        return (prevIdx + 1) % slides.length;
+      } else if (keyEvent.key === "ArrowLeft") {
+        return (prevIdx + slides.length - 1) % slides.length;
+      } 
+
+      return prevIdx; // Return previous index if key is not handled
+    });
+  },[keyEvent])
+
+
+
+  // Fetch hymn from db using uuid once
+  useEffect(()=>{
+    console.log("rerendering happens here!");
+    get_slides_of_hymn(uuid)
+      .then((s) => setSlides(s))
+      .catch((e) => {console.log(e); router.navigate("/notfound");});
+  },[])
 
   // Auto-hide the menu after a few seconds
   useEffect(() => {
@@ -49,15 +78,8 @@ export default function HymnPresentation() {
     }
   }, [isPresentationSettingsIconShown, isSettingsMenuOpen]);
 
-  const handleMenuInteraction = (e: any) => {
-    e.stopPropagation(); // Prevent parent interactions from hiding the menu
-  };
 
-  // Handle font selection
-  const handleFontSelect = (fontFamily: string) => {
-    setPresentationSettings({ font: fontFamily });
-  };
-
+  // Font loading
   const [loaded, error] = useFonts({
     Amiri_400Regular,
     Rubik_400Regular,
@@ -67,9 +89,6 @@ export default function HymnPresentation() {
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
-    // Example fetching hymn packs from a backend
-    //fetchHymnPacks();
-    //fetchLastViewedHymns();
   }, [loaded, error]);
 
   if (!loaded && !error) {
@@ -115,24 +134,35 @@ export default function HymnPresentation() {
         </View>
       )}
 
-      {/* Hymn Text Display */}
-      <Pressable
-        className="flex-1 justify-center items-center cursor-default"
-        onPress={() => {
-          setIsPresentationSettingsIconShown(!isPresentationSettingsIconShown);
-          setIsSettingsMenuOpen(false);
-        }}
-      >
-        <Text
-          className={`text-center text-4xl text-${presentationSettings.fontColor}`}
-          style={{
-            fontFamily: presentationSettings.font,
-            fontSize: presentationSettings.fontSize || 60,
+        {/* Hymn Text Display */}
+        <Pressable
+          className="flex-1 justify-center items-center cursor-default"
+          onPress={(e) => {
+            setIsPresentationSettingsIconShown(!isPresentationSettingsIconShown);
+            setIsSettingsMenuOpen(false);
+            // For mobile when user clicks on left and right side of the slides
+            if(e.nativeEvent.pageX/screenWidth <= 0.25) {
+              setCurrSlideIdx((currSlideIdx + slides.length - 1) % slides.length);
+            } else if(e.nativeEvent.pageX/screenWidth >= 0.75) {
+              setCurrSlideIdx((currSlideIdx + 1) % slides.length);
+            }
           }}
         >
-          الوطن هو السماء {/* Displaying the fixed text */}
-        </Text>
-      </Pressable>
+
+        {/* ScrollView needed for hymns with text that is long */}
+        <ScrollView className="w-full h-full" contentContainerClassName="flex-grow justify-center">
+            <Text
+              className={`text-center text-${presentationSettings.fontColor}`}
+              style={{
+                fontFamily: presentationSettings.font,
+                fontSize: presentationSettings.fontSize || 60,
+              }}
+              >
+              {slides && slides.length > 0 && slides[currSlideIdx].lines.join("\n")}
+            </Text>
+          </ScrollView>
+        </Pressable>
+      <Text className={`absolute text-${presentationSettings.fontColor} bottom-0 text-xl m-2`}>{currSlideIdx + 1} | {slides.length}</Text>
     </View>
   );
 }

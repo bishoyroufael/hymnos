@@ -34,14 +34,14 @@ const FontSizeAdjuster: React.FC<FontSizeAdjusterProps> = ({
         onPress={handleDecrease}
         className="px-2 py-1 bg-gray-300 rounded select-none"
       >
-        -
+       <Text>-</Text>
       </Pressable>
       <Text>{fontSize}</Text>
       <Pressable
         onPress={handleIncrease}
         className="px-2 py-1 bg-gray-300 rounded select-none"
       >
-        +
+        <Text>+</Text>
       </Pressable>
     </View>
   );

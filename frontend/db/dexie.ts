@@ -1,5 +1,5 @@
-import { Dexie, type EntityTable } from 'dexie';
-import { generateRandomString } from './utils';
+import { Dexie, PromiseExtended, type EntityTable } from 'dexie';
+import { generateRandomString, normalize_text } from './utils';
 import dexieObservable from 'dexie-observable';
 import dexieSyncable from 'dexie-syncable';
 import { Hymn, HymnsPack, Slide, Tag } from './models';
@@ -7,10 +7,10 @@ import { Hymn, HymnsPack, Slide, Tag } from './models';
 
 // Database declaration (move this to its own module also)
 export const db = new Dexie('HymnsDatabase', {"addons":[dexieObservable, dexieSyncable]}) as Dexie & {
-  hymns: EntityTable<Hymn>;
-  packs: EntityTable<HymnsPack>;
-  slides: EntityTable<Slide>;
-  tags: EntityTable<Tag>;
+  hymns: EntityTable<Hymn, 'uuid'>;
+  packs: EntityTable<HymnsPack, 'uuid'>;
+  slides: EntityTable<Slide, 'uuid'>;
+  tags: EntityTable<Tag, 'uuid'>;
 };
 
 db.version(1).stores({
@@ -37,19 +37,9 @@ db.slides.hook("updating", function (mods, primKey, obj, trans) {
 });
 
 
-
-// function trigrams(s: string) {
-//   const n = 3;
-//   var r = [];
-//   for(var i = 0; i <= s.length - n; i++)
-//      r.push(s.substring(i, i + n));
-//   return r;
-// }
-
-
 function getAllWords(text: string) {
     /// <param name="text" type="String"></param>
-    var allWordsIncludingDups = text.split(' ');
+    var allWordsIncludingDups = text.split(' ').map(w=>normalize_text(w));
     var wordSet = allWordsIncludingDups.reduce(function (prev, current) {
         prev[current] = true;
         return prev;
@@ -57,45 +47,50 @@ function getAllWords(text: string) {
     return Object.keys(wordSet);
 }
 
-// function generate_fake_data(N=100000)
-// {
-//     const result = [];
-//     for (let i = 1; i <= N; i++) {
-//         const t = generateRandomString(2500);
-//         const obj : Hymn = {
-//             // id: i, // Ensures uniqueness
-//             text: t,
-//             title: "dump hymn",
-//             music_author: generateRandomString(2500),
-//             words_author: generateRandomString(2500),
-//             chords: generateRandomString(2500),
-//             chords_pos: generateRandomString(2500),
-//             tags: []
-//         };
-//         result.push(obj);
-//     }
-//     return result
-// }
 
-// export function bulk_insert_hymns() {
-//   const fd1 = generate_fake_data(100); 
-//   db.hymns.bulkPut(fd1).then((n)=>{console.log(n)},(r)=>{console.log(r)});
-// }
+function* chunkArray<T>(array: T[], chunkSize: number): IterableIterator<T[]> {
+  for (let i = 0; i < array.length; i += chunkSize) {
+    yield array.slice(i, i + chunkSize);
+  }
+}
+
+export async function insert_hymns_and_packs(
+  hymns: Array<Hymn>,
+  packs: Array<HymnsPack>,
+  slides: Array<Slide>,
+  chunkSize: number = 200,
+  onProgress: (newProgress: number) => void
+): Promise<void> {
+  const totalItems = hymns.length + packs.length + slides.length;
+  let completedItems = 0;
+
+  try {
+    // Helper function to process chunks and update progress
+    const bulkPutChunks = async <T>(data: T[], store: EntityTable<any, any>) => {
+      for (const chunk of chunkArray(data, chunkSize)) {
+        await db.transaction('rw', store, async () => {
+          await store.bulkPut(chunk);
+        });
+        completedItems += chunk.length;
+        onProgress(Math.round(completedItems/totalItems*100));
+      }
+    };
+
+    await bulkPutChunks(hymns, db.hymns);
+    await bulkPutChunks(packs, db.packs);
+    await bulkPutChunks(slides, db.slides);
 
 
-export function insert_hymns_and_packs(hymns: Array<Hymn>, packs: Array<HymnsPack>, slides: Array<Slide>) {
-  db.transaction('rw', [db.hymns, db.packs, db.slides], function () {
-    db.hymns.bulkPut(hymns);
-    db.packs.bulkPut(packs);
-    db.slides.bulkPut(slides);
-    console.log("Added hymns and packs!")
-  }).catch(function(e) {
-    console.log(e)
-  })
+    console.log("Added hymns, packs, and slides successfully!");
+    onProgress(Math.round(completedItems/totalItems*100));
+  } catch (e) {
+    console.error("Error during bulk insertion:", e);
+    onProgress(Math.round(completedItems/totalItems*100));
+  }
 }
 
 // https://github.com/dexie/Dexie.js/issues/281#issuecomment-229228163
-function find_in_slides(prefixes: string[], l: number = 10) {
+async function find_in_slides(prefixes: string[], l: number = 10) {
     return db.transaction('r', db.slides, function*() {
         // Parallell search for all prefixes - just select resulting primary keys
         const results = yield Dexie.Promise.all (prefixes.map(prefix =>
@@ -110,26 +105,50 @@ function find_in_slides(prefixes: string[], l: number = 10) {
                 const set = new Set(b);
                 return a.filter(k => set.has(k));
             });
-
         // Finally select entire documents from intersection
         return yield db.slides.where(':id').anyOf (reduced).limit(l).toArray();
     });
 }
 
 
-export function search_text(q: string) {
-  // const startTime = performance.now()
-
+export async function search_in_slides(q: string) {
+  const startTime = performance.now()
+  console.log("search working in progress");
   // Get prefixes and run search over word splits
-  const prefixes = q.trim().split(" ")
-  find_in_slides(prefixes).then(slides => {
+  const prefixes = q.trim().split(" ").map(w=>normalize_text(w));
+  try {
+    const slides = await find_in_slides(prefixes);
     // const endTime = performance.now()
     // console.log(`took ${endTime - startTime} milliseconds`)
-    return slides
-  }).catch((r)=>{
-    console.log(r)
-  })
-
+    const slidesArr: Slide[] = [];
+    // todo: how to convert this wierd generator to an array of slides
+    for (const ss of slides) {
+      slidesArr.push(ss as unknown as Slide);
+    }
+    return slidesArr;
+  } catch (r) {
+    console.log(r);
+    return [];
+  }
 }
 
+export function get_hymns_from_slides(slides: Slide[]) {
+  return db.hymns.where(":id").anyOf( slides.map(v => v.hymn_uuid) ).toArray((h)=>{
+    return h
+  })
+}
 
+export function get_slides_of_hymn(hymn_uuid: string) {
+  db.slides.count().then(c=>console.log(c));
+  return db.transaction('r', [db.hymns, db.slides], async ()=>{
+    const slides_order  = (await db.hymns.get(hymn_uuid)).slides_order;
+    const slides: Slide[] = await db.slides.bulkGet(slides_order)
+    return slides
+  });
+}
+
+export async function is_db_empty() {
+  // for now we check if there's hymns
+  const n = await db.hymns.count();
+  return n == 0;
+}

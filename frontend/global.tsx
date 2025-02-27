@@ -18,6 +18,8 @@ interface HymnosState {
   ) => void; // Allow partial updates
   setIsPresentationSettingsIconShown: (isShown: boolean) => void;
   setIsSettingsMenuOpen: (isOpen: boolean) => void;
+  syncProgressPercentage: number;
+  setSyncProgressPercentage: (progress: number) => void;
 }
 
 const useHymnosState = create<HymnosState>((set) => ({
@@ -29,6 +31,7 @@ const useHymnosState = create<HymnosState>((set) => ({
     font: "Amiri_400Regular",
     fontSize: 60, // Default font size
   },
+  syncProgressPercentage: 0,
   setPresentationSettings: (
     newPresentationSettings: Partial<PresentationSettings>
   ) =>
@@ -42,6 +45,8 @@ const useHymnosState = create<HymnosState>((set) => ({
     set(() => ({ isPresentationSettingsIconShown: isShown })),
   setIsSettingsMenuOpen: (isOpen: boolean) =>
     set(() => ({ isSettingsMenuOpen: isOpen })),
+  setSyncProgressPercentage:(progress) => 
+    set(() => ({ syncProgressPercentage:  progress})),
 }));
 
 export default useHymnosState;

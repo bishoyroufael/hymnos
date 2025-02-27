@@ -12,7 +12,7 @@ export interface Hymn {
   author_music: string | null;
   verses?: string[];
   chorus?: string[];
-  chorusFirst: boolean;
+  slides_order?: string[];
   tags?: string[];
 }
 export interface HymnsPack {

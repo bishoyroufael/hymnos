@@ -1,5 +1,6 @@
+import { router } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, ScrollView } from "react-native";
+import { View, Text, FlatList, ScrollView, Pressable } from "react-native";
 
 interface Hymn {
   id: string;
@@ -21,6 +22,7 @@ export default function HymnPack() {
 
   // Fetch hymn pack details from backend
   useEffect(() => {
+    console.log("HymnPack useEffect triggered.")
     fetchHymnPackDetails();
   }, []);
 
