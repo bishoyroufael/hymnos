@@ -34,7 +34,7 @@ class Hymn(BaseModel):
     author_music: str | None
     verses: List[str] = [] # store slide uuid
     chorus: List[str] = [] # store slide uuid
-    chorusFirst: bool
+    slides_order: List[str] = [] # store slide ids in order of how to present them 
     tags: list[str] = [] # tags ids
 
 class HymnsPack(BaseModel):
