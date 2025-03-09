@@ -22,12 +22,10 @@ Make sure you have Python, Nodejs and npm install on your system. Please refer t
 
 ## Backend
 
-Backend is built using Python and [fastapi](https://fastapi.tiangolo.com/) for designing a simple API.
+Backend is built using Python and [fastapi](https://fastapi.tiangolo.com/) for designing a simple API. `uv` is used to manage depenedncies.
 
-- Create a new virtual environment using `python -m venv venv` inside your `backend/` folder.
-- Activate the venv using `source venv/bin/activate` for linux. For windows run `.\venv\Scripts\activate`.
-- Install the dependencies using `pip install -r requirements.txt`
-- Serve the backend API using `fastapi dev src/main.py`.
+- Install `uv` using `curl -LsSf https://astral.sh/uv/install.sh | sh` for linux or `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"` for windows.
+- Serve the backend API by running `uv run fastapi dev src/main.py` inside the `backend/` folder.
 - In your browser navigate to `http://127.0.0.1:8000/docs` for the Swagger docs.
 
 # Architecture

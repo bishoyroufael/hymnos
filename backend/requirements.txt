@@ -1,9 +1,0 @@
-APScheduler==3.10.4
-brotli_asgi==1.4.0
-fast_langdetect==0.2.5
-fastapi==0.115.10
-fastapi_cache==0.1.0
-pydantic==2.10.6
-pydantic_core==2.30.0
-Requests==2.32.3
-zstd==1.5.6.1
