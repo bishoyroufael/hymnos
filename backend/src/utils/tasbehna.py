@@ -100,7 +100,7 @@ def get_tasbe7na_hymns(file_url: str):
     temp_file_path.unlink()
 
     try:
-        json_db = from_json(list(new_folder.glob("*.json"))[0].read_text())
+        json_db = from_json(list(new_folder.glob("*.json"))[0].read_text(encoding='utf-8'))
     except Exception as e:
         print(e)
     finally:
