@@ -48,7 +48,7 @@ export default memo(function HomePage() {
   
         const startTime = performance.now()
         // todo: taking too much time, should be chunked up..
-        insert_hymns_and_packs(json.hymns, json.packs, json.slides, 5000, syncProgressCallback).then(()=>{
+        insert_hymns_and_packs(json.hymns, json.packs, json.slides, 200, syncProgressCallback).then(()=>{
           const endTime = performance.now()
           console.log(`Call to bulk import took ${endTime - startTime} milliseconds`)
           // Add pack to list if not present
