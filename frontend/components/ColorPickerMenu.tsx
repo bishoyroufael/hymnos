@@ -1,4 +1,3 @@
-// https://stackoverflow.com/questions/71818458/why-wont-tailwind-find-my-dynamic-class
 import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { isMobile } from "react-device-detect";
@@ -8,28 +7,47 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 function ColorRow({
   color,
   onSelectColor,
+  currentColor,
 }: {
   color: string;
   onSelectColor: (color: string) => void;
+  currentColor: string;
 }) {
   return (
     <View className="flex flex-row gap-x-1 flex-wrap">
-      {["100", "300", "500", "700", "900"].map((shade) => (
-        <View
-          key={shade}
-          className={`bg-${color}-${shade} w-5 h-5 rounded-md border-gray-700 border hover:scale-110 transition duration-100 ease-in-out`}
-          onStartShouldSetResponder={() => true}
-          onResponderRelease={() => onSelectColor(`${color}-${shade}`)}
-        />
-      ))}
+      {["100", "300", "500", "700", "900"].map((shade) => {
+        const colorValue = `${color}-${shade}`;
+        const isSelected = colorValue === currentColor;
+        return (
+          <View
+            key={shade}
+            className={`relative bg-${color}-${shade} w-5 h-5 rounded-md border-gray-700 border transition duration-100 ease-in-out ${
+              isSelected ? "border-2 border-white" : "hover:scale-110"
+            }`}
+            onStartShouldSetResponder={() => true}
+            onResponderRelease={() => onSelectColor(colorValue)}
+          >
+            {isSelected && (
+              <Ionicons
+                name="checkmark"
+                size={14}
+                color="white"
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              />
+            )}
+          </View>
+        );
+      })}
     </View>
   );
 }
 
 export default function ColorPickerMenu({
   onColorSelect,
+  currentColor,
 }: {
   onColorSelect: (color: string) => void;
+  currentColor: string;
 }) {
   const { setCurrentView, setActiveMenu } = useHymnosState();
 
@@ -50,13 +68,41 @@ export default function ColorPickerMenu({
         </Pressable>
         <Text className="font-bold">Select Color</Text>
       </View>
-      <ColorRow color="blue" onSelectColor={onColorSelect} />
-      <ColorRow color="cyan" onSelectColor={onColorSelect} />
-      <ColorRow color="green" onSelectColor={onColorSelect} />
-      <ColorRow color="red" onSelectColor={onColorSelect} />
-      <ColorRow color="yellow" onSelectColor={onColorSelect} />
-      <ColorRow color="slate" onSelectColor={onColorSelect} />
-      <ColorRow color="gray" onSelectColor={onColorSelect} />
+      <ColorRow
+        color="blue"
+        onSelectColor={onColorSelect}
+        currentColor={currentColor}
+      />
+      <ColorRow
+        color="cyan"
+        onSelectColor={onColorSelect}
+        currentColor={currentColor}
+      />
+      <ColorRow
+        color="green"
+        onSelectColor={onColorSelect}
+        currentColor={currentColor}
+      />
+      <ColorRow
+        color="red"
+        onSelectColor={onColorSelect}
+        currentColor={currentColor}
+      />
+      <ColorRow
+        color="yellow"
+        onSelectColor={onColorSelect}
+        currentColor={currentColor}
+      />
+      <ColorRow
+        color="slate"
+        onSelectColor={onColorSelect}
+        currentColor={currentColor}
+      />
+      <ColorRow
+        color="gray"
+        onSelectColor={onColorSelect}
+        currentColor={currentColor}
+      />
     </View>
   );
 }

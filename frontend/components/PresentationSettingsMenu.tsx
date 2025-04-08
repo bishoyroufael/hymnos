@@ -38,6 +38,7 @@ export default function PresentationSettingsMenu() {
     setActiveMenu,
     currentView,
     setCurrentView,
+    presentationSettings,
   } = useHymnosState();
 
   const handleToggleMenu = (menuTitle: string) => {
@@ -47,27 +48,30 @@ export default function PresentationSettingsMenu() {
 
   const handleBackgroundColorSelect = (color: string) => {
     setPresentationSettings({ backgroundColor: color });
-    // Removed setCurrentView("main") and setActiveMenu(null) to keep the menu open
   };
 
   const handleFontColorSelect = (color: string) => {
     setPresentationSettings({ fontColor: color });
-    // Removed setCurrentView("main") and setActiveMenu(null) to keep the menu open
   };
 
   const handleFontSelect = (font: string) => {
     setPresentationSettings({ font });
-    // Removed setCurrentView("main") and setActiveMenu(null) to keep the menu open
   };
 
   if (currentView === "nested") {
     return (
       <View className="rounded-md bg-slate-200 p-2 w-52">
         {activeMenu === "Background Color" && (
-          <ColorPickerMenu onColorSelect={handleBackgroundColorSelect} />
+          <ColorPickerMenu
+            onColorSelect={handleBackgroundColorSelect}
+            currentColor={presentationSettings.backgroundColor}
+          />
         )}
         {activeMenu === "Font Color" && (
-          <ColorPickerMenu onColorSelect={handleFontColorSelect} />
+          <ColorPickerMenu
+            onColorSelect={handleFontColorSelect}
+            currentColor={presentationSettings.fontColor}
+          />
         )}
         {activeMenu === "Font Family" && (
           <FontMenu onFontSelect={handleFontSelect} />
