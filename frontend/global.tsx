@@ -6,7 +6,7 @@ interface PresentationSettings {
   backgroundColor: string;
   fontColor: string;
   font: string;
-  fontSize: number; // Add fontSize
+  fontSize: number;
 }
 
 interface HymnosState {
@@ -15,13 +15,15 @@ interface HymnosState {
   presentationSettings: PresentationSettings;
   setPresentationSettings: (
     newPresentationSettings: Partial<PresentationSettings>
-  ) => void; // Allow partial updates
+  ) => void;
   setIsPresentationSettingsIconShown: (isShown: boolean) => void;
   setIsSettingsMenuOpen: (isOpen: boolean) => void;
-  setActiveMenu: (menu: string | null) => void; // Setter for active menu
+  setActiveMenu: (menu: string | null) => void;
   syncProgressPercentage: number;
   setSyncProgressPercentage: (progress: number) => void;
-  activeMenu: string | null; // Add activeMenu to the state interface
+  activeMenu: string | null;
+  currentView: "main" | "nested"; // New state to track the current view
+  setCurrentView: (view: "main" | "nested") => void; // Setter for current view
 }
 
 const useHymnosState = create<HymnosState>((set) => ({
@@ -31,17 +33,18 @@ const useHymnosState = create<HymnosState>((set) => ({
     backgroundColor: "slate-900",
     fontColor: "blue-100",
     font: "Amiri_400Regular",
-    fontSize: 60, // Default font size
+    fontSize: 60,
   },
-  activeMenu: null, // Initially, no menu is open
+  activeMenu: null,
   syncProgressPercentage: 0,
+  currentView: "main", // Default to main menu view
   setPresentationSettings: (
     newPresentationSettings: Partial<PresentationSettings>
   ) =>
     set((state) => ({
       presentationSettings: {
         ...state.presentationSettings,
-        ...newPresentationSettings, // Merge new settings with existing ones
+        ...newPresentationSettings,
       },
     })),
   setIsPresentationSettingsIconShown: (isShown: boolean) =>
@@ -49,8 +52,10 @@ const useHymnosState = create<HymnosState>((set) => ({
   setIsSettingsMenuOpen: (isOpen: boolean) =>
     set(() => ({ isSettingsMenuOpen: isOpen })),
   setActiveMenu: (menu: string | null) => set((state) => ({ activeMenu: menu })),
-  setSyncProgressPercentage:(progress) => 
-    set(() => ({ syncProgressPercentage:  progress})),
+  setSyncProgressPercentage: (progress) =>
+    set(() => ({ syncProgressPercentage: progress })),
+  setCurrentView: (view: "main" | "nested") =>
+    set(() => ({ currentView: view })),
 }));
 
 export default useHymnosState;
