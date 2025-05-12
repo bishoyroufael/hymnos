@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, Dimensions, ScrollView, SafeAreaView } from "react-native";
-import PresentationSettingsMenu from "../../components/PresentationSettingsMenu";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, Pressable, Dimensions, TextInput, Keyboard } from "react-native";
 import useHymnosState from "../../global";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-
 import { Amiri_400Regular } from "@expo-google-fonts/amiri";
-import { Rubik_400Regular } from "@expo-google-fonts/rubik";
+import { Cairo_400Regular } from "@expo-google-fonts/cairo";
+import { Lateef_400Regular } from "@expo-google-fonts/lateef";
 import { BalooBhaijaan2_400Regular } from "@expo-google-fonts/baloo-bhaijaan-2";
 import { router, useLocalSearchParams} from "expo-router";
 import { get_slides_of_hymn } from "../../db/dexie";
 import { Slide } from "../../db/models";
 import { useKeyEvent } from "expo-key-event";
+import SlideSettingsIcon from "../../components/SlideSettingsIcon";
+import SlideEditIcon from "../../components/SlideEditIcon";
 
 const screenWidth = Dimensions.get('screen').width;
 
 export default function HymnPresentation() {
+  console.log("presentation screen rendered")
   const { uuid } = useLocalSearchParams<{uuid: string }>();
   if (uuid == null){
     router.navigate("/notfound");
@@ -29,43 +30,59 @@ export default function HymnPresentation() {
     isPresentationSettingsIconShown,
     setIsPresentationSettingsIconShown,
     presentationSettings,
-    setPresentationSettings,
+    isEditingMode,
+    setIsEditingMode
   } = useHymnosState();
 
   const [slides, setSlides] = useState<Slide[]>([]);
   const [currSlideIdx, setCurrSlideIdx] = useState<number>(0);
   const { keyEvent } = useKeyEvent();
+  const [currentTextAreaValue, setCurrentTextAreaValue] = useState(null)  
+
+  // https://medium.com/@oherterich/creating-a-textarea-with-dynamic-height-using-react-and-typescript-5ed2d78d9848
+  // re-called if node ref is updated, current text value changed, or font is changed
+  const textAreaRef = useCallback((node: HTMLTextAreaElement | null) => {
+    if (node != null) {
+      // We need to reset the height momentarily to get the correct scrollHeight for the textarea
+      node.style.height = "0px";
+      const scrollHeight = node.scrollHeight;
+      // We then set the height directly, outside of the render loop
+      // Trying to set this with state or a ref will product an incorrect value.
+      node.style.height = scrollHeight + "px";
+    }
+  }, [currentTextAreaValue, presentationSettings])
 
 
   // Handling key events
   // re-runs on keyEvent change
   useEffect(()=>{
+    if (!slides || slides.length === 0 || !keyEvent) return; // Handle edge case
     if (keyEvent && keyEvent.key === "Escape") {
         router.navigate("/");
     }
-
     setCurrSlideIdx((prevIdx) => {
-      if (!slides || slides.length === 0 || !keyEvent) return prevIdx; // Handle edge case
+      const newKey = keyEvent.key === 'ArrowRight'
+                ? (prevIdx + 1) % slides.length
+                : keyEvent.key === 'ArrowLeft'
+                ? (prevIdx + slides.length - 1) % slides.length
+                : prevIdx;
 
-      if (keyEvent.key === "ArrowRight") {
-        return (prevIdx + 1) % slides.length;
-      } else if (keyEvent.key === "ArrowLeft") {
-        return (prevIdx + slides.length - 1) % slides.length;
-      } 
-
-      return prevIdx; // Return previous index if key is not handled
+      setCurrentTextAreaValue(slides[newKey].lines.join("\n"))
+      return newKey; // Return previous index if key is not handled
     });
-  },[keyEvent])
 
+  },[keyEvent])
 
 
   // Fetch hymn from db using uuid once
   useEffect(()=>{
     console.log("rerendering happens here!");
     get_slides_of_hymn(uuid)
-      .then((s) => setSlides(s))
+      .then((s) => {setSlides(s); setCurrentTextAreaValue(s[0].lines.join("\n"))})
       .catch((e) => {console.log(e); router.navigate("/notfound");});
-  },[])
+  }, [])
+
+
 
   // Auto-hide the menu after a few seconds
   useEffect(() => {
@@ -82,9 +99,11 @@ export default function HymnPresentation() {
   // Font loading
   const [loaded, error] = useFonts({
     Amiri_400Regular,
-    Rubik_400Regular,
+    Cairo_400Regular,
     BalooBhaijaan2_400Regular,
+    Lateef_400Regular
   });
+
   useEffect(() => {
     if (loaded || error) {
       SplashScreen.hideAsync();
@@ -94,6 +113,7 @@ export default function HymnPresentation() {
   if (!loaded && !error) {
     return null;
   }
+  
   return (
     <View
       className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
@@ -101,38 +121,9 @@ export default function HymnPresentation() {
         setIsPresentationSettingsIconShown(true); // Show menu icon on pointer move
       }}
     >
-      {/* Hamburger Menu Icon */}
-      {isPresentationSettingsIconShown && (
-        <View className="absolute top-4 left-4 z-10 w-auto">
-          <Pressable
-            className="p-2 rounded-full w-auto h-auto"
-            onPress={(e) => {
-              e.stopPropagation(); // Prevent hiding on menu interaction
-              setIsSettingsMenuOpen(!isSettingsMenuOpen); // Toggle settings menu
-              //console.log("Settings Menu Open:", !isSettingsMenuOpen);
-            }}
-          >
-            <Ionicons
-              name="settings"
-              size={30}
-              className={`text-${presentationSettings.fontColor}`}
-            />
-          </Pressable>
-
-          {/* Settings Menu */}
-          {isSettingsMenuOpen && (
-            <View
-              onStartShouldSetResponder={() => true} // Capture touch events for menu
-              onTouchStart={(e) => {
-                e.stopPropagation(); // Stop propagation to avoid closing
-                e.preventDefault(); // Prevent closing the menu when interacting
-              }}
-            >
-              <PresentationSettingsMenu />
-            </View>
-          )}
-        </View>
-      )}
+        {/* Hamburger Menu Icon */}
+        <SlideSettingsIcon/>
+        <SlideEditIcon/>
 
         {/* Hymn Text Display */}
         <Pressable
@@ -148,19 +139,28 @@ export default function HymnPresentation() {
             }
           }}
         >
-
-        {/* ScrollView needed for hymns with text that is long */}
-        <ScrollView className="w-full h-full" contentContainerClassName="flex-grow justify-center">
-            <Text
-              className={`text-center text-${presentationSettings.fontColor}`}
-              style={{
-                fontFamily: presentationSettings.font,
-                fontSize: presentationSettings.fontSize || 60,
-              }}
-              >
-              {slides && slides.length > 0 && slides[currSlideIdx].lines.join("\n")}
-            </Text>
-          </ScrollView>
+          
+          {slides && slides.length > 0 && 
+          <TextInput
+          readOnly
+          caretHidden
+          multiline={true}
+          // @ts-ignore
+          ref={textAreaRef}
+          onChangeText={(updatedLineText)=>{
+            const updatedSlide = slides[currSlideIdx]
+            updatedSlide.lines = updatedLineText.split("\n")
+            setSlides(slides.with(currSlideIdx, updatedSlide));
+            setCurrentTextAreaValue(updatedLineText);
+          }}
+          className={`text-center text-${presentationSettings.fontColor} outline-none w-[80%] resize-none`}
+          // ref={textareaRef}
+          style={{
+            fontFamily: presentationSettings.font,
+            fontSize: presentationSettings.fontSize || 60
+          }}
+          value={currentTextAreaValue}/>}
+      
         </Pressable>
       <Text className={`absolute text-${presentationSettings.fontColor} bottom-0 text-xl m-2`}>{currSlideIdx + 1} | {slides.length}</Text>
     </View>

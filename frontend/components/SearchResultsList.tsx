@@ -3,6 +3,7 @@ import React from "react"
 import { FlatList, View, Text, Pressable } from "react-native"
 import { get_slides_of_hymn } from "../db/dexie"
 import { router } from "expo-router"
+import { addLastViewedHymn } from "../db/localstorage"
 
 export interface SearchResultsListProps {
     hymn_uuid: string
@@ -19,7 +20,11 @@ export default function SearchResultsList ({items}: {items: SearchResultsListPro
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
             <Pressable className="p-2 border-b border-gray-300 transition duration-200 ease-in-out hover:scale-x-[.98]" 
-                        onPress={()=>{router.push(`/hymn/presentation?uuid=${item.hymn_uuid}`);}}
+                        onPress={()=>{
+                            // hymn is added to localstorage
+                            addLastViewedHymn(item.hymn_uuid);
+                            router.push(`/hymn/presentation?uuid=${item.hymn_uuid}`);
+                        }}
             >
                 <Text className="text-lg font-semibold text-gray-800">{item.title}</Text>
                 <Text className="text-sm text-gray-600">{item.searchLine}</Text>

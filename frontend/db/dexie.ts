@@ -54,6 +54,14 @@ function* chunkArray<T>(array: T[], chunkSize: number): IterableIterator<T[]> {
   }
 }
 
+/**
+ * Inserts hymns, packs, and slides into the database in chunks.
+ * @param hymns - An array of Hymn objects to insert.
+ * @param packs - An array of HymnsPack objects to insert.
+ * @param slides - An array of Slide objects to insert.
+ * @param chunkSize - The size of each chunk to insert at a time (default is 200).
+ * @param onProgress - A callback function that receives the progress percentage as an argument.
+ */
 export async function insert_hymns_and_packs(
   hymns: Array<Hymn>,
   packs: Array<HymnsPack>,
@@ -132,12 +140,22 @@ export async function search_in_slides(q: string) {
   }
 }
 
+/**
+ * Retrieves hymns from the database based on an array of slide objects.
+ * @param slides - An array of Slide objects to retrieve hymns for.
+ * @returns A Promise that resolves to an array of Hymn objects.
+ */
 export function get_hymns_from_slides(slides: Slide[]) {
   return db.hymns.where(":id").anyOf( slides.map(v => v.hymn_uuid) ).toArray((h)=>{
     return h
   })
 }
 
+/**
+ * Retrieves the slides for a given hymn UUID from the database.
+ * @param hymn_uuid - The UUID of the hymn to retrieve slides for.
+ * @returns A Promise that resolves to an array of Slide objects.
+ */
 export function get_slides_of_hymn(hymn_uuid: string) {
   db.slides.count().then(c=>console.log(c));
   return db.transaction('r', [db.hymns, db.slides], async ()=>{
@@ -147,8 +165,57 @@ export function get_slides_of_hymn(hymn_uuid: string) {
   });
 }
 
+/**
+ * Checks if the database is empty by counting the number of hymns.
+ * @returns A Promise that resolves to a boolean indicating whether the database is empty or not.
+ */
 export async function is_db_empty() {
   // for now we check if there's hymns
   const n = await db.hymns.count();
   return n == 0;
+}
+
+
+/**
+ * Get all hymn packs in a database
+ * @returns A Promise that resolves to an array containing all hymn packs.
+ */
+export async function get_all_packs() {
+  const packs: HymnsPack[] = await db.packs.toArray();
+  return packs;
+}
+
+/**
+ * @param uuid string of uuids of hymns
+ * @returns array of Hymns
+ */
+export async function get_hymns_by_uuid(uuid: string[]) {
+  const hymns = await db.hymns.bulkGet(uuid)
+  return hymns
+}
+
+/**
+ * 
+ * @param uuid string of uuid of pack
+ * @returns return pack if found
+ */
+export async function get_pack_by_uuid(uuid: string) {
+  const pack = await db.packs.get(uuid);
+  return pack
+}
+
+
+/**
+ * 
+ * @param pack_uuid uuid of pack
+ * @param page the page number, page must be >= 1
+ * @returns hymns of the page
+ */
+export async function get_pack_hymns_paged(pack_uuid: string, page: number = 1) {
+  // page is assumed to contain 5 results
+  const SIZE_PER_PAGE = 10;
+  const start_idx = (page - 1) * SIZE_PER_PAGE;
+  const hymns_uuids = (await db.packs.get(pack_uuid)).hymns_uuid.slice(start_idx, start_idx + SIZE_PER_PAGE);
+  const hymns = await get_hymns_by_uuid(hymns_uuids);
+  return hymns;
 }

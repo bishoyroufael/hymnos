@@ -1,49 +1,47 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, ScrollView, Pressable } from "react-native";
+import { get_pack_by_uuid, get_pack_hymns_paged } from "../../db/dexie";
+import { Hymn, HymnsPack } from "../../db/models";
 
-interface Hymn {
-  id: string;
-  title: string;
-}
+// interface Hymn {
+//   id: string;
+//   title: string;
+// }
 
-interface HymnPackDetails {
-  id: string;
-  name: string;
-  description: string;
-  creator: string;
-  dateCreated: string;
-  hymns: Hymn[];
-}
+// interface HymnPackDetails {
+//   id: string;
+//   name: string;
+//   description: string;
+//   creator: string;
+//   dateCreated: string;
+//   hymns: Hymn[];
+// }
 
 export default function HymnPack() {
-  const [hymnPackDetails, setHymnPackDetails] =
-    useState<HymnPackDetails | null>(null);
+  const { uuid } = useLocalSearchParams<{uuid: string }>();
+  if (uuid == null){
+    router.navigate("/notfound");
+    return null;
+  }
+  
+  const [hymnPack, setHymnPack] = useState<HymnsPack | null>(null);
+  const [hymnsInPage, setHymnsInPage] = useState<Hymn[]>([]);
 
   // Fetch hymn pack details from backend
   useEffect(() => {
-    console.log("HymnPack useEffect triggered.")
-    fetchHymnPackDetails();
+    get_pack_by_uuid(uuid)
+      .then((p) => {
+        setHymnPack(p);
+        get_pack_hymns_paged(uuid).then((res) => {
+          setHymnsInPage(res);
+        });
+      })
+      .catch((e) => { console.log(e); router.navigate("/notfound"); });
   }, []);
 
-  const fetchHymnPackDetails = async () => {
-    // Replace this with actual backend fetch
-    const fetchedPack: HymnPackDetails = {
-      id: "1",
-      name: "Classic Hymns",
-      description: "A collection of traditional church hymns",
-      creator: "John Doe",
-      dateCreated: "2024-01-01",
-      hymns: [
-        { id: "1", title: "Amazing Grace" },
-        { id: "2", title: "How Great Thou Art" },
-        { id: "3", title: "Holy, Holy, Holy" },
-      ],
-    };
-    setHymnPackDetails(fetchedPack);
-  };
 
-  if (!hymnPackDetails) {
+  if (!hymnPack) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text>Loading...</Text>
@@ -57,15 +55,15 @@ export default function HymnPack() {
         <ScrollView className="flex p-4">
           {/* Hymn Pack Information */}
           <View className="mb-8">
-            <Text className="text-2xl font-bold">{hymnPackDetails.name}</Text>
+            <Text className="text-2xl font-bold">{hymnPack.title}</Text>
             <Text className="text-gray-700 mt-2">
-              {hymnPackDetails.description}
+              {hymnPack.description}
             </Text>
             <Text className="text-gray-500 mt-4">
-              Created by: {hymnPackDetails.creator}
+              Created by: {hymnPack.author}
             </Text>
             <Text className="text-gray-500">
-              Date: {hymnPackDetails.dateCreated}
+              Version: {hymnPack.version}
             </Text>
           </View>
 
@@ -73,8 +71,9 @@ export default function HymnPack() {
           <View>
             <Text className="text-xl font-bold mb-4">Hymns in this Pack</Text>
             <FlatList
-              data={hymnPackDetails.hymns}
-              keyExtractor={(item) => item.id}
+              className="max-h-72"
+              data={hymnsInPage}
+              keyExtractor={(item) => item.uuid}
               renderItem={({ item }) => (
                 <View className="mb-2 p-4 bg-gray-100 rounded-lg">
                   <Text className="font-semibold">{item.title}</Text>
@@ -82,6 +81,7 @@ export default function HymnPack() {
               )}
             />
           </View>
+
         </ScrollView>
       </View>
     </View>

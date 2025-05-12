@@ -8,8 +8,8 @@
 export interface Hymn {
   uuid: string;
   title: string | null;
-  author_words: string | null;
-  author_music: string | null;
+  author: string | null;
+  composer: string | null;
   verses?: string[];
   chorus?: string[];
   slides_order?: string[];

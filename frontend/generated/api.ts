@@ -46,13 +46,13 @@ export interface Hymn {
      * @type {string}
      * @memberof Hymn
      */
-    'author_words': string | null;
+    'author': string | null;
     /**
      * 
      * @type {string}
      * @memberof Hymn
      */
-    'author_music': string | null;
+    'composer': string | null;
     /**
      * 
      * @type {Array<string>}

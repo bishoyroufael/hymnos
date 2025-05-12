@@ -34,10 +34,16 @@ export default function FontMenu({ onFontSelect }: FontMenuProps) {
         onSelect={() => onFontSelect("Amiri_400Regular")}
       />
       <FontPreviewItem
-        fontName="Rubik"
+        fontName="Cairo"
         previewText="تَوِّبْنِي فَأَتُوبَ"
-        fontFamily="Rubik_400Regular"
-        onSelect={() => onFontSelect("Rubik_400Regular")} 
+        fontFamily="Cairo_400Regular"
+        onSelect={() => onFontSelect("Cairo_400Regular")} 
+      />
+      <FontPreviewItem
+        fontName="Lateef"
+        previewText="تَوِّبْنِي فَأَتُوبَ"
+        fontFamily="Lateef_400Regular"
+        onSelect={() => onFontSelect("Lateef_400Regular")} 
       />
       <FontPreviewItem
         fontName="Baloo Bhaijaan 2"

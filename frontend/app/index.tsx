@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { router } from "expo-router";
-import { get_hymns_from_slides, insert_hymns_and_packs, is_db_empty, search_in_slides} from "../db/dexie";
+import { get_all_packs, get_hymns_by_uuid, get_hymns_from_slides, insert_hymns_and_packs, is_db_empty, search_in_slides} from "../db/dexie";
 import * as API from "../generated/";
 import { Hymn, HymnsPack } from "../db/models";
 import { AxiosResponse } from "axios";
@@ -16,6 +16,8 @@ import * as fzstd from "fzstd";
 import SearchResultsList, { SearchResultsListProps } from "../components/SearchResultsList";
 import ProgressBar from "../components/ProgressBar";
 import useHymnosState from "../global";
+import { getLastViewedHymns } from "../db/localstorage";
+
 const HymnosAPI = new API.DefaultApi(new API.Configuration({"basePath":"http://localhost:8000"}))
 
 
@@ -23,7 +25,7 @@ export default memo(function HomePage() {
   console.log("Rendering HomePage");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResultsListProps[]>([])
-
+  
   const [hymnPacks, setHymnPacks] = useState<HymnsPack[]>([]);
 
   // we should think of a mechanism how to store the last viewed hymns in the database
@@ -36,6 +38,13 @@ export default memo(function HomePage() {
     (async () => {
       // we shouldn't fetch anything if the database contain hymns
       if (!await is_db_empty()) {
+        const allPacks = await get_all_packs();
+        setHymnPacks(allPacks);
+        
+        const lastViewedHymnsUuids = getLastViewedHymns()
+        const lastViewedHymns = await get_hymns_by_uuid(lastViewedHymnsUuids)
+        console.log(lastViewedHymns)
+        setLastViewedHymns(lastViewedHymns);
         return
       }
       HymnosAPI.downloadLatestJsonDataLatestDownloadGet({"responseType": "arraybuffer"}).then((res)=>{
@@ -58,7 +67,11 @@ export default memo(function HomePage() {
       }, (r)=>{
         console.error(r)
       })
+
+
     })()
+
+
   },[]) 
 
   // Fetch hymn packs from backend
@@ -110,7 +123,7 @@ export default memo(function HomePage() {
             keyExtractor={(item) => item.uuid}
             horizontal
             renderItem={({ item }) => (
-              <TouchableOpacity className="p-4 bg-gray-100 rounded-lg w-48 mr-2" onPress={() => router.navigate("/hymn/pack")}>
+              <TouchableOpacity className="p-4 bg-gray-100 rounded-lg w-48 mr-2" onPress={() => router.navigate(`/hymn/pack?uuid=${item.uuid}`)}>
                 <Text className="font-semibold">{item.title}</Text>
                 <Text className="text-gray-600 mt-2">{item.description}</Text>
               </TouchableOpacity>
@@ -123,11 +136,14 @@ export default memo(function HomePage() {
           <Text className="text-xl font-bold">Last Viewed Hymns</Text>
           <FlatList
             data={lastViewedHymns}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.uuid}
+            horizontal
             renderItem={({ item }) => (
-              <View className="p-4 bg-gray-100 rounded-lg mb-2">
+              <TouchableOpacity className="p-4 bg-gray-100 rounded-lg w-48 mr-2" onPress={() => router.navigate(`/hymn/presentation?uuid=${item.uuid}`)}>
                 <Text className="font-semibold">{item.title}</Text>
-              </View>
+                <Text className="text-gray-600 mt-2">Author: {item.author}</Text>
+                <Text className="text-gray-600 mt-2">Composer: {item.composer}</Text>
+              </TouchableOpacity>
             )}
           />
         </View>

@@ -43,7 +43,7 @@ function MenuNestedItem({
   );
 }
 
-export default function PresentationSettingsMenu() {
+export default function SlideSettingsMenu() {
   // Access global state updater from Zustand
   const { setPresentationSettings } = useHymnosState();
   const handleBackgroundColorSelect = (color: string) => {
