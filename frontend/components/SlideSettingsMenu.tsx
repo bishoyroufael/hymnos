@@ -5,7 +5,6 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import FontMenu from "./FontMenu";
 import FontSizeAdjuster from "./FontSizeAdjuster";
 import useHymnosState from "../global";
-import { isMobile } from "react-device-detect";
 
 function MenuNestedItem({
   title,
@@ -33,8 +32,6 @@ function MenuNestedItem({
 
 export default function SlideSettingsMenu() {
   // Access global state updater from Zustand
-  const { setPresentationSettings } = useHymnosState();
-export default function PresentationSettingsMenu() {
   const {
     setPresentationSettings,
     activeMenu,
