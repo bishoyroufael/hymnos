@@ -1,20 +1,28 @@
 import React from "react";
-import { View, Text ,Pressable} from "react-native";
+import { View, Text, Pressable } from "react-native";
+import useHymnosState from "../global";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 interface FontMenuProps {
   onFontSelect: (font: string) => void;
 }
 
-function FontPreviewItem({ fontName, previewText, fontFamily ,onSelect}: {
+function FontPreviewItem({
+  fontName,
+  previewText,
+  fontFamily,
+  onSelect,
+}: {
   fontName: string;
   previewText: string;
   fontFamily: string;
-  onSelect: (fontFamily: string) => void;}) {
+  onSelect: (fontFamily: string) => void;
+}) {
   return (
     <View
       className="p-2 hover:bg-slate-300 rounded-md flex-col"
-      onStartShouldSetResponder={() => true} // Enables interaction for View
-      onResponderRelease={() => onSelect(fontFamily)} // Handles font selection
+      onStartShouldSetResponder={() => true}
+      onResponderRelease={() => onSelect(fontFamily)}
     >
       <Text className="font-bold text-sm">{fontName}</Text>
       <Text style={{ fontFamily: fontFamily }} className="text-xl">
@@ -25,8 +33,21 @@ function FontPreviewItem({ fontName, previewText, fontFamily ,onSelect}: {
 }
 
 export default function FontMenu({ onFontSelect }: FontMenuProps) {
+  const { setCurrentView, setActiveMenu } = useHymnosState();
+
+  const handleBack = () => {
+    setCurrentView("main");
+    setActiveMenu(null);
+  };
+
   return (
     <View className="rounded-md bg-slate-200 p-2 flex-col gap-y-1 w-40">
+      <View className="flex-row items-center mb-2">
+        <Pressable onPress={handleBack} className="mr-2">
+          <Ionicons name="arrow-back" size={20} color="black" />
+        </Pressable>
+        <Text className="font-bold">Select Font</Text>
+      </View>
       <FontPreviewItem
         fontName="Amiri"
         previewText="تَوِّبْنِي فَأَتُوبَ"
