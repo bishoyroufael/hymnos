@@ -30,8 +30,8 @@ class Tag(BaseModel):
 class Hymn(BaseModel):
     uuid: str
     title: str | None
-    author_words: str | None
-    author_music: str | None
+    author: str | None
+    composer: str | None
     verses: List[str] = [] # store slide uuid
     chorus: List[str] = [] # store slide uuid
     slides_order: List[str] = [] # store slide ids in order of how to present them 

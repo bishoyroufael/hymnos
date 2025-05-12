@@ -1,3 +1,4 @@
+import uuid
 from pydantic import BaseModel
 from typing import List, Optional
 from pydantic_core import from_json
@@ -31,8 +32,8 @@ def combine_song(title: Optional[str], verses: Optional[List[List[str]]], chorus
 def convert_tasbe7na_to_hymnos(hymns_tasbe7na):
     arabic_hymns = [h for h in hymns_tasbe7na if (detect(combine_song(h.get('title'), h.get('verses'), h.get('chorus')), low_memory=False)['lang'] in ['ar', 'arz', 'fa'] )] 
     hymnos_hymns = [Hymn(uuid=str(uuid4()),title=h.get("title"), 
-                              author_words=None, 
-                              author_music=None) 
+                              author=None, 
+                              composer=None) 
                                         for h in arabic_hymns]
     hymnos_slides = [] 
     for hymnos_hymn, arabic_hymn in zip(hymnos_hymns, arabic_hymns):
@@ -70,12 +71,11 @@ def convert_tasbe7na_to_hymnos(hymns_tasbe7na):
         hymnos_hymn.slides_order = slides_per_hymn_order
 
 
-    # pack_id = "bed3c7ee" #str(uuid.uuid4())[:8]
-    arabic_pack = HymnsPack(uuid=str(int(datetime.now().timestamp())),
+    arabic_pack = HymnsPack(uuid=str(uuid.uuid4()),
                             title="Hymnos Arabic Hymns", 
                             author="Hymnos", 
-                            version="v1.0", 
-                            description="An Arabic collection of hymns collected from varioud resources.",
+                            version="1.0", 
+                            description="An Arabic collection of hymns collected from various resources.",
                             hymns_uuid=[h.uuid for h in hymnos_hymns])
 
     # print(f"Pack containing: {len(arabic_pack.hymns)} hymns")
