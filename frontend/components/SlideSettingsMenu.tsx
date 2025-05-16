@@ -5,6 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import FontMenu from "./FontMenu";
 import FontSizeAdjuster from "./FontSizeAdjuster";
 import useHymnosState from "../global";
+import HymnosText from "./HymnosText";
 
 function MenuNestedItem({
   title,
@@ -17,7 +18,7 @@ function MenuNestedItem({
     <View className="relative">
       <Pressable className="flex-row" onPress={() => onToggle()}>
         <View className="p-2 hover:bg-slate-300 rounded-md flex-row items-center w-full">
-          <Text>{title}</Text>
+          <HymnosText>{title}</HymnosText>
           <Ionicons
             name="chevron-forward"
             size={16}
@@ -95,7 +96,7 @@ export default function SlideSettingsMenu() {
         onToggle={() => handleToggleMenu("Font Family")}
       />
       <View className="flex-row items-center justify-between">
-        <Text className="font p-2">Font Size</Text>
+        <HymnosText className="p-2">Font Size</HymnosText>
         <FontSizeAdjuster />
       </View>
     </View>

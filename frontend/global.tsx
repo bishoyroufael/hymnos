@@ -10,16 +10,10 @@ interface PresentationSettings {
 }
 
 interface HymnosState {
-  isPresentationSettingsIconShown: boolean;
-  isSettingsMenuOpen: boolean;
-  isEditingMode: boolean;
   presentationSettings: PresentationSettings;
   setPresentationSettings: (
     newPresentationSettings: Partial<PresentationSettings>
   ) => void;
-  setIsPresentationSettingsIconShown: (isShown: boolean) => void;
-  setIsSettingsMenuOpen: (isOpen: boolean) => void;
-  setIsEditingMode: (isEditing: boolean) => void;
   setActiveMenu: (menu: string | null) => void;
   syncProgressPercentage: number;
   setSyncProgressPercentage: (progress: number) => void;
@@ -29,14 +23,11 @@ interface HymnosState {
 }
 
 const useHymnosState = create<HymnosState>((set) => ({
-  isPresentationSettingsIconShown: false,
-  isSettingsMenuOpen: false,
-  isEditingMode: false,
   presentationSettings: {
     backgroundColor: "slate-900",
     fontColor: "blue-100",
     font: "Amiri_400Regular",
-    fontSize: 60,
+    fontSize: 80,
   },
   activeMenu: null,
   syncProgressPercentage: 0,
@@ -50,12 +41,6 @@ const useHymnosState = create<HymnosState>((set) => ({
         ...newPresentationSettings,
       },
     })),
-  setIsPresentationSettingsIconShown: (isShown: boolean) =>
-    set(() => ({ isPresentationSettingsIconShown: isShown })),
-  setIsSettingsMenuOpen: (isOpen: boolean) =>
-    set(() => ({ isSettingsMenuOpen: isOpen })),
-  setIsEditingMode: (isEditing: boolean) =>
-    set(() => ({isEditingMode: isEditing})),
   setSyncProgressPercentage:(progress) => 
     set(() => ({ syncProgressPercentage:  progress})),
   setActiveMenu: (menu: string | null) => set((state) => ({ activeMenu: menu })),

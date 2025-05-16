@@ -3,6 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { isMobile } from "react-device-detect";
 import useHymnosState from "../global";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import HymnosText from "./HymnosText";
 
 function ColorRow({
   color,
@@ -66,7 +67,7 @@ export default function ColorPickerMenu({
         <Pressable onPress={handleBack} className="mr-2">
           <Ionicons name="arrow-back" size={20} color="black" />
         </Pressable>
-        <Text className="font-bold">Select Color</Text>
+        <HymnosText className="font-medium">Select Color</HymnosText>
       </View>
       <ColorRow
         color="blue"

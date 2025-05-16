@@ -1,3 +1,4 @@
+import { toast, Slide } from "react-toastify";
 
 export function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ';
@@ -48,3 +49,47 @@ export const normalize_text = function(text: string) {
 
   return text;
 }
+
+  export const emitError = (msg: string) => {
+      toast.error(msg, {
+      position: "top-center",
+      autoClose: 4000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: false,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      transition: Slide
+    })}
+
+  export const emitInfo = (msg: string, onCloseCallback?: ()=>void) => {
+    toast.success(msg, {
+    position: "top-center",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: false,
+    pauseOnHover: false,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+    transition: Slide,
+    onClose(reason) {
+        onCloseCallback?.();
+      }});
+    }
+
+
+  export const emitWarning = (msg: string) => {
+    toast.warning(msg, {
+    position: "top-center",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: false,
+    pauseOnHover: false,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+    transition: Slide,
+    });
+    }

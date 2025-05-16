@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, Pressable } from "react-native";
 import useHymnosState from "../global";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import HymnosText from "./HymnosText";
 
 interface FontMenuProps {
   onFontSelect: (font: string) => void;
@@ -24,7 +25,7 @@ function FontPreviewItem({
       onStartShouldSetResponder={() => true}
       onResponderRelease={() => onSelect(fontFamily)}
     >
-      <Text className="font-bold text-sm">{fontName}</Text>
+      <HymnosText className="text-sm">{fontName}</HymnosText>
       <Text style={{ fontFamily: fontFamily }} className="text-xl">
         {previewText}
       </Text>
@@ -46,7 +47,7 @@ export default function FontMenu({ onFontSelect }: FontMenuProps) {
         <Pressable onPress={handleBack} className="mr-2">
           <Ionicons name="arrow-back" size={20} color="black" />
         </Pressable>
-        <Text className="font-bold">Select Font</Text>
+        <HymnosText className="font-medium">Select Font</HymnosText>
       </View>
       <FontPreviewItem
         fontName="Amiri"

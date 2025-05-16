@@ -1,37 +1,37 @@
 import React from "react"
-import { Pressable, View } from "react-native"
+import { Pressable, View, ViewProps } from "react-native"
 import useHymnosState from "../global";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import SlideSettingsMenu from "./SlideSettingsMenu";
 
-export default function SlideSettingsIcon () {
-  const {
-    isSettingsMenuOpen,
-    setIsSettingsMenuOpen,
-    isPresentationSettingsIconShown,
-    presentationSettings,
-  } = useHymnosState();
+interface SlideSettingsIconProps extends ViewProps {
+  showOnlyIf: boolean
+  shouldOpenMenu: boolean
+  iconClassName: string 
+  onPressCallBack: ()=>void
+}
 
+export default function SlideSettingsIcon ({showOnlyIf, shouldOpenMenu, iconClassName, onPressCallBack, ...rest} : SlideSettingsIconProps) {
   return (
-      isPresentationSettingsIconShown && (
-        <View className="absolute top-4 left-4 z-10 w-auto">
+      showOnlyIf && (
+        <View {...rest}>
           <Pressable
             className="p-2 rounded-full w-auto h-auto"
             onPress={(e) => {
               e.stopPropagation(); // Prevent hiding on menu interaction
-              setIsSettingsMenuOpen(!isSettingsMenuOpen); // Toggle settings menu
-              //console.log("Settings Menu Open:", !isSettingsMenuOpen);
+              onPressCallBack();
             }}
           >
             <Ionicons
               name="settings"
               size={30}
-              className={`text-${presentationSettings.fontColor}`}
+              className={iconClassName}
             />
           </Pressable>
 
+          {/* This should be abstracted and a menu component should be passed from the parent element*/}
           {/* Settings Menu */}
-          {isSettingsMenuOpen && (
+          {shouldOpenMenu && (
             <View
               onStartShouldSetResponder={() => true} // Capture touch events for menu
               onTouchStart={(e) => {

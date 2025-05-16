@@ -4,6 +4,7 @@ import dexieObservable from 'dexie-observable';
 import dexieSyncable from 'dexie-syncable';
 import { Hymn, HymnsPack, Slide, Tag } from './models';
 
+export const SIZE_PER_PAGE = 10;
 
 // Database declaration (move this to its own module also)
 export const db = new Dexie('HymnsDatabase', {"addons":[dexieObservable, dexieSyncable]}) as Dexie & {
@@ -195,6 +196,15 @@ export async function get_hymns_by_uuid(uuid: string[]) {
 }
 
 /**
+ * @param uuid string of uuids of hymn
+ * @returns hymn if present
+ */
+export async function get_hymn_by_uuid(uuid: string) {
+  const hymn = await db.hymns.get(uuid)
+  return hymn
+}
+
+/**
  * 
  * @param uuid string of uuid of pack
  * @returns return pack if found
@@ -213,9 +223,71 @@ export async function get_pack_by_uuid(uuid: string) {
  */
 export async function get_pack_hymns_paged(pack_uuid: string, page: number = 1) {
   // page is assumed to contain 5 results
-  const SIZE_PER_PAGE = 10;
   const start_idx = (page - 1) * SIZE_PER_PAGE;
   const hymns_uuids = (await db.packs.get(pack_uuid)).hymns_uuid.slice(start_idx, start_idx + SIZE_PER_PAGE);
-  const hymns = await get_hymns_by_uuid(hymns_uuids);
+  const hymns = (await get_hymns_by_uuid(hymns_uuids)).toSorted((a,b)=>a.title.localeCompare(b.title));
   return hymns;
+}
+
+
+/**
+ * 
+ * @param updated_slides new slides of already existing hymn
+ * @param hymn_uuid hymn uuid
+ * @returns void
+ */
+export async function update_hymn_with_slides(hymn_uuid: string, updated_slides: Slide[]) {
+  const hymn = await db.hymns.get(hymn_uuid);
+  // 1. Find uuids of slides that user deleted while editing for hymn
+  const new_slides_uuids = updated_slides.map((v)=>v.uuid);
+  const deleted_slides = hymn.slides_order.filter(item => !new_slides_uuids.includes(item));
+  if (deleted_slides.length > 0){
+    db.slides.bulkDelete(deleted_slides);
+  }
+
+  // 2. Add or update new slides in table
+  const _rs = await db.slides.bulkPut(updated_slides, {allKeys: true})
+  
+  // 3. Update hymn slide order
+  hymn.slides_order = new_slides_uuids
+  const _rh = await db.hymns.put(hymn)
+}
+
+
+/**
+ * 
+ * @param pack pack object to be inserted or updated
+ */
+export async function update_or_add_pack(pack: HymnsPack) {
+  const _ = db.packs.put(pack)
+}
+
+
+/**
+ * 
+ * @param hymn hymn object to be inserted or updated
+ */
+export async function update_or_add_hymn(hymn: Hymn) {
+  const _ = db.hymns.put(hymn)
+}
+
+/**
+ * 
+ * @param uuid uuid of hymn to be removed (i.e will also remove references to the hymn in packs and slides)
+ */
+export async function delete_hymn_by_uuid(uuid: string) {
+  const rp = await db.packs.filter((p)=>p.hymns_uuid.includes(uuid)).toArray() // packs having the hymn
+  const updatedPacks = rp.map(p => ({ ...p, hymns_uuid: p.hymns_uuid.filter(u => u !== uuid) }));
+  const _fp = await db.packs.bulkPut(updatedPacks)
+  const _rs = await db.slides.filter((s)=>s.hymn_uuid == uuid).delete()
+  const _rh = db.hymns.delete(uuid);
+}
+
+
+/**
+ * 
+ * @param uuid uuid of pack to be deleted (doesn't delete hymns inside)
+ */
+export async function delete_pack_by_uuid(uuid: string) {
+  const dp = await db.packs.delete(uuid)
 }

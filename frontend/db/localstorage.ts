@@ -1,5 +1,5 @@
 // Note: LLM Generated
-
+// todo: find a proper structured way to do it
 const STORAGE_KEY = 'lastViewedHymns';
 
 // Get hymns from localStorage
