@@ -1,163 +1,289 @@
+import HymnosPageWrapper from "@components/base/HymnosPageWrapper";
+import ConfirmModal from "@components/base/ConfirmModal";
+import EditableTextInput from "@components/base/EditableTextInput";
+import ToolBox from "@components/base/ToolBox";
+import HymnosText from "@components/base/HymnosText";
+import Loader from "@components/base/Loader";
+import {
+  delete_hymn_by_uuid,
+  DEXIE_VERSION,
+  export_hymn,
+  get_hymn_by_uuid,
+  get_slides_of_hymn,
+  update_or_add_hymn,
+} from "@db/dexie";
+import { deleteHymnFromLocalStorage } from "@db/localstorage";
+import { Hymn, Slide } from "@db/models";
+import Feather from "@expo/vector-icons/Feather";
+import { HymnosDataExport, MetaData } from "@utils/exporter";
+import { emitError, emitInfo } from "@utils/notification";
+import Constants from "expo-constants";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, Pressable } from "react-native";
-import { delete_hymn_by_uuid, get_hymn_by_uuid, get_slides_of_hymn, update_or_add_hymn, } from "../../db/dexie";
-import { Hymn, Slide } from "../../db/models";
-import HymnosPageWrapper from "../../components/HymnosPageWrapper";
-import { useConfirmModal } from "../../hooks/useConfirmModal";
-import ConfirmModal from "../../components/ConfirmModal";
-import EditableTextInput from "../../components/EditableTextInput";
-import Toolbox from "../../components/Toolbox";
-import EditToolBox from "../../components/EditToolBox";
 import _ from "lodash";
-import {Slide as SlideAnimation, ToastContainer, toast } from 'react-toastify';
-import { emitError, emitInfo } from "../../db/utils";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import HymnosText from "../../components/HymnosText";
+import React, { useEffect, useState } from "react";
+import { FlatList, Pressable, View } from "react-native";
+import { useConfirmModal } from "../../hooks/useConfirmModal";
 
 export default function HymnDetails() {
-  const { uuid } = useLocalSearchParams<{uuid: string }>();
-  if (uuid == null){
+  const { uuid } = useLocalSearchParams<{ uuid: string }>();
+  if (uuid == null) {
     router.navigate("/notfound");
     return null;
   }
-  
+
   const [hymn, setHymn] = useState<Hymn | null>(null);
   const [hymnBackup, setHymnBackup] = useState<Hymn | null>(null);
   const [slidesInHymn, setSlidesInHymn] = useState<Slide[]>([]);
   const [isEditingHymn, setIsEditingHymn] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const handleInputChange = (key: string, value: string) => {
-    setHymn(prev => ({ ...prev, [key]: value}))
+    setHymn((prev) => ({ ...prev, [key]: value }));
   };
 
   const confirmModal = useConfirmModal();
 
+  const handleExport = () => {
+    setIsExporting(true);
+    export_hymn(uuid)
+      .then((data) => {
+        const metadata: MetaData = {
+          hymnos_version: Constants.expoConfig.version,
+          dexie_version: DEXIE_VERSION.toString(),
+          user_agent: window.navigator.userAgent,
+        };
+        const dataExport: HymnosDataExport = {
+          hymns: [data.hymn],
+          packs: [],
+          slides: data.slides,
+          metadata: metadata,
+        };
+        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+          JSON.stringify(dataExport),
+        )}`;
+        const link = document.createElement("a");
+        link.href = jsonString;
+        link.download = `hymn_export_${uuid}.json`;
+        link.click();
+
+        // ✅ move this here
+        setIsExporting(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsExporting(false); // also ensure false on error
+      });
+  };
 
   // Fetch hymn pack details from backend
   useEffect(() => {
     get_hymn_by_uuid(uuid)
       .then((h) => {
         setHymn(h);
-        setHymnBackup(_.cloneDeep(h))
+        setHymnBackup(_.cloneDeep(h));
         get_slides_of_hymn(uuid).then((slides) => {
           setSlidesInHymn(slides);
         });
       })
-      .catch((e) => { console.log(e); router.navigate("/notfound"); });
+      .catch((e) => {
+        console.log(e);
+        router.navigate("/notfound");
+      });
   }, []);
 
-
-  if (!hymn) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <HymnosText>Loading...</HymnosText>
-      </View>
-    );
+  if (!hymn || isExporting) {
+    return <Loader />;
   }
 
+  const handleDeleteHymn = () => {
+    delete_hymn_by_uuid(uuid).then(() => {
+      setIsEditingHymn(false);
+      deleteHymnFromLocalStorage(uuid); // delete from LS if exists
+      emitInfo("Hymn was deleted! Returning to home page..", () =>
+        router.navigate("/"),
+      );
+    });
+  };
+  const handleCancel = () => {
+    setHymn(_.cloneDeep(hymnBackup));
+    setIsEditingHymn(false);
+  };
+  const handleSubmit = () => {
+    if (hymn.title.trim().length < 10) {
+      emitError("Hymn title should have more than 10 characters");
+      return;
+    }
+    update_or_add_hymn(hymn).then(() => {
+      setIsEditingHymn(false);
+    });
+  };
+
+  function handleShare(): void {
+    throw new Error("Function not implemented.");
+  }
+
+  function handleOnEdit(): void {
+    setIsEditingHymn(true);
+  }
 
   return (
     <HymnosPageWrapper>
-        <View className="gap-y-4">
-          <ConfirmModal visible={confirmModal.visible} onConfirm={confirmModal.onConfirm} onCancel={confirmModal.hide}/>
-          {/* Hymn Pack Information */}
-          <View className="gap-2">
-            <View className="flex flex-row-reverse items-center gap-2 flex-wrap">
-                <EditableTextInput
-                    rtl
-                    placeholder="اكتب اسم الترنيمه.." 
-                    refKey={"title"}
-                    value={hymn.title}
-                    isEditing={isEditingHymn}
-                    className={`flex-1 text-3xl font-semibold pt-2 pb-2 outline-none text-gray-800 ${isEditingHymn ? "animate-pulse" : ""}`} 
-                    onUpdateText={handleInputChange}
-                />
-                <EditToolBox
-                  deleteIconClassName="text-red-500 hover:text-red-600 duration-100"
-                  submitIconClassName="text-green-400 hover:text-green-500 duration-100"
-                  cancelIconClassName="text-red-400 hover:text-red-500 duration-100"
-                  className="flex flex-row"
-                  showOnlyIf={isEditingHymn}
-                  cancelEditCallback={()=>{setHymn(_.cloneDeep(hymnBackup)); setIsEditingHymn(false);}}
-                  deleteCallback={()=>{
-                    delete_hymn_by_uuid(uuid).then(()=>{
-                      setIsEditingHymn(false);
-                      emitInfo("Hymn was deleted! Returning to home page..", ()=>router.navigate("/"))
-                    });
-                  }}
-                  submitEditCallback={()=>{
-                    if (hymn.title.trim().length < 10) {
-                      emitError("Hymn title should have more than 10 characters");
-                      return;
-                    }
-                    update_or_add_hymn(hymn).then(()=>{
-                      setIsEditingHymn(false);
-                    });
-                  }}
-                />
-                <ToastContainer/>
-                <Toolbox
-                  editIconClassName="hover:text-green-600 text-green-500 duration-200"
-                  shareIconClassName="hover:text-blue-600 text-blue-500 duration-200"
-                  className="flex flex-row"
-                  showOnlyIf={!isEditingHymn}
-                  onEnableEdit={()=>{ setIsEditingHymn(true); }}
-                  onShareCallback={()=>{}}
-                />
-            </View>
-            <View className="flex flex-row-reverse gap-2">
-                <HymnosText className="text-gray-800 font-medium">المؤلف:</HymnosText>
-                <EditableTextInput
-                    rtl
-                    placeholder="اكتب اسم المؤلف.." 
-                    refKey={"author"}
-                    value={hymn.author}
-                    isEditing={isEditingHymn}
-                    className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
-                    valueIfEmpty="مجهول"
-                    onUpdateText={handleInputChange}
-                />
-            </View>
-            <View className="flex flex-row-reverse gap-2">
-                <HymnosText className="text-gray-800 font-medium">الملحن:</HymnosText>
-                <EditableTextInput
-                    rtl
-                    placeholder="اكتب اسم الملحن.." 
-                    refKey={"composer"}
-                    value={hymn.composer}
-                    isEditing={isEditingHymn}
-                    className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
-                    valueIfEmpty="مجهول"
-                    onUpdateText={handleInputChange}
-                />
-            </View>
+      <View className="gap-y-4">
+        <ConfirmModal
+          visible={confirmModal.visible}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.hide}
+        />
+        {/* Hymn Pack Information */}
+        <View className="gap-2">
+          <View className="flex flex-row-reverse items-center gap-2 flex-wrap">
+            <EditableTextInput
+              rtl
+              placeholder="اكتب اسم الترنيمه.."
+              refKey={"title"}
+              value={hymn.title}
+              isEditing={isEditingHymn}
+              className={`flex-1 text-3xl font-semibold pt-2 pb-2 outline-none text-gray-800 ${isEditingHymn ? "animate-pulse" : ""}`}
+              onUpdateText={handleInputChange}
+            />
+
+            <ToolBox
+              className="flex flex-row"
+              showOnlyIf={isEditingHymn}
+              actions={[
+                {
+                  key: "delete",
+                  iconName: "trash",
+                  iconClassName: "text-red-500 hover:text-red-600 duration-100",
+                  confirm: true,
+                  onPress: handleDeleteHymn,
+                },
+                {
+                  key: "cancel",
+                  iconName: "x",
+                  iconClassName: "text-red-400 hover:text-red-500 duration-100",
+                  onPress: handleCancel,
+                },
+                {
+                  key: "submit",
+                  iconName: "check",
+                  iconClassName:
+                    "text-green-400 hover:text-green-500 duration-100",
+                  confirm: true,
+                  onPress: handleSubmit,
+                },
+              ]}
+            />
+
+            <ToolBox
+              showOnlyIf={!isEditingHymn}
+              className="flex flex-row"
+              actions={[
+                {
+                  key: "export",
+                  iconName: "download",
+                  onPress: handleExport,
+                  iconClassName:
+                    "hover:text-blue-600 text-blue-500 duration-200",
+                },
+                {
+                  key: "share",
+                  iconName: "share-2",
+                  onPress: handleShare,
+                  iconClassName:
+                    "hover:text-blue-600 text-blue-500 duration-200",
+                },
+                {
+                  key: "edit",
+                  iconName: "edit",
+                  onPress: handleOnEdit,
+                  iconClassName:
+                    "hover:text-green-600 text-green-500 duration-200",
+                },
+              ]}
+            />
           </View>
-          {/* Hymn Titles */}
-          <View className="justify-center gap-y-4">
-            <HymnosText className="text-2xl font-semibold text-gray-800">كلام الترنيمه</HymnosText>
-             {slidesInHymn.length != 0 ?  
+          <View className="flex flex-row-reverse gap-2">
+            <HymnosText className="text-gray-800 font-medium">
+              المؤلف:
+            </HymnosText>
+            <EditableTextInput
+              rtl
+              placeholder="اكتب اسم المؤلف.."
+              refKey={"author"}
+              value={hymn.author}
+              isEditing={isEditingHymn}
+              className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
+              valueIfEmpty="مجهول"
+              onUpdateText={handleInputChange}
+            />
+          </View>
+          <View className="flex flex-row-reverse gap-2">
+            <HymnosText className="text-gray-800 font-medium">
+              الملحن:
+            </HymnosText>
+            <EditableTextInput
+              rtl
+              placeholder="اكتب اسم الملحن.."
+              refKey={"composer"}
+              value={hymn.composer}
+              isEditing={isEditingHymn}
+              className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
+              valueIfEmpty="مجهول"
+              onUpdateText={handleInputChange}
+            />
+          </View>
+        </View>
+        {/* Hymn Titles */}
+        <View className="justify-center gap-y-4">
+          <HymnosText className="text-2xl font-semibold text-gray-800">
+            كلام الترنيمه
+          </HymnosText>
+          {slidesInHymn.length != 0 ? (
             <FlatList
-            className="h-[60vh]"
-            data={slidesInHymn}
-            keyExtractor={(item) => item.uuid}
-            contentContainerClassName="gap-y-2"
-            renderItem={({ item }) => (
-              <View className={`border-2 border-gray-200 flex flex-row w-full justify-center items-center p-1 gap-1 bg-gray-100 rounded-lg `}>
-                  <Pressable disabled={isEditingHymn} className="p-4 rounded-lg flex-1" onPress={()=>{router.navigate(`/hymn/presentation?uuid=${uuid}`)}}>
-                    <HymnosText className={`whitespace-pre-line text-2xl text-center ${isEditingHymn ? "text-gray-500" : "text-gray-800"}`}>{item.lines.join("\n")}</HymnosText>
+              className="h-[60vh]"
+              data={slidesInHymn}
+              keyExtractor={(item) => item.uuid}
+              contentContainerClassName="gap-y-2"
+              renderItem={({ item }) => (
+                <View
+                  className={`border-2 border-gray-200 flex flex-row w-full justify-center items-center p-1 gap-1 bg-gray-100 rounded-lg `}
+                >
+                  <Pressable
+                    disabled={isEditingHymn}
+                    className="p-4 rounded-lg flex-1"
+                    onPress={() => {
+                      router.navigate(`/hymn/presentation?uuid=${uuid}`);
+                    }}
+                  >
+                    <HymnosText
+                      className={`whitespace-pre-line text-2xl text-center ${isEditingHymn ? "text-gray-500" : "text-gray-800"}`}
+                    >
+                      {item.lines.join("\n")}
+                    </HymnosText>
                   </Pressable>
                 </View>
               )}
-              /> : 
-                <Pressable onPress={()=>router.navigate(`/hymn/presentation?uuid=${hymn.uuid}`)} className="h-[60vh] flex justify-center self-center bg-gray-100 rounded-lg hover:bg-gray-200 w-full duration-100">
-                  <HymnosText className="text-3xl text-center text-gray-800">اضف كلمات الترنيمه</HymnosText>
-                  <Ionicons name="add" size={40} className="self-center text-gray-800"/>
-                </Pressable>
-            }
-
-          </View>
+            />
+          ) : (
+            <Pressable
+              onPress={() =>
+                router.navigate(`/hymn/presentation?uuid=${hymn.uuid}&isNew`)
+              }
+              className="h-[60vh] flex justify-center self-center bg-gray-100 rounded-lg hover:bg-gray-200 w-full duration-100"
+            >
+              <HymnosText className="text-3xl text-center text-gray-800">
+                اضف كلمات الترنيمه
+              </HymnosText>
+              <Feather
+                name="plus"
+                size={40}
+                className="self-center text-gray-800"
+              />
+            </Pressable>
+          )}
         </View>
+      </View>
     </HymnosPageWrapper>
   );
 }

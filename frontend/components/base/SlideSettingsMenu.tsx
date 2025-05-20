@@ -1,11 +1,11 @@
 import React from "react";
 import { View, Text, Pressable, SafeAreaView } from "react-native";
 import ColorPickerMenu from "./ColorPickerMenu";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Feather from "@expo/vector-icons/Feather";
 import FontMenu from "./FontMenu";
 import FontSizeAdjuster from "./FontSizeAdjuster";
-import useHymnosState from "../global";
-import HymnosText from "./HymnosText";
+import useHymnosState from "../../global";
+import HymnosText from "@components/base/HymnosText";
 
 function MenuNestedItem({
   title,
@@ -19,8 +19,8 @@ function MenuNestedItem({
       <Pressable className="flex-row" onPress={() => onToggle()}>
         <View className="p-2 hover:bg-slate-300 rounded-md flex-row items-center w-full">
           <HymnosText>{title}</HymnosText>
-          <Ionicons
-            name="chevron-forward"
+          <Feather
+            name="chevron-right"
             size={16}
             color="black"
             className="ml-auto"

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
-import useHymnosState from "../global";
-import HymnosText from "./HymnosText";
+import useHymnosState from "../../global";
+import HymnosText from "@components/base/HymnosText";
 
 interface FontSizeAdjusterProps {
   onFontSizeChange?: (size: number) => void; // callback
@@ -35,7 +35,7 @@ const FontSizeAdjuster: React.FC<FontSizeAdjusterProps> = ({
         onPress={handleDecrease}
         className="px-2 py-1 bg-gray-300 rounded select-none"
       >
-       <HymnosText>-</HymnosText>
+        <HymnosText>-</HymnosText>
       </Pressable>
       <HymnosText>{fontSize}</HymnosText>
       <Pressable

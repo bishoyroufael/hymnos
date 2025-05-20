@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
-import useHymnosState from "../global";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import HymnosText from "./HymnosText";
+import useHymnosState from "../../global";
+import Feather from "@expo/vector-icons/Feather";
+import HymnosText from "@components/base/HymnosText";
 
 interface FontMenuProps {
   onFontSelect: (font: string) => void;
@@ -45,7 +45,7 @@ export default function FontMenu({ onFontSelect }: FontMenuProps) {
     <View className="rounded-md bg-slate-200 p-2 flex-col gap-y-1 w-40">
       <View className="flex-row items-center mb-2">
         <Pressable onPress={handleBack} className="mr-2">
-          <Ionicons name="arrow-back" size={20} color="black" />
+          <Feather name="arrow-left" size={20} color="black" />
         </Pressable>
         <HymnosText className="font-medium">Select Font</HymnosText>
       </View>
@@ -59,13 +59,13 @@ export default function FontMenu({ onFontSelect }: FontMenuProps) {
         fontName="Cairo"
         previewText="تَوِّبْنِي فَأَتُوبَ"
         fontFamily="Cairo_400Regular"
-        onSelect={() => onFontSelect("Cairo_400Regular")} 
+        onSelect={() => onFontSelect("Cairo_400Regular")}
       />
       <FontPreviewItem
         fontName="Lateef"
         previewText="تَوِّبْنِي فَأَتُوبَ"
         fontFamily="Lateef_400Regular"
-        onSelect={() => onFontSelect("Lateef_400Regular")} 
+        onSelect={() => onFontSelect("Lateef_400Regular")}
       />
       <FontPreviewItem
         fontName="Baloo Bhaijaan 2"

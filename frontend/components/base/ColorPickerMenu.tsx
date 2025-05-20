@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { isMobile } from "react-device-detect";
-import useHymnosState from "../global";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import HymnosText from "./HymnosText";
+import useHymnosState from "../../global";
+import Feather from "@expo/vector-icons/Feather";
+import HymnosText from "@components/base/HymnosText";
 
 function ColorRow({
   color,
@@ -29,8 +29,8 @@ function ColorRow({
             onResponderRelease={() => onSelectColor(colorValue)}
           >
             {isSelected && (
-              <Ionicons
-                name="checkmark"
+              <Feather
+                name="check"
                 size={14}
                 color="white"
                 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
@@ -65,7 +65,7 @@ export default function ColorPickerMenu({
     >
       <View className="flex-row items-center mb-2">
         <Pressable onPress={handleBack} className="mr-2">
-          <Ionicons name="arrow-back" size={20} color="black" />
+          <Feather name="arrow-left" size={20} color="black" />
         </Pressable>
         <HymnosText className="font-medium">Select Color</HymnosText>
       </View>

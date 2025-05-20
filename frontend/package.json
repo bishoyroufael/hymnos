@@ -28,8 +28,8 @@
     "dexie-observable": "^4.0.1-beta.13",
     "dexie-react-hooks": "^1.1.7",
     "dexie-syncable": "^4.0.1-beta.13",
-    "expo": "^52.0.30",
-    "expo-constants": "~17.0.5",
+    "expo": "~52.0.46",
+    "expo-constants": "~17.0.8",
     "expo-crypto": "~14.0.2",
     "expo-font": "~13.0.3",
     "expo-key-event": "^1.1.0",
@@ -40,6 +40,7 @@
     "expo-status-bar": "~2.0.1",
     "fzstd": "^0.1.1",
     "indexeddbshim": "^15.2.0",
+    "install": "^0.13.0",
     "lodash": "^4.17.21",
     "nativewind": "^4.1.23",
     "react": "18.3.1",
@@ -54,7 +55,9 @@
     "react-native-web": "~0.19.13",
     "react-toastify": "^11.0.5",
     "tailwindcss": "^3.4.14",
-    "zustand": "^5.0.1"
+    "zustand": "^5.0.1",
+    "expo-document-picker": "~13.0.3",
+    "expo-image": "~2.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

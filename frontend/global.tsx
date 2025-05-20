@@ -1,5 +1,6 @@
 // contain code regarding global state managment using Zustand
 
+import { Dimensions } from "react-native";
 import { create } from "zustand";
 
 interface PresentationSettings {
@@ -27,7 +28,7 @@ const useHymnosState = create<HymnosState>((set) => ({
     backgroundColor: "slate-900",
     fontColor: "blue-100",
     font: "Amiri_400Regular",
-    fontSize: 80,
+    fontSize: Dimensions.get("screen").width > 640 ? 80 : 40,
   },
   activeMenu: null,
   syncProgressPercentage: 0,

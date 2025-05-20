@@ -1,11 +1,20 @@
 // Note: LLM Generated
 // todo: find a proper structured way to do it
-const STORAGE_KEY = 'lastViewedHymns';
+const STORAGE_KEY = "lastViewedHymns";
 
 // Get hymns from localStorage
-export function getLastViewedHymns() : string[] {
+export function getLastViewedHymns(): string[] {
   const data = localStorage.getItem(STORAGE_KEY);
   return data ? JSON.parse(data) : [];
+}
+
+export function deleteHymnFromLocalStorage(uuid: string) {
+  let hymns = getLastViewedHymns();
+
+  // filter to get all hymns except the one needed to be deleted
+  hymns = hymns.filter((id: string) => id !== uuid);
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(hymns));
 }
 
 // Add a new hymn UUID to the list

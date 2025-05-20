@@ -3,6 +3,7 @@ import { generateRandomString, normalize_text } from './utils';
 import dexieObservable from 'dexie-observable';
 import dexieSyncable from 'dexie-syncable';
 import { Hymn, HymnsPack, Slide, Tag } from './models';
+import { HymnosDataExport } from '@utils/exporter';
 
 export const SIZE_PER_PAGE = 10;
 
@@ -13,6 +14,8 @@ export const db = new Dexie('HymnsDatabase', {"addons":[dexieObservable, dexieSy
   slides: EntityTable<Slide, 'uuid'>;
   tags: EntityTable<Tag, 'uuid'>;
 };
+
+export const DEXIE_VERSION = Dexie.version
 
 db.version(1).stores({
   hymns: '$$uuid',
@@ -124,11 +127,12 @@ export async function search_in_slides(q: string) {
   const startTime = performance.now()
   console.log("search working in progress");
   // Get prefixes and run search over word splits
-  const prefixes = q.trim().split(" ").map(w=>normalize_text(w));
+  const prefixes = [...new Set(q.trim().split(" ").map(w=>normalize_text(w)))];
+  console.log(prefixes);
   try {
     const slides = await find_in_slides(prefixes);
-    // const endTime = performance.now()
-    // console.log(`took ${endTime - startTime} milliseconds`)
+    const endTime = performance.now()
+    console.log(`took ${endTime - startTime} milliseconds`)
     const slidesArr: Slide[] = [];
     // todo: how to convert this wierd generator to an array of slides
     for (const ss of slides) {
@@ -158,7 +162,7 @@ export function get_hymns_from_slides(slides: Slide[]) {
  * @returns A Promise that resolves to an array of Slide objects.
  */
 export function get_slides_of_hymn(hymn_uuid: string) {
-  db.slides.count().then(c=>console.log(c));
+  // db.slides.count().then(c=>console.log(c));
   return db.transaction('r', [db.hymns, db.slides], async ()=>{
     const slides_order  = (await db.hymns.get(hymn_uuid)).slides_order;
     const slides: Slide[] = await db.slides.bulkGet(slides_order)
@@ -290,4 +294,51 @@ export async function delete_hymn_by_uuid(uuid: string) {
  */
 export async function delete_pack_by_uuid(uuid: string) {
   const dp = await db.packs.delete(uuid)
+}
+
+
+
+/**
+ * 
+ * @param uuid uuid of hymn to export
+ * @returns object containing hymn and slides of hymn
+ */
+export async function export_hymn(uuid: string) {
+  const hymn = await get_hymn_by_uuid(uuid)
+  const slides = await db.slides.bulkGet(hymn.slides_order)
+  return {
+    hymn: hymn,
+    slides: slides
+  }
+}
+
+/**
+ * 
+ * @param uuid uuid of pack to export
+ * @returns object containing pack and its related hymns and slides
+ */
+export async function export_pack(uuid: string) { 
+  const pack = await db.packs.get(uuid);
+  const hymns = await db.hymns.bulkGet(pack.hymns_uuid);
+  const slideGroups = await Promise.all(
+      hymns.map(h => db.slides.bulkGet(h.slides_order))
+  );
+  const slides: Slide[] = slideGroups.flat();
+
+  return {
+    pack: pack,
+    hymns: hymns,
+    slides: slides
+  }
+}
+
+
+/**
+ * 
+ * @param data data from an export to import to the database
+ */
+export async function import_data(data: HymnosDataExport) {
+  const _hp = await db.packs.bulkPut(data.packs)
+  const _hs = await db.slides.bulkPut(data.slides)
+  const _hh = await db.hymns.bulkPut(data.hymns)
 }
