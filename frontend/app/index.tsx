@@ -153,11 +153,7 @@ export default memo(function HomePage() {
       <ScrollView contentContainerClassName="gap-y-4">
         <View className="gap-y-4">
           <View className="flex flex-row justify-between items-center gap-6">
-            <CreateOrUploadToolBox
-              onAddCallback={() => router.navigate("/create/pack")}
-              onUploadCallback={handleImport}
-            />
-            <View className="h-0.5 bg-gray-300 flex-1 items-center justify-center"></View>
+            <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
             <HymnosText className="text-2xl font-medium text-gray-800">
               مكاتب الترانيم
             </HymnosText>
@@ -175,11 +171,7 @@ export default memo(function HomePage() {
         </View>
         <View className="gap-y-4">
           <View className="flex flex-row justify-between items-center gap-6">
-            <CreateOrUploadToolBox
-              onAddCallback={() => router.navigate("/create/hymn")}
-              onUploadCallback={handleImport}
-            />
-            <View className="h-0.5 bg-gray-300 flex-1 items-center justify-center"></View>
+            <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
             <HymnosText className="text-2xl font-medium text-gray-800">
               الترانيم السابقه
             </HymnosText>

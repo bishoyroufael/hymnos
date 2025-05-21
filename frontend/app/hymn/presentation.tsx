@@ -18,8 +18,10 @@ import useHymnosState from "../../global";
 // import Toolbox from "@components/Toolbox";
 import HymnosText from "@components/base/HymnosText";
 import Loader from "@components/base/Loader";
-import SlideSettingsMenu from "@components/base/SlideSettingsMenu";
+import SlideSettingsMenu from "@components/menus/SlideSettingsMenu";
 import { addLastViewedHymn } from "@db/localstorage";
+import Menu from "@components/base/Menu";
+import ColorPickerMenu from "@components/menus/ColorPickerMenu";
 
 const screenWidth = Dimensions.get("screen").width;
 

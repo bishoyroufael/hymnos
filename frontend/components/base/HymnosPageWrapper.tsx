@@ -1,24 +1,68 @@
 import HymnosText from "@components/base/HymnosText";
+import Menu from "@components/base/Menu";
 import ToolBox from "@components/base/ToolBox";
-import React from "react";
+import Feather from "@expo/vector-icons/Feather";
+import { router } from "expo-router";
+import React, { useState } from "react";
 import { Image, Pressable, View } from "react-native";
 import { ToastContainer } from "react-toastify";
 
 function Header() {
+  const [openMenu, setOpenMenu] = useState(false);
   return (
-    <View className="w-10/12 self-center flex-row items-center justify-between p-4 border border-gray-300 shadow rounded-lg bg-slate-50 hover:bg-slate-100 duration-200 mt-2">
+    <View
+      style={{ direction: "rtl" }}
+      className="z-10 w-10/12 self-center flex-row items-center justify-between p-4 border border-gray-300 shadow rounded-lg bg-slate-50 hover:bg-slate-100 duration-200 mt-2"
+    >
       {/* Left: Menu */}
-      <View className="flex-1 flex-row gap-4">
-        <Pressable>
-          <HymnosText className="text-sky-700 hover:text-sky-800 duration-200">
+      <View className="flex-1 flex-row gap-4 items-center">
+        <Pressable onPress={() => router.navigate("/")}>
+          {/* <HymnosText className="text-sky-700 hover:text-sky-800 duration-200">
             Home
-          </HymnosText>
+          </HymnosText> */}
+          <Feather
+            name="home"
+            size={25}
+            className="text-sky-700 hover:text-sky-800 duration-200"
+          />
         </Pressable>
-        <Pressable>
-          <HymnosText className="text-sky-700 hover:text-sky-800 duration-200">
+        <Pressable onPress={() => setOpenMenu((prev) => !prev)}>
+          {/* <HymnosText className="text-sky-700 hover:text-sky-800 duration-200">
             Create
-          </HymnosText>
+          </HymnosText> */}
+          <Feather
+            name={!openMenu ? "edit" : "x"}
+            size={25}
+            className="text-sky-700 hover:text-sky-800 duration-200"
+          />
         </Pressable>
+        {openMenu && (
+          <View
+            className="absolute top-16 left-12 right-12 w-auto"
+            style={{ direction: "rtl" }}
+          >
+            <Menu
+              className="w-52 bg-slate-200 h-fit rounded-md p-2 gap-1 flex flex-col shadow"
+              title="إنشاء"
+              items={[
+                {
+                  title: "ترنيمة",
+                  onPress: () => {
+                    router.navigate("/create/hymn");
+                  },
+                  itemCustomView: <Feather name="music" size={20} />,
+                },
+                {
+                  title: "مكتبة ترانيم",
+                  onPress: () => {
+                    router.navigate("/create/pack");
+                  },
+                  itemCustomView: <Feather name="folder" size={20} />,
+                },
+              ]}
+            />
+          </View>
+        )}
       </View>
 
       {/* Center: Title */}
@@ -29,15 +73,14 @@ function Header() {
       </View>
 
       {/* Right: Hidden buttons with fixed size */}
-      <View className="flex-1">
+      <View className="flex-1 flex-row justify-end">
         <ToolBox
           showOnlyIf={true}
           actions={[
             {
               key: "settings",
               iconName: "settings",
-              iconClassName:
-                "text-sky-700 hover:text-sky-800 duration-200 text-end",
+              iconClassName: "text-sky-700 hover:text-sky-800 duration-200",
               onPress: () => {},
             },
           ]}
