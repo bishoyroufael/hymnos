@@ -11,17 +11,19 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { useConfirmModal } from "@hooks/useConfirmModal";
+import Feather from "@expo/vector-icons/Feather";
 
 export default function HymnPack() {
   // const [searchQuery, setSearchQuery] = useState("");
   const [hymnPack, setHymnPack] = useState<HymnsPack | null>({
-    title: "New Untitled Pack",
+    title: "مكتبه ترانيم جديده",
     author: "Hymnos App",
-    description: "Empty Description of New Untitled Pack",
+    description: "",
     version: "1.0",
     hymns_uuid: [],
     uuid: randomUUID(),
   });
+
   const [isEditingPack, setIsEditingPack] = useState<boolean>(true);
   const confirmModal = useConfirmModal();
   const handleInputChange = (key: string, value: string) => {
@@ -54,38 +56,26 @@ export default function HymnPack() {
   }
   return (
     <HymnosPageWrapper>
-      {/* Hymn Pack Information */}
-      <View className="justify-center">
+      <View className="gap-4 md:w-1/2 w-full self-center border-2 rounded-lg p-6 border-gray-300 shadow hover:border-gray-400 duration-200">
+        {/* Hymn Pack Information */}
         <ConfirmModal
           visible={confirmModal.visible}
           onConfirm={confirmModal.onConfirm}
           onCancel={confirmModal.hide}
         />
-        <View className="flex flex-row items-center gap-2 flex-wrap">
+
+        {/* Title and Submit Icon */}
+        <View className="flex flex-row-reverse items-center gap-2 flex-wrap">
+          <Feather name="folder" size={30} className="text-gray-800" />
           <EditableTextInput
+            rtl
             placeholder="اكتب اسم المكتبه.."
             refKey={"title"}
             value={hymnPack.title}
             isEditing={isEditingPack}
-            className={`flex-1 text-3xl font-semibold pt-2 pb-2 outline-none text-gray-800 ${isEditingPack ? "animate-pulse" : ""}`}
+            className={`flex-1 max-w-full text-3xl font-semibold outline-none text-gray-800 ${isEditingPack ? "animate-pulse" : ""}`}
             onUpdateText={handleInputChange}
           />
-
-          <ToolBox
-            className="flex flex-row"
-            showOnlyIf={isEditingPack}
-            actions={[
-              {
-                key: "submit",
-                iconName: "check",
-                iconClassName:
-                  "text-green-400 hover:text-green-500 duration-100",
-                confirm: true,
-                onPress: handleSubmit,
-              },
-            ]}
-          />
-
           <ToolBox
             showOnlyIf={!isEditingPack}
             className="flex flex-row"
@@ -106,18 +96,31 @@ export default function HymnPack() {
             ]}
           />
         </View>
-        <EditableTextInput
-          placeholder="اكتب وصف المكتبه.."
-          refKey={"description"}
-          value={hymnPack.description}
-          isEditing={isEditingPack}
-          className={`flex-1 pt-2 pb-2 outline-none text-gray-700 ${isEditingPack ? "animate-pulse" : ""}`}
-          onUpdateText={handleInputChange}
-        />
 
+        {/* Description of Pack */}
         <View className="flex flex-row-reverse gap-2 items-center">
+          <Feather name="edit-3" size={20} className="text-gray-800" />
+          <HymnosText className="text-gray-800 font-medium">
+            وصف المكتبه:
+          </HymnosText>
+          <EditableTextInput
+            rtl
+            placeholder="اكتب وصف المكتبه.."
+            refKey={"description"}
+            value={hymnPack.description}
+            isEditing={isEditingPack}
+            className={`flex-1 border border-gray-200 p-2 rounded-md outline-none text-gray-700 ${isEditingPack ? "animate-pulse" : ""}`}
+            onUpdateText={handleInputChange}
+            multiline
+          />
+        </View>
+
+        {/* Author of Pack */}
+        <View className="flex flex-row-reverse gap-2 items-center">
+          <Feather name="user" size={20} className="text-gray-800" />
           <HymnosText className="text-gray-800 font-medium">المؤلف:</HymnosText>
           <EditableTextInput
+            rtl
             placeholder="اكتب مؤلف المكتبه.."
             refKey={"author"}
             value={hymnPack.author}
@@ -126,12 +129,31 @@ export default function HymnPack() {
             onUpdateText={handleInputChange}
           />
         </View>
+
         <HymnosText className="text-gray-500">
-          Version: {hymnPack.version}
+          اصدار: {hymnPack.version}
         </HymnosText>
         <HymnosText className="text-gray-500">
-          Number of Hymns: {hymnPack.hymns_uuid.length}
+          عدد الترانيم: {hymnPack.hymns_uuid.length}
         </HymnosText>
+
+        <View className="flex flex-row-reverse items-center gap-2">
+          <View className="flex-1 bg-gray-200 h-0.5" />
+          <ToolBox
+            className="flex flex-row"
+            showOnlyIf={isEditingPack}
+            actions={[
+              {
+                key: "submit",
+                iconName: "check-circle",
+                iconSize: 35,
+                iconClassName: "text-blue-400 hover:text-blue-500 duration-100",
+                confirm: true,
+                onPress: handleSubmit,
+              },
+            ]}
+          />
+        </View>
       </View>
     </HymnosPageWrapper>
   );

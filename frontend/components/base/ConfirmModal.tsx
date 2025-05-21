@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, Modal, Pressable } from 'react-native';
+import HymnosText from "@components/base/HymnosText";
+import React from "react";
+import { View, Text, Modal, Pressable } from "react-native";
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -11,27 +12,36 @@ interface ConfirmModalProps {
 
 export default function ConfirmModal({
   visible,
-  title = 'Confirm Action',
-  message = 'Are you sure you want to proceed?',
+  title = "تأكيد",
+  message = "هل تريد الاستمرار؟",
   onConfirm,
-  onCancel
-} : ConfirmModalProps) {
+  onCancel,
+}: ConfirmModalProps) {
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View className="flex-1 bg-black/50 justify-center items-center">
         <View className="bg-white rounded-xl p-6 w-80 space-y-4 shadow-xl">
-          <Text className="text-lg font-semibold text-gray-800">{title}</Text>
-          <Text className="text-sm text-gray-600">{message}</Text>
-          <View className="flex-row justify-end space-x-2">
+          <HymnosText className="text-lg font-semibold text-gray-800">
+            {title}
+          </HymnosText>
+          <HymnosText className="text-sm text-gray-600">{message}</HymnosText>
+          <View className="flex flex-row-reverse justify-end space-x-2">
             <Pressable onPress={onCancel}>
-              <Text className="px-4 py-2 text-sm text-gray-600">Cancel</Text>
+              <HymnosText className="px-4 py-2 text-sm text-gray-600">
+                إلغاء
+              </HymnosText>
             </Pressable>
-            <Pressable onPress={onConfirm} className="bg-green-400 rounded">
-              <Text className="px-4 py-2 text-sm text-white">Confirm</Text>
+            <Pressable
+              onPress={onConfirm}
+              className="bg-green-400 rounded hover:bg-green-500 duration-100"
+            >
+              <HymnosText className="px-4 py-2 text-sm text-white">
+                تأكيد
+              </HymnosText>
             </Pressable>
           </View>
         </View>
       </View>
     </Modal>
   );
-};
+}

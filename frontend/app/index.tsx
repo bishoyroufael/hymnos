@@ -16,10 +16,7 @@ import {
 } from "@db/dexie";
 import { getLastViewedHymns } from "@db/localstorage";
 import { Hymn, HymnsPack } from "@db/models";
-import { HymnosDataExport } from "@utils/exporter";
-import { emitError, emitInfo } from "@utils/notification";
 import { AxiosResponse } from "axios";
-import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
 import * as fzstd from "fzstd";
 import React, { memo, useCallback, useEffect, useState } from "react";
@@ -28,6 +25,7 @@ import "../assets/global.css";
 import * as API from "../generated/";
 import useHymnosState from "../global";
 import { Image } from "expo-image";
+import Feather from "@expo/vector-icons/Feather";
 
 const HymnosAPI = new API.DefaultApi(
   new API.Configuration({ basePath: "http://localhost:8000" }),
@@ -49,8 +47,9 @@ export default memo(function HomePage() {
     (async () => {
       // we shouldn't fetch anything if the database contain hymns
       if (!(await is_db_empty())) {
-        const allPacks = await get_all_packs();
-        setHymnPacks(allPacks);
+        // const allPacks = await get_all_packs();
+        // setHymnPacks(allPacks);
+        await updatePacks();
 
         const lastViewedHymnsUuids = getLastViewedHymns();
         // removes undefined elements from previously deleted items
@@ -108,34 +107,16 @@ export default memo(function HomePage() {
     };
   }, [fetchInitialData]);
 
-  const handleImport = async () => {
-    try {
-      const doc = await DocumentPicker.getDocumentAsync({
-        type: "application/json",
-      });
-
-      if (doc && doc.assets && doc.assets.length > 0) {
-        const file = doc.assets[0].file;
-        const content = await file.text();
-
-        const hymnosData: HymnosDataExport = JSON.parse(content);
-        await import_data(hymnosData);
-        const new_updated_packs = await get_all_packs();
-        setHymnPacks(new_updated_packs);
-
-        emitInfo("Successfully imported data!");
-      }
-    } catch (e) {
-      emitError("Error occurred while importing: " + e);
-    }
+  const updatePacks = async () => {
+    const new_updated_packs = await get_all_packs();
+    setHymnPacks(new_updated_packs);
   };
-  // return (<HymnosPageWrapper> <></> </HymnosPageWrapper>)
   return (
-    <HymnosPageWrapper>
-      {/* Search Bar */}
-      <View className="flex items-center justify-end mt-8 gap-y-4 z-20 min-h-[40%]">
+    <HymnosPageWrapper onUploadDataCallback={updatePacks}>
+      {/* Hero Section */}
+      <View className="flex items-center justify-end mt-8 gap-y-4 z-20">
         <View className="flex flex-column items-center gap-6">
-          <HymnosText className="text-7xl md:text-9xl font-light text-gray-400 hover:text-sky-400 duration-200 drop-shadow-[0_5.0px_1.0px_rgba(0,0,0.9,0.8)]">
+          <HymnosText className="text-7xl md:text-9xl font-light text-gray-400 hover:text-sky-400 duration-500 drop-shadow-[0_5.0px_1.0px_rgba(0,0,0.9,0.8)]">
             ϩⲩⲙⲛⲟⲥ
           </HymnosText>
           <HymnosText className="text-md text-gray-600">
@@ -150,13 +131,15 @@ export default memo(function HomePage() {
           }}
         />
       </View>
+      {/* Library Section */}
       <ScrollView contentContainerClassName="gap-y-4">
         <View className="gap-y-4">
-          <View className="flex flex-row justify-between items-center gap-6">
+          <View className="flex flex-row justify-between items-center gap-4">
             <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
             <HymnosText className="text-2xl font-medium text-gray-800">
               مكاتب الترانيم
             </HymnosText>
+            <Feather name="folder" size={20} className="text-gray-800" />
           </View>
           <HorizontalHymnList
             data={hymnPacks}
@@ -170,11 +153,12 @@ export default memo(function HomePage() {
           />
         </View>
         <View className="gap-y-4">
-          <View className="flex flex-row justify-between items-center gap-6">
+          <View className="flex flex-row justify-between items-center gap-4">
             <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
             <HymnosText className="text-2xl font-medium text-gray-800">
               الترانيم السابقه
             </HymnosText>
+            <Feather name="music" size={20} className="text-gray-800" />
           </View>
           <HorizontalHymnList
             data={lastViewedHymns}
@@ -185,7 +169,7 @@ export default memo(function HomePage() {
               router.navigate(`/hymn/presentation?uuid=${item.uuid}`);
             }}
             renderCardDescription={(item) =>
-              `Author: ${item.author || "مجهول"}\nComposer: ${item.composer || "مجهول"}`
+              `المؤلف: ${item.author || "مجهول"}\nالملحن: ${item.composer || "مجهول"}`
             }
           />
         </View>

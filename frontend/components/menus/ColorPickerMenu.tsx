@@ -39,7 +39,7 @@ function ColorRow({
           <Pressable
             key={shade}
             className={`relative bg-${color}-${shade} ${cellSize} rounded-md border-gray-700 border transition duration-100 ease-in-out ${
-              isSelected ? "border-2 border-black" : ""
+              isSelected ? "border-2 border-black scale-90" : ""
             }`}
             onPress={() => {
               onSelectColor(colorValue);
@@ -48,9 +48,8 @@ function ColorRow({
             {isSelected && (
               <Feather
                 name="check"
-                size={14}
-                color="black"
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                size={20}
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black"
               />
               // Displays a checkmark when the color is selected
             )}
@@ -70,8 +69,8 @@ export default function ColorPickerMenu({
 }) {
   // Define colors based on mobile view
   const colors = isMobile
-    ? ["blue", "green", "yellow", "gray"] // Mobile view: 1st, 3rd, 5th, 7th rows
-    : ["blue", "cyan", "green", "red", "yellow", "slate", "gray"]; // Default view: all rows
+    ? ["blue", "green", "yellow", "slate"] // Mobile view: 1st, 3rd, 5th, 7th rows
+    : ["blue", "cyan", "green", "red", "yellow", "gray", "slate"]; // Default view: all rows
   // console.log("CURRENT COLOR COLOR PICKER MENU:", currentColor);
   return (
     <Menu

@@ -1,17 +1,11 @@
-import ToolBox from "@components/base/ToolBox";
 import PlusButton from "@components/base/PlusButton";
+import ToolBox from "@components/base/ToolBox";
 import { get_slides_of_hymn, update_hymn_with_slides } from "@db/dexie";
 import { Slide } from "@db/models";
-import { Amiri_400Regular } from "@expo-google-fonts/amiri";
-import { BalooBhaijaan2_400Regular } from "@expo-google-fonts/baloo-bhaijaan-2";
-import { Cairo_400Regular } from "@expo-google-fonts/cairo";
-import { Lateef_400Regular } from "@expo-google-fonts/lateef";
 import * as Crypto from "expo-crypto";
-import { useFonts } from "expo-font";
 import { useKeyEvent } from "expo-key-event";
 import { router, useLocalSearchParams } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import _, { debounce } from "lodash";
+import _ from "lodash";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Dimensions, Pressable, TextInput, View } from "react-native";
 import useHymnosState from "../../global";
@@ -20,15 +14,14 @@ import HymnosText from "@components/base/HymnosText";
 import Loader from "@components/base/Loader";
 import SlideSettingsMenu from "@components/menus/SlideSettingsMenu";
 import { addLastViewedHymn } from "@db/localstorage";
-import Menu from "@components/base/Menu";
-import ColorPickerMenu from "@components/menus/ColorPickerMenu";
-
-const screenWidth = Dimensions.get("screen").width;
+import { usePresentationFonts } from "@hooks/usePresentationFonts";
+import * as ScreenOrientation from "expo-screen-orientation";
 
 export default function HymnPresentation() {
-  const { uuid, isNew } = useLocalSearchParams<{
+  const { uuid, isNew, startSlide } = useLocalSearchParams<{
     uuid: string;
     isNew: string;
+    startSlide: string;
   }>();
 
   if (uuid == null) {
@@ -63,19 +56,6 @@ export default function HymnPresentation() {
     [slides, presentationSettings, currSlideIdx],
   );
 
-  // debouncing needed for mobile devices due to multiple triggers of onPointerMove event
-  // todo: find if there's a way to eleminate this workaround
-  const showPresentationSettingsIcons = useCallback(
-    debounce(
-      () => {
-        setIsPresentationSettingsIconShown(true);
-      },
-      1000,
-      { leading: true, trailing: false },
-    ),
-    [],
-  );
-
   const focusRef = useRef(null);
 
   const focusTextAreaAndMoveCaretToEnd = () => {
@@ -87,24 +67,28 @@ export default function HymnPresentation() {
     }
   };
 
-  // Handling key events
-  // re-runs on keyEvent change
-  useEffect(() => {
-    if (!slides || slides.length === 0 || !keyEvent) return; // Handle edge case
-    if (keyEvent && keyEvent.key === "Escape") {
+  const handleKeyEvent = (ke: any) => {
+    if (ke && ke.key === "Escape") {
       router.canGoBack() ? router.back() : router.navigate("/");
     }
     setCurrSlideIdx((prevIdx) => {
       const newKey =
-        keyEvent.key === "ArrowRight"
+        ke.key === "ArrowRight"
           ? (prevIdx + 1) % slides.length
-          : keyEvent.key === "ArrowLeft"
+          : ke.key === "ArrowLeft"
             ? (prevIdx + slides.length - 1) % slides.length
             : prevIdx;
 
       // setCurrentTextAreaValue(slides[newKey].lines.join("\n"))
       return newKey; // Return previous index if key is not handled
     });
+  };
+
+  // Handling key events
+  // re-runs on keyEvent change
+  useEffect(() => {
+    if (!slides || slides.length === 0 || !keyEvent) return; // Handle edge case
+    handleKeyEvent(keyEvent);
   }, [keyEvent]);
 
   // Fetch hymn from db using uuid once
@@ -121,6 +105,10 @@ export default function HymnPresentation() {
         } else {
           setSlides(s);
           setbackupSlides(_.cloneDeep(s));
+          const idxFound = s.findIndex((item) => item.uuid == startSlide);
+          if (idxFound != -1) {
+            setCurrSlideIdx(idxFound);
+          }
         }
         addLastViewedHymn(uuid);
       })
@@ -142,22 +130,8 @@ export default function HymnPresentation() {
   }, [isPresentationSettingsIconShown, isSettingsMenuOpen]);
 
   // Font loading
-  const [loaded, error] = useFonts({
-    Amiri_400Regular,
-    Cairo_400Regular,
-    BalooBhaijaan2_400Regular,
-    Lateef_400Regular,
-  });
-
-  useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
-
-  if (!loaded && !error) {
-    return null;
-  }
+  const fontsLoaded = usePresentationFonts();
+  if (!fontsLoaded) return null;
 
   const cancelEditing = () => {
     setSlides(_.cloneDeep(backupSlides));
@@ -213,20 +187,17 @@ export default function HymnPresentation() {
   function handleShare(): void {
     throw new Error("Function not implemented.");
   }
+
   function handleOnEdit(): void {
     setIsEditingMode(true);
     focusTextAreaAndMoveCaretToEnd();
   }
-
   return (
     <View
       className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
-      onPointerMove={() => {
-        showPresentationSettingsIcons(); // Show menu icon on pointer move
-      }}
+      onPointerMove={() => setIsPresentationSettingsIconShown(true)}
     >
       {/* Icons/Tools */}
-
       <View className="absolute top-4 left-4 z-10 w-auto">
         <ToolBox
           showOnlyIf={isPresentationSettingsIconShown}
@@ -322,8 +293,11 @@ export default function HymnPresentation() {
       <Pressable
         className="flex-1 justify-center items-center cursor-default"
         onPress={(e) => {
-          setIsPresentationSettingsIconShown(!isPresentationSettingsIconShown);
+          setIsPresentationSettingsIconShown(true);
           setIsSettingsMenuOpen(false);
+
+          const screenWidth = Dimensions.get("screen").width;
+          console.log(e.nativeEvent.pageX, e.nativeEvent.pageY, screenWidth);
           // For mobile when user clicks on left and right side of the slides
           if (e.nativeEvent.pageX / screenWidth <= 0.25) {
             setCurrSlideIdx((currSlideIdx + slides.length - 1) % slides.length);
@@ -339,6 +313,10 @@ export default function HymnPresentation() {
             readOnly={!isEditingMode}
             caretHidden={!isEditingMode}
             multiline={true}
+            onKeyPress={(e) => {
+              if (isEditingMode) return;
+              handleKeyEvent(e.nativeEvent);
+            }}
             ref={(el) => {
               // @ts-ignore
               textAreaRef(el);
@@ -349,7 +327,7 @@ export default function HymnPresentation() {
               updatedSlide.lines = updatedLineText.split("\n");
               setSlides(slides.with(currSlideIdx, updatedSlide));
             }}
-            className={`no-scrollbar text-center text-${presentationSettings.fontColor} outline-none w-[80%] resize-none ${isEditingMode ? "animate-pulse focus:outline-${presentationSettings.fontColor} pointer-events-auto" : "pointer-events-none"} rounded-lg`}
+            className={`no-scrollbar text-center text-${presentationSettings.fontColor} outline-none w-[80%] resize-none ${isEditingMode ? `animate-pulse focus:outline-${presentationSettings.fontColor}` : ""} rounded-lg`}
             style={{
               fontFamily: presentationSettings.font,
               fontSize: presentationSettings.fontSize,

@@ -6,6 +6,7 @@ import { useConfirmModal } from "@hooks/useConfirmModal";
 interface ToolBoxAction {
   key: string;
   iconName: string;
+  iconSize?: number;
   onPress: () => void;
   confirm?: boolean;
   iconClassName?: string;
@@ -48,7 +49,7 @@ export default function ToolBox({
               >
                 <Feather
                   name={action.iconName as any}
-                  size={25}
+                  size={action.iconSize || 25}
                   className={action.iconClassName}
                 />
               </Pressable>

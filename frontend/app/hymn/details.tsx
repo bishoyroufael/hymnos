@@ -43,6 +43,28 @@ export default function HymnDetails() {
 
   const confirmModal = useConfirmModal();
 
+  const renderItem = ({ item }: { item: Slide }) => (
+    <View
+      className={`border-2 border-gray-200 flex flex-row w-full p-1 bg-gray-100 ${!isEditingHymn ? "hover:bg-gray-200 hover:border-gray-300 duration-100" : ""} rounded-lg`}
+    >
+      <Pressable
+        disabled={isEditingHymn}
+        className="p-4 rounded-lg flex-1"
+        onPress={() => {
+          router.navigate(
+            `/hymn/presentation?uuid=${uuid}&startSlide=${item.uuid}`,
+          );
+        }}
+      >
+        <HymnosText
+          className={`whitespace-pre-line text-3xl font-light text-center ${isEditingHymn ? "text-gray-500" : "text-gray-800"}`}
+        >
+          {item.lines.join("\n")}
+        </HymnosText>
+      </Pressable>
+    </View>
+  );
+
   const handleExport = () => {
     setIsExporting(true);
     export_hymn(uuid)
@@ -99,7 +121,7 @@ export default function HymnDetails() {
     delete_hymn_by_uuid(uuid).then(() => {
       setIsEditingHymn(false);
       deleteHymnFromLocalStorage(uuid); // delete from LS if exists
-      emitInfo("Hymn was deleted! Returning to home page..", () =>
+      emitInfo("تم مسح الترنيمه، جاري العوده الي الرئيسيه..", () =>
         router.navigate("/"),
       );
     });
@@ -128,7 +150,7 @@ export default function HymnDetails() {
 
   return (
     <HymnosPageWrapper>
-      <View className="gap-y-4">
+      <View className="gap-4">
         <ConfirmModal
           visible={confirmModal.visible}
           onConfirm={confirmModal.onConfirm}
@@ -137,13 +159,14 @@ export default function HymnDetails() {
         {/* Hymn Pack Information */}
         <View className="gap-2">
           <View className="flex flex-row-reverse items-center gap-2 flex-wrap">
+            <Feather name="music" size={30} className="text-gray-800" />
             <EditableTextInput
               rtl
               placeholder="اكتب اسم الترنيمه.."
               refKey={"title"}
               value={hymn.title}
               isEditing={isEditingHymn}
-              className={`flex-1 text-3xl font-semibold pt-2 pb-2 outline-none text-gray-800 ${isEditingHymn ? "animate-pulse" : ""}`}
+              className={`flex-1 max-w-full text-3xl font-semibold pt-2 pb-2 outline-none text-gray-800 ${isEditingHymn ? "animate-pulse" : ""}`}
               onUpdateText={handleInputChange}
             />
 
@@ -203,7 +226,9 @@ export default function HymnDetails() {
               ]}
             />
           </View>
-          <View className="flex flex-row-reverse gap-2">
+          {/* Author */}
+          <View className="flex flex-row-reverse gap-2 items-center">
+            <Feather name="user" size={20} className="text-gray-800" />
             <HymnosText className="text-gray-800 font-medium">
               المؤلف:
             </HymnosText>
@@ -218,7 +243,9 @@ export default function HymnDetails() {
               onUpdateText={handleInputChange}
             />
           </View>
-          <View className="flex flex-row-reverse gap-2">
+          {/* Composer */}
+          <View className="flex flex-row-reverse gap-2 items-center">
+            <Feather name="user" size={20} className="text-gray-800" />
             <HymnosText className="text-gray-800 font-medium">
               الملحن:
             </HymnosText>
@@ -234,43 +261,26 @@ export default function HymnDetails() {
             />
           </View>
         </View>
+
         {/* Hymn Titles */}
-        <View className="justify-center gap-y-4">
+        <View className="gap-4">
           <HymnosText className="text-2xl font-semibold text-gray-800">
             كلام الترنيمه
           </HymnosText>
           {slidesInHymn.length != 0 ? (
             <FlatList
-              className="h-[60vh]"
+              className="h-[40vh]"
               data={slidesInHymn}
               keyExtractor={(item) => item.uuid}
               contentContainerClassName="gap-y-2"
-              renderItem={({ item }) => (
-                <View
-                  className={`border-2 border-gray-200 flex flex-row w-full justify-center items-center p-1 gap-1 bg-gray-100 rounded-lg `}
-                >
-                  <Pressable
-                    disabled={isEditingHymn}
-                    className="p-4 rounded-lg flex-1"
-                    onPress={() => {
-                      router.navigate(`/hymn/presentation?uuid=${uuid}`);
-                    }}
-                  >
-                    <HymnosText
-                      className={`whitespace-pre-line text-2xl text-center ${isEditingHymn ? "text-gray-500" : "text-gray-800"}`}
-                    >
-                      {item.lines.join("\n")}
-                    </HymnosText>
-                  </Pressable>
-                </View>
-              )}
+              renderItem={renderItem}
             />
           ) : (
             <Pressable
               onPress={() =>
                 router.navigate(`/hymn/presentation?uuid=${hymn.uuid}&isNew`)
               }
-              className="h-[60vh] flex justify-center self-center bg-gray-100 rounded-lg hover:bg-gray-200 w-full duration-100"
+              className="h-[40vh] flex justify-center self-center bg-gray-100 rounded-lg hover:bg-gray-200 w-full duration-100"
             >
               <HymnosText className="text-3xl text-center text-gray-800">
                 اضف كلمات الترنيمه

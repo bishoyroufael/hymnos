@@ -31,9 +31,9 @@ export default function SearchBar({ onPressItemCallback }: SearchBarProps) {
   return (
     <View className="w-full">
       <TextInput
-        style={{ fontFamily: "Rubik_400Regular" }}
-        className="w-full p-4 border rounded-lg border-gray-200 text-lg text-gray-800 outline-none shadow"
-        placeholder="Search Hymns..."
+        style={{ fontFamily: "Rubik_400Regular", direction: "rtl" }}
+        className="md:w-1/2 md:focus:w-full w-full self-center p-4 border-2 rounded-lg border-gray-400 text-lg text-gray-800 outline-none shadow focus:border-gray-800 duration-500"
+        placeholder="ابحث عن ترانيم.."
         placeholderTextColor="#6b7280" // text-gray-500
         value={searchQuery}
         onChangeText={(searchWord) => {
