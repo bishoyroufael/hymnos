@@ -56,7 +56,7 @@ export default function HymnPack() {
   }
   return (
     <HymnosPageWrapper>
-      <View className="gap-4 md:w-1/2 w-full self-center border-2 rounded-lg p-6 border-gray-300 shadow hover:border-gray-400 duration-200">
+      <View className="flex flex-grow gap-4 md:w-1/2 w-full self-center border-2 rounded-lg p-6 border-gray-300 shadow hover:border-gray-400 duration-200">
         {/* Hymn Pack Information */}
         <ConfirmModal
           visible={confirmModal.visible}
@@ -98,13 +98,16 @@ export default function HymnPack() {
         </View>
 
         {/* Description of Pack */}
-        <View className="flex flex-row-reverse gap-2 items-center">
-          <Feather name="edit-3" size={20} className="text-gray-800" />
-          <HymnosText className="text-gray-800 font-medium">
-            وصف المكتبه:
-          </HymnosText>
+        <View className="flex flex-col gap-2">
+          <View className="flex flex-row-reverse gap-2 items-center">
+            <Feather name="edit-3" size={20} className="text-gray-800" />
+            <HymnosText className="text-gray-800 font-medium">
+              وصف المكتبه:
+            </HymnosText>
+          </View>
           <EditableTextInput
             rtl
+            numberOfLines={5}
             placeholder="اكتب وصف المكتبه.."
             refKey={"description"}
             value={hymnPack.description}
@@ -137,7 +140,7 @@ export default function HymnPack() {
           عدد الترانيم: {hymnPack.hymns_uuid.length}
         </HymnosText>
 
-        <View className="flex flex-row-reverse items-center gap-2">
+        <View className="mt-auto flex-row-reverse items-center gap-2">
           <View className="flex-1 bg-gray-200 h-0.5" />
           <ToolBox
             className="flex flex-row"

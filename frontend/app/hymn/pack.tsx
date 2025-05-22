@@ -51,6 +51,9 @@ export default function HymnPack() {
   const confirmModal = useConfirmModal();
 
   const numColumns = Dimensions.get("screen").width > 768 ? 5 : 1;
+  const pageSize =
+    Dimensions.get("screen").width > 768 ? SIZE_PER_PAGE * 3 : SIZE_PER_PAGE;
+
   // 5 columns for md and large else 1 columns
   const renderItem = ({ item }) => (
     <View className="border-2 border-gray-200 hover:border-gray-300 flex flex-row w-full md:w-[18%] items-center p-2 gap-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-lg">
@@ -129,11 +132,11 @@ export default function HymnPack() {
   };
 
   const refreshHymnsInPage = (pack: HymnsPack, page: number) => {
-    get_pack_hymns_paged(uuid, page).then((res) => {
+    get_pack_hymns_paged(uuid, page, pageSize).then((res) => {
       setHymnsInPage(res);
       setPagingMetaData({
         currentPage: page,
-        maxPage: Math.ceil(pack.hymns_uuid.length / SIZE_PER_PAGE),
+        maxPage: Math.ceil(pack.hymns_uuid.length / pageSize),
       });
     });
   };
@@ -192,225 +195,212 @@ export default function HymnPack() {
 
   return (
     <HymnosPageWrapper>
-      <View className="gap-4">
-        {/* Hymn Pack Information */}
-        <View className="gap-2">
-          <ConfirmModal
-            visible={confirmModal.visible}
-            onConfirm={confirmModal.onConfirm}
-            onCancel={confirmModal.hide}
+      {/* Hymn Pack Information */}
+      <View className="gap-2">
+        <ConfirmModal
+          visible={confirmModal.visible}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.hide}
+        />
+
+        {/* Title and ToolBox */}
+        <View className="flex flex-row-reverse items-center gap-2 flex-wrap">
+          <Feather name="folder" size={30} className="text-gray-800" />
+          <EditableTextInput
+            rtl
+            placeholder="اكتب اسم المكتبه.."
+            refKey={"title"}
+            value={hymnPack.title}
+            isEditing={isEditingPack}
+            className={`flex-1 max-w-full flex-wrap text-3xl font-semibold outline-none text-gray-800 ${isEditingPack ? "animate-pulse" : ""}`}
+            onUpdateText={handleInputChange}
           />
 
-          {/* Title and ToolBox */}
-          <View className="flex flex-row-reverse items-center gap-2 flex-wrap">
-            <Feather name="folder" size={30} className="text-gray-800" />
-            <EditableTextInput
-              rtl
-              placeholder="اكتب اسم المكتبه.."
-              refKey={"title"}
-              value={hymnPack.title}
-              isEditing={isEditingPack}
-              className={`flex-1 max-w-full flex-wrap text-3xl font-semibold outline-none text-gray-800 ${isEditingPack ? "animate-pulse" : ""}`}
-              onUpdateText={handleInputChange}
-            />
+          <ToolBox
+            showOnlyIf={isEditingPack}
+            className="flex flex-row"
+            actions={[
+              {
+                key: "delete",
+                iconName: "trash",
+                onPress: handleDeletePack,
+                confirm: true,
+                iconClassName: "text-red-500 hover:text-red-600 duration-100",
+              },
+              {
+                key: "cancel",
+                iconName: "x",
+                onPress: handleCancel,
+                iconClassName: "text-red-400 hover:text-red-500 duration-100",
+              },
+              {
+                key: "submit",
+                iconName: "check",
+                onPress: handleSubmit,
+                confirm: true,
+                iconClassName:
+                  "text-green-400 hover:text-green-500 duration-100",
+              },
+            ]}
+          />
 
-            <ToolBox
-              showOnlyIf={isEditingPack}
-              className="flex flex-row"
-              actions={[
-                {
-                  key: "delete",
-                  iconName: "trash",
-                  onPress: handleDeletePack,
-                  confirm: true,
-                  iconClassName: "text-red-500 hover:text-red-600 duration-100",
-                },
-                {
-                  key: "cancel",
-                  iconName: "x",
-                  onPress: handleCancel,
-                  iconClassName: "text-red-400 hover:text-red-500 duration-100",
-                },
-                {
-                  key: "submit",
-                  iconName: "check",
-                  onPress: handleSubmit,
-                  confirm: true,
-                  iconClassName:
-                    "text-green-400 hover:text-green-500 duration-100",
-                },
-              ]}
-            />
+          <ToolBox
+            showOnlyIf={!isEditingPack}
+            className="flex flex-row"
+            actions={[
+              {
+                key: "export",
+                iconName: "download",
+                onPress: handleExport,
+                iconClassName: "hover:text-blue-600 text-blue-500 duration-200",
+              },
+              {
+                key: "share",
+                iconName: "share-2",
+                onPress: handleShare,
+                iconClassName: "hover:text-blue-600 text-blue-500 duration-200",
+              },
+              {
+                key: "edit",
+                iconName: "edit",
+                onPress: handleOnEdit,
+                iconClassName:
+                  "hover:text-green-600 text-green-500 duration-200",
+              },
+            ]}
+          />
+        </View>
 
-            <ToolBox
-              showOnlyIf={!isEditingPack}
-              className="flex flex-row"
-              actions={[
-                {
-                  key: "export",
-                  iconName: "download",
-                  onPress: handleExport,
-                  iconClassName:
-                    "hover:text-blue-600 text-blue-500 duration-200",
-                },
-                {
-                  key: "share",
-                  iconName: "share-2",
-                  onPress: handleShare,
-                  iconClassName:
-                    "hover:text-blue-600 text-blue-500 duration-200",
-                },
-                {
-                  key: "edit",
-                  iconName: "edit",
-                  onPress: handleOnEdit,
-                  iconClassName:
-                    "hover:text-green-600 text-green-500 duration-200",
-                },
-              ]}
-            />
-          </View>
-
-          {/* Description of Pack */}
+        {/* Description of Pack */}
+        <View className="flex flex-col gap-2">
           <View className="flex flex-row-reverse gap-2 items-center">
             <Feather name="edit-3" size={20} className="text-gray-800" />
             <HymnosText className="text-gray-800 font-medium">
               وصف المكتبه:
             </HymnosText>
-            <EditableTextInput
-              rtl
-              placeholder="اكتب وصف المكتبه.."
-              refKey={"description"}
-              value={hymnPack.description}
-              isEditing={isEditingPack}
-              className={`flex-1 border border-gray-200 p-2 rounded-md outline-none text-gray-700 ${isEditingPack ? "animate-pulse" : ""}`}
-              // className={`flex-1 pt-2 pb-2 outline-none text-gray-700 ${isEditingPack ? "animate-pulse" : ""}`}
-              onUpdateText={handleInputChange}
-            />
           </View>
+          <EditableTextInput
+            rtl
+            numberOfLines={5}
+            placeholder="اكتب وصف المكتبه.."
+            refKey={"description"}
+            value={hymnPack.description}
+            isEditing={isEditingPack}
+            className={`flex-1 border border-gray-200 p-2 rounded-md outline-none text-gray-700 ${isEditingPack ? "animate-pulse" : ""}`}
+            onUpdateText={handleInputChange}
+            multiline
+          />
+        </View>
 
-          {/* Author of Pack */}
-          <View className="flex flex-row-reverse gap-2 items-center">
-            <Feather name="user" size={20} className="text-gray-800" />
-            <HymnosText className="text-gray-800 font-medium">
-              المؤلف:
-            </HymnosText>
-            <EditableTextInput
-              rtl
-              placeholder="اكتب مؤلف المكتبه.."
-              refKey={"author"}
-              value={hymnPack.author}
-              isEditing={isEditingPack}
-              className={`flex-1 pt-2 pb-2 outline-none text-gray-500 ${isEditingPack ? "animate-pulse" : ""}`}
-              onUpdateText={handleInputChange}
+        {/* Author of Pack */}
+        <View className="flex flex-row-reverse gap-2 items-center">
+          <Feather name="user" size={20} className="text-gray-800" />
+          <HymnosText className="text-gray-800 font-medium">المؤلف:</HymnosText>
+          <EditableTextInput
+            rtl
+            placeholder="اكتب مؤلف المكتبه.."
+            refKey={"author"}
+            value={hymnPack.author}
+            isEditing={isEditingPack}
+            className={`flex-1 pt-2 pb-2 outline-none text-gray-500 ${isEditingPack ? "animate-pulse" : ""}`}
+            onUpdateText={handleInputChange}
+          />
+        </View>
+
+        <HymnosText className="text-gray-500">
+          اصدار: {hymnPack.version}
+        </HymnosText>
+        <HymnosText className="text-gray-500">
+          عدد الترانيم: {hymnPack.hymns_uuid.length}
+        </HymnosText>
+      </View>
+
+      {/* Hymn Titles */}
+      <View className="gap-4 flex-grow">
+        <View className="flex flex-row items-center justify-between">
+          <Pressable
+            onPress={() => {
+              setIsAddingHymn(!isAddingHymn);
+            }}
+          >
+            <Feather
+              name={isAddingHymn ? "x-circle" : "plus-circle"}
+              size={30}
+              className="text-green-400 hover:text-green-500 duration-100"
             />
-          </View>
-
-          <HymnosText className="text-gray-500">
-            اصدار: {hymnPack.version}
-          </HymnosText>
-          <HymnosText className="text-gray-500">
-            عدد الترانيم: {hymnPack.hymns_uuid.length}
+          </Pressable>
+          <HymnosText className="text-2xl font-medium">
+            الترانيم في هذه المكتبه
           </HymnosText>
         </View>
 
-        {/* Hymn Titles */}
-        <View className="gap-4">
-          <View className="flex flex-row items-center justify-between">
-            <Pressable
-              onPress={() => {
-                setIsAddingHymn(!isAddingHymn);
-              }}
-            >
-              <Feather
-                name={isAddingHymn ? "x-circle" : "plus-circle"}
-                size={30}
-                className="text-green-400 hover:text-green-500 duration-100"
-              />
-            </Pressable>
-            <HymnosText className="text-2xl font-medium">
-              الترانيم في هذه المكتبه
-            </HymnosText>
-          </View>
-
-          {isAddingHymn ? (
-            <View>
-              <SearchBar
-                onPressItemCallback={(item) => {
-                  setHymnPack((prev) => {
-                    if (prev.hymns_uuid.includes(item.hymn_uuid)) {
-                      emitWarning("الترنيمه موجوده في المكتبه بالفعل!");
-                      return prev;
-                    }
-                    const withAddedHymn = prev;
-                    withAddedHymn.hymns_uuid.push(item.hymn_uuid);
-                    update_or_add_pack(withAddedHymn).then(() => {
-                      emitInfo("تم اضافه الترنيمه الي المكتبه!");
-                      refreshHymnsInPage(
-                        withAddedHymn,
-                        pagingMetaData.currentPage,
-                      );
-                    });
-                    return withAddedHymn;
-                  });
-                }}
-              />
-            </View>
-          ) : (
-            <View>
-              <FlatList
-                numColumns={numColumns}
-                key={numColumns}
-                columnWrapperClassName={
-                  numColumns == 1 ? "" : "justify-between"
-                }
-                horizontal={false}
-                data={hymnsInPage}
-                keyExtractor={(item) => item.uuid}
-                contentContainerClassName="gap-4"
-                renderItem={renderItem}
-              />
-              <View className="flex flex-row justify-between items-center p-4">
-                <Pressable
-                  disabled={pagingMetaData.currentPage == 1}
-                  onPress={() => {
-                    refreshHymnsInPage(
-                      hymnPack,
-                      pagingMetaData.currentPage - 1,
-                    );
-                  }}
-                >
-                  <Feather
-                    name="chevron-left"
-                    size={30}
-                    className={`${pagingMetaData.currentPage == 1 ? "text-gray-400" : "text-gray-500 hover:scale-110 hover:text-gray-600 duration-100"}`}
-                  />
-                </Pressable>
-                <HymnosText>
-                  Page: {pagingMetaData.currentPage} -{" "}
-                  {pagingMetaData.maxPage}{" "}
-                </HymnosText>
-                <Pressable
-                  disabled={
-                    pagingMetaData.currentPage == pagingMetaData.maxPage
+        {isAddingHymn ? (
+          <View className="h-[70vh]">
+            <SearchBar
+              onPressItemCallback={(item) => {
+                setHymnPack((prev) => {
+                  if (prev.hymns_uuid.includes(item.hymn_uuid)) {
+                    emitWarning("الترنيمه موجوده في المكتبه بالفعل!");
+                    return prev;
                   }
-                  onPress={() => {
+                  const withAddedHymn = prev;
+                  withAddedHymn.hymns_uuid.push(item.hymn_uuid);
+                  update_or_add_pack(withAddedHymn).then(() => {
+                    emitInfo("تم اضافه الترنيمه الي المكتبه!");
                     refreshHymnsInPage(
-                      hymnPack,
-                      pagingMetaData.currentPage + 1,
+                      withAddedHymn,
+                      pagingMetaData.currentPage,
                     );
-                  }}
-                >
-                  <Feather
-                    name="chevron-right"
-                    size={30}
-                    className={`${pagingMetaData.currentPage == pagingMetaData.maxPage ? "text-gray-400" : "text-gray-500 hover:scale-110 hover:text-gray-600 duration-100"}`}
-                  />
-                </Pressable>
-              </View>
+                  });
+                  return withAddedHymn;
+                });
+              }}
+            />
+          </View>
+        ) : (
+          <View className="flex-grow">
+            <FlatList
+              numColumns={numColumns}
+              key={numColumns}
+              columnWrapperClassName={numColumns == 1 ? "" : "justify-between"}
+              horizontal={false}
+              data={hymnsInPage}
+              keyExtractor={(item) => item.uuid}
+              contentContainerClassName="gap-4 flex-1"
+              renderItem={renderItem}
+            />
+            <View className="flex flex-row justify-between items-center p-4">
+              <Pressable
+                disabled={pagingMetaData.currentPage == 1}
+                onPress={() => {
+                  refreshHymnsInPage(hymnPack, pagingMetaData.currentPage - 1);
+                }}
+              >
+                <Feather
+                  name="chevron-left"
+                  size={30}
+                  className={`${pagingMetaData.currentPage == 1 ? "text-gray-400" : "text-gray-500 hover:scale-110 hover:text-gray-600 duration-100"}`}
+                />
+              </Pressable>
+              <HymnosText>
+                Page: {pagingMetaData.currentPage} -{" "}
+                {pagingMetaData.maxPage}{" "}
+              </HymnosText>
+              <Pressable
+                disabled={pagingMetaData.currentPage == pagingMetaData.maxPage}
+                onPress={() => {
+                  refreshHymnsInPage(hymnPack, pagingMetaData.currentPage + 1);
+                }}
+              >
+                <Feather
+                  name="chevron-right"
+                  size={30}
+                  className={`${pagingMetaData.currentPage == pagingMetaData.maxPage ? "text-gray-400" : "text-gray-500 hover:scale-110 hover:text-gray-600 duration-100"}`}
+                />
+              </Pressable>
             </View>
-          )}
-        </View>
+          </View>
+        )}
       </View>
     </HymnosPageWrapper>
   );

@@ -43,7 +43,7 @@ export default function Header({ onUploadDataCallback }: HeaderProps) {
   return (
     <View
       style={{ direction: "rtl" }}
-      className="z-20 w-10/12 self-center flex-row items-center justify-between p-4 border border-gray-300 shadow rounded-lg bg-slate-50 hover:bg-slate-100 duration-200 mt-2"
+      className="z-20 w-10/12 self-center flex-row flex-none items-center justify-between p-4 border border-gray-300 shadow rounded-lg bg-slate-50 hover:bg-slate-100 duration-200 mt-2"
     >
       {/* Left: Menu */}
       <View className="flex-1 flex-row gap-4 items-center">
@@ -63,7 +63,7 @@ export default function Header({ onUploadDataCallback }: HeaderProps) {
         </Pressable>
         {openCreateMenu && (
           <View
-            className="absolute top-16 left-12 right-12 w-auto"
+            className="absolute top-14 left-12 right-12 w-auto"
             style={{ direction: "rtl" }}
           >
             <Menu
@@ -92,7 +92,7 @@ export default function Header({ onUploadDataCallback }: HeaderProps) {
 
       {/* Center: Title */}
       <View className="w-1/3 items-center">
-        <HymnosText className="text-2xl font-light tracking-wide text-sky-800">
+        <HymnosText className="text-lg font-light tracking-wide text-sky-800">
           ϩⲩⲙⲛⲟⲥ
         </HymnosText>
       </View>

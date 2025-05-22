@@ -150,149 +150,141 @@ export default function HymnDetails() {
 
   return (
     <HymnosPageWrapper>
-      <View className="gap-4">
-        <ConfirmModal
-          visible={confirmModal.visible}
-          onConfirm={confirmModal.onConfirm}
-          onCancel={confirmModal.hide}
-        />
-        {/* Hymn Pack Information */}
-        <View className="gap-2">
-          <View className="flex flex-row-reverse items-center gap-2 flex-wrap">
-            <Feather name="music" size={30} className="text-gray-800" />
-            <EditableTextInput
-              rtl
-              placeholder="اكتب اسم الترنيمه.."
-              refKey={"title"}
-              value={hymn.title}
-              isEditing={isEditingHymn}
-              className={`flex-1 max-w-full text-3xl font-semibold pt-2 pb-2 outline-none text-gray-800 ${isEditingHymn ? "animate-pulse" : ""}`}
-              onUpdateText={handleInputChange}
-            />
+      <ConfirmModal
+        visible={confirmModal.visible}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={confirmModal.hide}
+      />
+      {/* Hymn Pack Information */}
+      <View className="gap-2">
+        <View className="flex flex-row-reverse items-center gap-2 flex-wrap">
+          <Feather name="music" size={30} className="text-gray-800" />
+          <EditableTextInput
+            rtl
+            placeholder="اكتب اسم الترنيمه.."
+            refKey={"title"}
+            value={hymn.title}
+            isEditing={isEditingHymn}
+            className={`flex-1 max-w-full text-3xl font-semibold pt-2 pb-2 outline-none text-gray-800 ${isEditingHymn ? "animate-pulse" : ""}`}
+            onUpdateText={handleInputChange}
+          />
 
-            <ToolBox
-              className="flex flex-row"
-              showOnlyIf={isEditingHymn}
-              actions={[
-                {
-                  key: "delete",
-                  iconName: "trash",
-                  iconClassName: "text-red-500 hover:text-red-600 duration-100",
-                  confirm: true,
-                  onPress: handleDeleteHymn,
-                },
-                {
-                  key: "cancel",
-                  iconName: "x",
-                  iconClassName: "text-red-400 hover:text-red-500 duration-100",
-                  onPress: handleCancel,
-                },
-                {
-                  key: "submit",
-                  iconName: "check",
-                  iconClassName:
-                    "text-green-400 hover:text-green-500 duration-100",
-                  confirm: true,
-                  onPress: handleSubmit,
-                },
-              ]}
-            />
+          <ToolBox
+            className="flex flex-row"
+            showOnlyIf={isEditingHymn}
+            actions={[
+              {
+                key: "delete",
+                iconName: "trash",
+                iconClassName: "text-red-500 hover:text-red-600 duration-100",
+                confirm: true,
+                onPress: handleDeleteHymn,
+              },
+              {
+                key: "cancel",
+                iconName: "x",
+                iconClassName: "text-red-400 hover:text-red-500 duration-100",
+                onPress: handleCancel,
+              },
+              {
+                key: "submit",
+                iconName: "check",
+                iconClassName:
+                  "text-green-400 hover:text-green-500 duration-100",
+                confirm: true,
+                onPress: handleSubmit,
+              },
+            ]}
+          />
 
-            <ToolBox
-              showOnlyIf={!isEditingHymn}
-              className="flex flex-row"
-              actions={[
-                {
-                  key: "export",
-                  iconName: "download",
-                  onPress: handleExport,
-                  iconClassName:
-                    "hover:text-blue-600 text-blue-500 duration-200",
-                },
-                {
-                  key: "share",
-                  iconName: "share-2",
-                  onPress: handleShare,
-                  iconClassName:
-                    "hover:text-blue-600 text-blue-500 duration-200",
-                },
-                {
-                  key: "edit",
-                  iconName: "edit",
-                  onPress: handleOnEdit,
-                  iconClassName:
-                    "hover:text-green-600 text-green-500 duration-200",
-                },
-              ]}
-            />
-          </View>
-          {/* Author */}
-          <View className="flex flex-row-reverse gap-2 items-center">
-            <Feather name="user" size={20} className="text-gray-800" />
-            <HymnosText className="text-gray-800 font-medium">
-              المؤلف:
-            </HymnosText>
-            <EditableTextInput
-              rtl
-              placeholder="اكتب اسم المؤلف.."
-              refKey={"author"}
-              value={hymn.author}
-              isEditing={isEditingHymn}
-              className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
-              valueIfEmpty="مجهول"
-              onUpdateText={handleInputChange}
-            />
-          </View>
-          {/* Composer */}
-          <View className="flex flex-row-reverse gap-2 items-center">
-            <Feather name="user" size={20} className="text-gray-800" />
-            <HymnosText className="text-gray-800 font-medium">
-              الملحن:
-            </HymnosText>
-            <EditableTextInput
-              rtl
-              placeholder="اكتب اسم الملحن.."
-              refKey={"composer"}
-              value={hymn.composer}
-              isEditing={isEditingHymn}
-              className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
-              valueIfEmpty="مجهول"
-              onUpdateText={handleInputChange}
-            />
-          </View>
+          <ToolBox
+            showOnlyIf={!isEditingHymn}
+            className="flex flex-row"
+            actions={[
+              {
+                key: "export",
+                iconName: "download",
+                onPress: handleExport,
+                iconClassName: "hover:text-blue-600 text-blue-500 duration-200",
+              },
+              {
+                key: "share",
+                iconName: "share-2",
+                onPress: handleShare,
+                iconClassName: "hover:text-blue-600 text-blue-500 duration-200",
+              },
+              {
+                key: "edit",
+                iconName: "edit",
+                onPress: handleOnEdit,
+                iconClassName:
+                  "hover:text-green-600 text-green-500 duration-200",
+              },
+            ]}
+          />
         </View>
-
-        {/* Hymn Titles */}
-        <View className="gap-4">
-          <HymnosText className="text-2xl font-semibold text-gray-800">
-            كلام الترنيمه
-          </HymnosText>
-          {slidesInHymn.length != 0 ? (
-            <FlatList
-              className="h-[40vh]"
-              data={slidesInHymn}
-              keyExtractor={(item) => item.uuid}
-              contentContainerClassName="gap-y-2"
-              renderItem={renderItem}
-            />
-          ) : (
-            <Pressable
-              onPress={() =>
-                router.navigate(`/hymn/presentation?uuid=${hymn.uuid}&isNew`)
-              }
-              className="h-[40vh] flex justify-center self-center bg-gray-100 rounded-lg hover:bg-gray-200 w-full duration-100"
-            >
-              <HymnosText className="text-3xl text-center text-gray-800">
-                اضف كلمات الترنيمه
-              </HymnosText>
-              <Feather
-                name="plus"
-                size={40}
-                className="self-center text-gray-800"
-              />
-            </Pressable>
-          )}
+        {/* Author */}
+        <View className="flex flex-row-reverse gap-2 items-center">
+          <Feather name="user" size={20} className="text-gray-800" />
+          <HymnosText className="text-gray-800 font-medium">المؤلف:</HymnosText>
+          <EditableTextInput
+            rtl
+            placeholder="اكتب اسم المؤلف.."
+            refKey={"author"}
+            value={hymn.author}
+            isEditing={isEditingHymn}
+            className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
+            valueIfEmpty="مجهول"
+            onUpdateText={handleInputChange}
+          />
         </View>
+        {/* Composer */}
+        <View className="flex flex-row-reverse gap-2 items-center">
+          <Feather name="user" size={20} className="text-gray-800" />
+          <HymnosText className="text-gray-800 font-medium">الملحن:</HymnosText>
+          <EditableTextInput
+            rtl
+            placeholder="اكتب اسم الملحن.."
+            refKey={"composer"}
+            value={hymn.composer}
+            isEditing={isEditingHymn}
+            className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
+            valueIfEmpty="مجهول"
+            onUpdateText={handleInputChange}
+          />
+        </View>
+      </View>
+
+      {/* Hymn Titles */}
+      <View className="gap-4 flex-grow">
+        <HymnosText className="text-2xl font-semibold text-gray-800">
+          كلام الترنيمه
+        </HymnosText>
+        {slidesInHymn.length != 0 ? (
+          <FlatList
+            className=""
+            data={slidesInHymn}
+            keyExtractor={(item) => item.uuid}
+            contentContainerClassName="gap-y-2"
+            renderItem={renderItem}
+          />
+        ) : (
+          <Pressable
+            onPress={() =>
+              router.navigate(`/hymn/presentation?uuid=${hymn.uuid}&isNew`)
+            }
+            className="flex-1 flex justify-center self-center bg-gray-100 rounded-lg hover:bg-gray-200 w-full duration-100"
+          >
+            <HymnosText className="text-3xl text-center text-gray-800">
+              اضف كلمات الترنيمه
+            </HymnosText>
+            <Feather
+              name="plus"
+              size={40}
+              className="self-center text-gray-800"
+            />
+          </Pressable>
+        )}
       </View>
     </HymnosPageWrapper>
   );

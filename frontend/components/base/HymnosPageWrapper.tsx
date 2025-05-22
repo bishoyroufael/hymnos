@@ -20,10 +20,8 @@ export default function HymnosPageWrapper({
       <ToastContainer />
       <ScrollView contentContainerClassName="justify-between h-full w-full flex">
         <Header onUploadDataCallback={onUploadDataCallback} />
-        <View className="flex w-full justify-center items-center">
-          <View className="flex gap-y-4 p-4 h-full self-center justify-center w-10/12">
-            {children}
-          </View>
+        <View className="flex gap-y-4 p-4 self-center justify-start w-10/12 flex-grow">
+          {children}
         </View>
         <Footer />
       </ScrollView>

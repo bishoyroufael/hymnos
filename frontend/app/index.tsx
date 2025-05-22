@@ -3,20 +3,20 @@ import HymnosText from "@components/base/HymnosText";
 import ProgressBar from "@components/base/ProgressBar";
 import SearchBar from "@components/base/SearchBar";
 import {
-  CreateOrUploadToolBox,
   HorizontalHymnList,
   renderSkeletons,
 } from "@components/fractions/home-screen";
 import {
   get_all_packs,
   get_hymns_by_uuid,
-  import_data,
   insert_hymns_and_packs,
   is_db_empty,
 } from "@db/dexie";
 import { getLastViewedHymns } from "@db/localstorage";
 import { Hymn, HymnsPack } from "@db/models";
+import Feather from "@expo/vector-icons/Feather";
 import { AxiosResponse } from "axios";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import * as fzstd from "fzstd";
 import React, { memo, useCallback, useEffect, useState } from "react";
@@ -24,8 +24,6 @@ import { ScrollView, View } from "react-native";
 import "../assets/global.css";
 import * as API from "../generated/";
 import useHymnosState from "../global";
-import { Image } from "expo-image";
-import Feather from "@expo/vector-icons/Feather";
 
 const HymnosAPI = new API.DefaultApi(
   new API.Configuration({ basePath: "http://localhost:8000" }),
@@ -116,11 +114,15 @@ export default memo(function HomePage() {
       {/* Hero Section */}
       <View className="flex items-center justify-end mt-8 gap-y-4 z-20">
         <View className="flex flex-column items-center gap-6">
-          <HymnosText className="text-7xl md:text-9xl font-light text-gray-400 hover:text-sky-400 duration-500 drop-shadow-[0_5.0px_1.0px_rgba(0,0,0.9,0.8)]">
+          {/* <HymnosText className="text-7xl md:text-9xl font-light text-gray-400 hover:text-sky-400 duration-500 drop-shadow-[0_5.0px_1.0px_rgba(0,0,0.9,0.8)]">
             ϩⲩⲙⲛⲟⲥ
-          </HymnosText>
+          </HymnosText> */}
+          <Image
+            source={require("../public/logo512.png")}
+            className="w-48 h-48 drop-shadow-[0_5.0px_4.0px_rgba(0,0,0.8,0.8)] hover:drop-shadow-[0_8.0px_8.0px_rgba(0,0,0.8,0.8)] hover:-translate-y-2 duration-500"
+          />
           <HymnosText className="text-md text-gray-600">
-            مكتبه شامله لعرض الترانيم والليتورجيا الكنسيه
+            مكتبة شاملة لعرض الترانيم والليتورجيا الكنسية.{" "}
           </HymnosText>
         </View>
         {/* Progress Bar */}

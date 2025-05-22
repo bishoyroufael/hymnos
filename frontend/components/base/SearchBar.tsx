@@ -11,6 +11,8 @@ interface SearchBarProps {
 export default function SearchBar({ onPressItemCallback }: SearchBarProps) {
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchIsLoading, setSearchIsLoading] = useState(false);
 
   const searchInDb = async (searchWord: string) => {
     const slides = await search_in_slides(searchWord);
@@ -23,10 +25,11 @@ export default function SearchBar({ onPressItemCallback }: SearchBarProps) {
       title: hymnMap[hymn_uuid],
       searchLine: lines.join(" | "),
     }));
+    setSearchIsLoading(false);
     setSearchResults(sr);
   };
 
-  const throttledSearch = useCallback(throttle(searchInDb, 500), []);
+  const throttledSearch = useCallback(debounce(searchInDb, 500), []);
 
   return (
     <View className="w-full">
@@ -36,18 +39,22 @@ export default function SearchBar({ onPressItemCallback }: SearchBarProps) {
         placeholder="ابحث عن ترانيم.."
         placeholderTextColor="#6b7280" // text-gray-500
         value={searchQuery}
+        onFocus={() => setShowSearchResults(true)}
+        onBlur={() => setShowSearchResults(false)}
         onChangeText={(searchWord) => {
           setSearchQuery(searchWord);
           if (searchWord.trim().length < 3) {
             setSearchResults([]);
             return;
           }
+          setSearchIsLoading(true);
           throttledSearch(searchWord);
         }}
       />
       {/* Drop Down Search Results */}
-      {searchResults.length > 0 && (
+      {showSearchResults && (
         <SearchResultsList
+          isLoading={searchIsLoading}
           onPressItemCallback={onPressItemCallback}
           items={searchResults}
         />
