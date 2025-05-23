@@ -7,7 +7,13 @@ import { useKeyEvent } from "expo-key-event";
 import { router, useLocalSearchParams } from "expo-router";
 import _ from "lodash";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Dimensions, Pressable, TextInput, View } from "react-native";
+import {
+  Dimensions,
+  GestureResponderEvent,
+  Pressable,
+  TextInput,
+  View,
+} from "react-native";
 import useHymnosState from "../../global";
 // import Toolbox from "@components/Toolbox";
 import HymnosText from "@components/base/HymnosText";
@@ -15,7 +21,8 @@ import Loader from "@components/base/Loader";
 import SlideSettingsMenu from "@components/menus/SlideSettingsMenu";
 import { addLastViewedHymn } from "@db/localstorage";
 import { usePresentationFonts } from "@hooks/usePresentationFonts";
-import * as ScreenOrientation from "expo-screen-orientation";
+import { shareText } from "@utils/sharing";
+import { Image } from "expo-image";
 
 export default function HymnPresentation() {
   const { uuid, isNew, startSlide } = useLocalSearchParams<{
@@ -72,15 +79,33 @@ export default function HymnPresentation() {
       router.canGoBack() ? router.back() : router.navigate("/");
     }
     setCurrSlideIdx((prevIdx) => {
+      const slidesWithEndLength = slides.length + 1;
       const newKey =
         ke.key === "ArrowRight"
-          ? (prevIdx + 1) % slides.length
+          ? (prevIdx + 1) % slidesWithEndLength
           : ke.key === "ArrowLeft"
-            ? (prevIdx + slides.length - 1) % slides.length
+            ? (prevIdx + slidesWithEndLength - 1) % slidesWithEndLength
             : prevIdx;
 
-      // setCurrentTextAreaValue(slides[newKey].lines.join("\n"))
       return newKey; // Return previous index if key is not handled
+    });
+  };
+
+  const handleSlidePress = (e: GestureResponderEvent) => {
+    setIsPresentationSettingsIconShown(true);
+    setIsSettingsMenuOpen(false);
+
+    setCurrSlideIdx((prevIdx) => {
+      const screenWidth = Dimensions.get("screen").width;
+      const slidesWithEndLength = slides.length + 1;
+      const newKey =
+        e.nativeEvent.pageX / screenWidth >= 0.75
+          ? (prevIdx + 1) % slidesWithEndLength
+          : e.nativeEvent.pageX / screenWidth <= 0.25
+            ? (prevIdx + slidesWithEndLength - 1) % slidesWithEndLength
+            : prevIdx;
+
+      return newKey;
     });
   };
 
@@ -91,6 +116,10 @@ export default function HymnPresentation() {
     handleKeyEvent(keyEvent);
   }, [keyEvent]);
 
+  const setSlidesStates = (s: Slide[]) => {
+    setSlides(s);
+    setbackupSlides(_.cloneDeep(s));
+  };
   // Fetch hymn from db using uuid once
   useEffect(() => {
     get_slides_of_hymn(uuid)
@@ -99,12 +128,10 @@ export default function HymnPresentation() {
           const emptySlides: Slide[] = [
             { uuid: Crypto.randomUUID(), lines: [], hymn_uuid: uuid },
           ];
-          setSlides(emptySlides);
-          setbackupSlides(_.cloneDeep(emptySlides));
+          setSlidesStates(emptySlides);
           setIsEditingMode(true);
         } else {
-          setSlides(s);
-          setbackupSlides(_.cloneDeep(s));
+          setSlidesStates(s);
           const idxFound = s.findIndex((item) => item.uuid == startSlide);
           if (idxFound != -1) {
             setCurrSlideIdx(idxFound);
@@ -185,13 +212,34 @@ export default function HymnPresentation() {
   };
 
   function handleShare(): void {
-    throw new Error("Function not implemented.");
+    const currSlide = slides[currSlideIdx];
+    shareText(currSlide.lines.join("\n"), window.location.href);
   }
 
   function handleOnEdit(): void {
     setIsEditingMode(true);
     focusTextAreaAndMoveCaretToEnd();
   }
+
+  // Handle Showing Last Empty Slide
+  if (currSlideIdx == slides.length) {
+    return (
+      // Pressable needed on mobile devices to re-trigger handleSlidePress
+      // which allows user to re-visit the previous slides
+      <Pressable
+        onPress={handleSlidePress}
+        className={`cursor-default flex justify-center items-center w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
+      >
+        <View className="w-52 h-60 bg-sky-50 rounded-3xl justify-center items-center">
+          <Image
+            source={require("../../public/logo512.png")}
+            className="w-40 h-40 drop-shadow-[0_5.0px_4.0px_rgba(0,0,0.8,0.8)] hover:drop-shadow-[0_8.0px_8.0px_rgba(0,0,0.8,0.8)] hover:-translate-y-2 duration-500"
+          />
+        </View>
+      </Pressable>
+    );
+  }
+
   return (
     <View
       className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
@@ -292,19 +340,7 @@ export default function HymnPresentation() {
       {/* Hymn Text Display */}
       <Pressable
         className="flex-1 justify-center items-center cursor-default"
-        onPress={(e) => {
-          setIsPresentationSettingsIconShown(true);
-          setIsSettingsMenuOpen(false);
-
-          const screenWidth = Dimensions.get("screen").width;
-          console.log(e.nativeEvent.pageX, e.nativeEvent.pageY, screenWidth);
-          // For mobile when user clicks on left and right side of the slides
-          if (e.nativeEvent.pageX / screenWidth <= 0.25) {
-            setCurrSlideIdx((currSlideIdx + slides.length - 1) % slides.length);
-          } else if (e.nativeEvent.pageX / screenWidth >= 0.75) {
-            setCurrSlideIdx((currSlideIdx + 1) % slides.length);
-          }
-        }}
+        onPress={handleSlidePress}
       >
         {slides && slides.length > 0 && slides[currSlideIdx] ? (
           <TextInput

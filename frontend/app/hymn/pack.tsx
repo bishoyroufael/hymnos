@@ -24,6 +24,7 @@ import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { Dimensions, FlatList, Pressable, View } from "react-native";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
+import { shareText } from "@utils/sharing";
 
 interface PagingMetaData {
   currentPage: number;
@@ -191,7 +192,10 @@ export default function HymnPack() {
   const handleOnEdit = () => {
     setIsEditingPack(true);
   };
-  const handleShare = () => {};
+
+  const handleShare = () => {
+    shareText(hymnPack.title, window.location.href);
+  };
 
   return (
     <HymnosPageWrapper>

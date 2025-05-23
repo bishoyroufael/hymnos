@@ -23,6 +23,7 @@ import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
+import { shareText } from "@utils/sharing";
 
 export default function HymnDetails() {
   const { uuid } = useLocalSearchParams<{ uuid: string }>();
@@ -141,7 +142,7 @@ export default function HymnDetails() {
   };
 
   function handleShare(): void {
-    throw new Error("Function not implemented.");
+    shareText(hymn.title, window.location.href);
   }
 
   function handleOnEdit(): void {
