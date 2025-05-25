@@ -8,6 +8,7 @@ export interface SearchResultsItem {
   hymn_uuid: string;
   title: string;
   searchLine: string;
+  slide_uuid: string;
 }
 
 interface SearchResultsListProps {

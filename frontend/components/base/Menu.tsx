@@ -69,7 +69,7 @@ export default function Menu({
           const isDisabled = !(item.nestedMenu || item.onPress);
           const match = className.match(/bg-[a-z]+-(\d+)/);
           const bgColorNum = match?.[1];
-          console.log(match);
+          // console.log(match);
           // Render CustomView if present
           return (
             <Pressable

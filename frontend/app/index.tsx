@@ -13,7 +13,7 @@ import {
   is_db_empty,
 } from "@db/dexie";
 import { getLastViewedHymns } from "@db/localstorage";
-import { Hymn, HymnsPack } from "@db/models";
+import { Hymn, HymnsPack, Slide } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
 import { AxiosResponse } from "axios";
 import { Image } from "expo-image";
@@ -26,7 +26,7 @@ import * as API from "../generated/";
 import useHymnosState from "../global";
 
 const HymnosAPI = new API.DefaultApi(
-  new API.Configuration({ basePath: "http://localhost:8000" }),
+  new API.Configuration({ basePath: "https://yellow-apples-like.loca.lt" }),
 );
 
 export default memo(function HomePage() {
@@ -100,9 +100,9 @@ export default memo(function HomePage() {
   // Fetch hymn packs from backend
   useEffect(() => {
     fetchInitialData();
-    return () => {
-      console.log("cleanup called!");
-    };
+    // return () => {
+    //   console.log("cleanup called!");
+    // };
   }, [fetchInitialData]);
 
   const updatePacks = async () => {
@@ -129,7 +129,9 @@ export default memo(function HomePage() {
         <ProgressBar />
         <SearchBar
           onPressItemCallback={(item) => {
-            router.push(`/hymn/presentation?uuid=${item.hymn_uuid}`);
+            router.push(
+              `/hymn/presentation?uuid=${item.hymn_uuid}&startSlide=${item.slide_uuid}`,
+            );
           }}
         />
       </View>

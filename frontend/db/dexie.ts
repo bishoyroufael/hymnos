@@ -1,14 +1,15 @@
-import { Dexie, PromiseExtended, type EntityTable } from "dexie";
-import { generateRandomString, normalize_text } from "./utils";
+import { HymnosDataExport } from "@utils/exporter";
+import { Dexie, type EntityTable } from "dexie";
 import dexieObservable from "dexie-observable";
 import dexieSyncable from "dexie-syncable";
+import Fuse from "fuse.js";
 import { Hymn, HymnsPack, Slide, Tag } from "./models";
-import { HymnosDataExport } from "@utils/exporter";
+import { generateWordPrefixes, normalizeArabic } from "./utils";
 
 export const SIZE_PER_PAGE = 10;
 
 // Database declaration (move this to its own module also)
-export const db = new Dexie("HymnsDatabase", {
+export const db = new Dexie("HymnosDB", {
   addons: [dexieObservable, dexieSyncable],
 }) as Dexie & {
   hymns: EntityTable<Hymn, "uuid">;
@@ -22,36 +23,32 @@ export const DEXIE_VERSION = Dexie.version;
 db.version(1).stores({
   hymns: "$$uuid",
   packs: "$$uuid",
-  slides: "$$uuid, *lines, *linesWords",
+  slides: "$$uuid, *searchWords",
   tags: "$$uuid",
 });
 
 db.slides.hook("creating", function (pk, obj, trans) {
-  if (obj.lines.constructor.name == "Array")
-    obj.linesWords = getAllWords(obj.lines.join(" "));
+  if (obj.lines.constructor.name == "Array") {
+    const lineClean = normalizeArabic(obj.lines.join(" "));
+    const searchWords = generateWordPrefixes(lineClean);
+    obj.searchWords = searchWords;
+  }
 });
 
 db.slides.hook("updating", function (mods, primKey, obj, trans) {
   if (mods.hasOwnProperty("lines")) {
     // "lines" property is being updated
-    if ((mods as any).lines.constructor.name == "Array")
+    if ((mods as any).lines.constructor.name == "Array") {
       // "lines" property was updated to another valid value. Re-index messageWords:
-      return { linesWords: getAllWords((mods as any).lines.join(" ")) };
-    else
+      const lineClean = normalizeArabic((mods as any).lines.join(" "));
+      const searchWords = generateWordPrefixes(lineClean);
+      return { searchWords: searchWords };
+    } else
       // "lines" property was deleted (typeof mods.lines === 'undefined') or changed to an unknown type. Remove indexes:
-      return { linesWords: [] };
+      // return { linesWords: [] };
+      return { searchWords: [] };
   }
 });
-
-function getAllWords(text: string) {
-  /// <param name="text" type="String"></param>
-  var allWordsIncludingDups = text.split(" ").map((w) => normalize_text(w));
-  var wordSet = allWordsIncludingDups.reduce(function (prev, current) {
-    prev[current] = true;
-    return prev;
-  }, {});
-  return Object.keys(wordSet);
-}
 
 function* chunkArray<T>(array: T[], chunkSize: number): IterableIterator<T[]> {
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -105,17 +102,17 @@ export async function insert_hymns_and_packs(
 }
 
 // https://github.com/dexie/Dexie.js/issues/281#issuecomment-229228163
-async function find_in_slides(prefixes: string[], l: number = 10) {
+async function find_in_slides_by_prefixes(prefixes: string[], l: number = 10) {
   return db.transaction("r", db.slides, function* () {
     // Parallell search for all prefixes - just select resulting primary keys
     const results = yield Dexie.Promise.all(
       prefixes.map((prefix) =>
-        db.slides.where("linesWords").startsWith(prefix).primaryKeys(),
+        db.slides.where("searchWords").equals(prefix).primaryKeys(),
       ),
     );
 
     // Intersect result set of primary keys
-    const reduced = results.reduce((a: any[], b: Iterable<unknown>) => {
+    const reduced = results.reduce((a: any[], b: any[]) => {
       const set = new Set(b);
       return a.filter((k) => set.has(k));
     });
@@ -124,29 +121,41 @@ async function find_in_slides(prefixes: string[], l: number = 10) {
   });
 }
 
-export async function search_in_slides(q: string) {
-  const startTime = performance.now();
-  console.log("search working in progress");
-  // Get prefixes and run search over word splits
-  const prefixes = [
-    ...new Set(
-      q
-        .trim()
-        .split(" ")
-        .map((w) => normalize_text(w)),
-    ),
-  ];
-  console.log(prefixes);
+async function find_in_slides_hybrid(
+  query: string,
+  prefixes: string[],
+  l: number = 10,
+) {
+  const candidates = await db.slides
+    .where("searchWords")
+    .anyOf(prefixes)
+    .toArray();
+
+  const fuse = new Fuse(candidates, {
+    keys: ["lines"],
+    threshold: 0.3,
+    shouldSort: true,
+  });
+
+  return fuse
+    .search(query)
+    .slice(0, l)
+    .map((result) => result.item);
+}
+
+export async function search_in_slides(
+  q: string,
+  mode: "by_prefixes" | "by_hybrid_score" = "by_prefixes",
+) {
+  // const startTime = performance.now();
+  const normalizedQuery = normalizeArabic(q);
+  const prefixes = generateWordPrefixes(normalizedQuery);
   try {
-    const slides = await find_in_slides(prefixes);
-    const endTime = performance.now();
-    console.log(`took ${endTime - startTime} milliseconds`);
-    const slidesArr: Slide[] = [];
-    // todo: how to convert this wierd generator to an array of slides
-    for (const ss of slides) {
-      slidesArr.push(ss as unknown as Slide);
-    }
-    return slidesArr;
+    const slides = await find_in_slides_by_prefixes(prefixes);
+    // const slides = await find_in_slides_hybrid(q, prefixes);
+    // const endTime = performance.now();
+    // console.log(`took ${endTime - startTime} milliseconds | slides: ${slides}`);
+    return slides;
   } catch (r) {
     console.log(r);
     return [];

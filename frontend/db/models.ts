@@ -42,7 +42,7 @@ export interface Slide {
   uuid: string;
   hymn_uuid: string;
   lines: string[];
-  linesWords?: string[];
+  searchWords?: string[];
   chords?: string[][] | null;
   chords_pos?: number[][] | null;
 }

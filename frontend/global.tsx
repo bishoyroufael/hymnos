@@ -11,12 +11,14 @@ interface PresentationSettings {
 }
 
 interface HymnosState {
+  searchDebounceDelay: number;
   presentationSettings: PresentationSettings;
   setPresentationSettings: (
-    newPresentationSettings: Partial<PresentationSettings>
+    newPresentationSettings: Partial<PresentationSettings>,
   ) => void;
   setActiveMenu: (menu: string | null) => void;
   syncProgressPercentage: number;
+  setSearchDebounceDelay: (delay: number) => void;
   setSyncProgressPercentage: (progress: number) => void;
   activeMenu: string | null;
   currentView: "main" | "nested"; // New state to track the current view
@@ -24,6 +26,7 @@ interface HymnosState {
 }
 
 const useHymnosState = create<HymnosState>((set) => ({
+  searchDebounceDelay: 200,
   presentationSettings: {
     backgroundColor: "slate-900",
     fontColor: "blue-100",
@@ -34,7 +37,7 @@ const useHymnosState = create<HymnosState>((set) => ({
   syncProgressPercentage: 0,
   currentView: "main", // Default to main menu view
   setPresentationSettings: (
-    newPresentationSettings: Partial<PresentationSettings>
+    newPresentationSettings: Partial<PresentationSettings>,
   ) =>
     set((state) => ({
       presentationSettings: {
@@ -42,9 +45,11 @@ const useHymnosState = create<HymnosState>((set) => ({
         ...newPresentationSettings,
       },
     })),
-  setSyncProgressPercentage:(progress) => 
-    set(() => ({ syncProgressPercentage:  progress})),
-  setActiveMenu: (menu: string | null) => set((state) => ({ activeMenu: menu })),
+  setSearchDebounceDelay: (delay: number) =>
+    set(() => ({ searchDebounceDelay: delay })),
+  setSyncProgressPercentage: (progress) =>
+    set(() => ({ syncProgressPercentage: progress })),
+  setActiveMenu: (menu: string | null) => set(() => ({ activeMenu: menu })),
   setCurrentView: (view: "main" | "nested") =>
     set(() => ({ currentView: view })),
 }));

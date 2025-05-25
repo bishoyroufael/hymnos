@@ -19,7 +19,7 @@ class Slide(BaseModel):
     uuid: str
     hymn_uuid: str
     lines: List[str] # list of lines
-    linesWords: List[str] = [] # used on frontend for indexing and searching
+    searchWords: List[str] = [] # used on frontend for indexing and searching
     chords: List[list[str]] | None = None # list of chords for each line
     chords_pos: List[list[int]] | None = None # position described as where the chord is letter-wise in the line
 
@@ -36,6 +36,7 @@ class Hymn(BaseModel):
     chorus: List[str] = [] # store slide uuid
     slides_order: List[str] = [] # store slide ids in order of how to present them 
     tags: list[str] = [] # tags ids
+    # lang: str = "ar"
 
 class HymnsPack(BaseModel):
     uuid: str

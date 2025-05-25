@@ -4,11 +4,12 @@ import ToolBox from "@components/base/ToolBox";
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
 import { HymnosDataExport } from "@utils/exporter";
 import { emitError, emitInfo } from "@utils/notification";
 import * as DocumentPicker from "expo-document-picker";
 import { import_data } from "@db/dexie";
+import useHymnosState from "global";
 
 const handleImport = async (onImportCallback?: () => void) => {
   try {
@@ -39,6 +40,7 @@ interface HeaderProps {
 export default function Header({ onUploadDataCallback }: HeaderProps) {
   const [openCreateMenu, setOpenCreateMenu] = useState(false);
   const [openSettingsMenu, setOpenSettingsMenu] = useState(false);
+  const { searchDebounceDelay, setSearchDebounceDelay } = useHymnosState();
 
   return (
     <View
@@ -123,6 +125,22 @@ export default function Header({ onUploadDataCallback }: HeaderProps) {
                   title: "رفع ترنيمه او مكتبه",
                   onPress: () => handleImport(onUploadDataCallback),
                   itemCustomView: <Feather name="upload" size={20} />,
+                },
+                {
+                  title: "وقت رد البحث",
+                  itemCustomView: (
+                    <TextInput
+                      keyboardType="numeric"
+                      maxLength={4}
+                      className="border w-1/2 p-2 rounded-md border-gray-400 bg-gray-200"
+                      value={searchDebounceDelay.toString()}
+                      onChangeText={(v) => {
+                        const parsed = parseInt(v.replace(/[^0-9]/g, ""));
+                        if (Number.isNaN(parsed)) return;
+                        setSearchDebounceDelay(parsed);
+                      }}
+                    />
+                  ),
                 },
               ]}
             />
