@@ -24,6 +24,7 @@ import React, { useEffect, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import { shareText } from "@utils/sharing";
+import { toggleFullScreen } from "@utils/ui";
 
 export default function HymnDetails() {
   const { uuid } = useLocalSearchParams<{ uuid: string }>();
@@ -52,6 +53,7 @@ export default function HymnDetails() {
         disabled={isEditingHymn}
         className="p-4 rounded-lg flex-1"
         onPress={() => {
+          toggleFullScreen();
           router.navigate(
             `/hymn/presentation?uuid=${uuid}&startSlide=${item.uuid}`,
           );
@@ -271,9 +273,10 @@ export default function HymnDetails() {
           />
         ) : (
           <Pressable
-            onPress={() =>
-              router.navigate(`/hymn/presentation?uuid=${hymn.uuid}&isNew`)
-            }
+            onPress={() => {
+              toggleFullScreen();
+              router.navigate(`/hymn/presentation?uuid=${hymn.uuid}&isNew`);
+            }}
             className="flex-1 flex justify-center self-center bg-gray-100 rounded-lg hover:bg-gray-200 w-full duration-100"
           >
             <HymnosText className="text-3xl text-center text-gray-800">

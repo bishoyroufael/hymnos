@@ -11,7 +11,7 @@ const FontSizeAdjuster: React.FC<FontSizeAdjusterProps> = ({
   onFontSizeChange,
 }) => {
   const { presentationSettings, setPresentationSettings } = useHymnosState();
-  const [fontSize, setFontSize] = useState(presentationSettings.fontSize || 16); // Default size
+  const [fontSize, setFontSize] = useState(presentationSettings.fontSize);
 
   const updateFontSize = (newSize: number) => {
     setFontSize(newSize);

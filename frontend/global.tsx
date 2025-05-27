@@ -2,6 +2,7 @@
 
 import { Dimensions } from "react-native";
 import { create } from "zustand";
+import { RFPercentage } from "react-native-responsive-fontsize";
 
 interface PresentationSettings {
   backgroundColor: string;
@@ -31,7 +32,7 @@ const useHymnosState = create<HymnosState>((set) => ({
     backgroundColor: "slate-900",
     fontColor: "blue-100",
     font: "Amiri_400Regular",
-    fontSize: Dimensions.get("screen").width > 640 ? 80 : 40,
+    fontSize: RFPercentage(7),
   },
   activeMenu: null,
   syncProgressPercentage: 0,

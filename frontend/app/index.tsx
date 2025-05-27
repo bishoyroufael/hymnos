@@ -24,9 +24,10 @@ import { ScrollView, View } from "react-native";
 import "../assets/global.css";
 import * as API from "../generated/";
 import useHymnosState from "../global";
+import { toggleFullScreen } from "@utils/ui";
 
 const HymnosAPI = new API.DefaultApi(
-  new API.Configuration({ basePath: "https://yellow-apples-like.loca.lt" }),
+  new API.Configuration({ basePath: "https://public-melons-tell.loca.lt" }),
 );
 
 export default memo(function HomePage() {
@@ -100,15 +101,13 @@ export default memo(function HomePage() {
   // Fetch hymn packs from backend
   useEffect(() => {
     fetchInitialData();
-    // return () => {
-    //   console.log("cleanup called!");
-    // };
   }, [fetchInitialData]);
 
   const updatePacks = async () => {
     const new_updated_packs = await get_all_packs();
     setHymnPacks(new_updated_packs);
   };
+
   return (
     <HymnosPageWrapper onUploadDataCallback={updatePacks}>
       {/* Hero Section */}
@@ -129,6 +128,7 @@ export default memo(function HomePage() {
         <ProgressBar />
         <SearchBar
           onPressItemCallback={(item) => {
+            toggleFullScreen();
             router.push(
               `/hymn/presentation?uuid=${item.hymn_uuid}&startSlide=${item.slide_uuid}`,
             );
@@ -170,6 +170,7 @@ export default memo(function HomePage() {
             skeletonElement={renderSkeletons()}
             emptyResultsElement={<></>}
             onCardPress={(item) => {
+              toggleFullScreen();
               router.navigate(`/hymn/presentation?uuid=${item.uuid}`);
             }}
             renderCardDescription={(item) =>

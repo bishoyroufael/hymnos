@@ -54,7 +54,7 @@ export default function SearchResultsList({
       ) : (
         <FlatList
           data={items}
-          className="h-72 max-h-fit"
+          className="h-fit max-h-72"
           keyExtractor={(item, index) => index.toString()}
           renderItem={renderItem}
         />

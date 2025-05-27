@@ -1,7 +1,7 @@
 import HymnosText from "@components/base/HymnosText";
 import Feather from "@expo/vector-icons/Feather";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, View, ViewProps } from "react-native";
+import { FlatList, Pressable, ScrollView, View, ViewProps } from "react-native";
 
 interface MenuItem {
   title: string;
@@ -38,12 +38,32 @@ export default function Menu({
     return current;
   }, [title, customView, items, menuStack]);
 
-  // console.log(activeMenu[0]?.onPress === undefined);
+  const renderItem = ({ item, index }) => {
+    const isDisabled = !(item.nestedMenu || item.onPress);
+    return (
+      <Pressable
+        disabled={isDisabled}
+        key={item.title}
+        className={`p-2 rounded-md flex-row items-center justify-between ${!isDisabled ? "hover:bg-slate-300 duration-200" : ""}`}
+        onPress={() => {
+          if (item.nestedMenu) {
+            setMenuStack((prev) => [...prev, index]);
+            return;
+          }
+          item.onPress?.();
+        }}
+      >
+        <HymnosText className="text-gray-800">{item.title}</HymnosText>
+        {item.itemCustomView}
+        {item.nestedMenu && <Feather name="chevron-right" size={16} />}
+      </Pressable>
+    );
+  };
 
   return (
     <View
       {...rest}
-      className={`bg-slate-200 rounded-md p-2 flex flex-col gap-1 ${className}`}
+      className={`bg-slate-200 rounded-md p-2 flex flex-col gap-1 ${className} [@media(max-height:350px)]:h-32`} // fix: Mobile switches to landspace menu is cutoff
     >
       <View className="flex-row flex items-center">
         {menuStack.length > 0 && (
@@ -64,32 +84,14 @@ export default function Menu({
 
       {activeMenu.title && <View className="border-b flex-1 bg-black" />}
 
-      {activeMenu.customView ||
-        activeMenu.items?.map((item: MenuItem, index: number) => {
-          const isDisabled = !(item.nestedMenu || item.onPress);
-          const match = className.match(/bg-[a-z]+-(\d+)/);
-          const bgColorNum = match?.[1];
-          // console.log(match);
-          // Render CustomView if present
-          return (
-            <Pressable
-              disabled={isDisabled}
-              key={item.title}
-              className={`p-2 rounded-md flex-row items-center justify-between ${!isDisabled ? "hover:bg-slate-300 duration-200" : ""}`}
-              onPress={() => {
-                if (item.nestedMenu) {
-                  setMenuStack((prev) => [...prev, index]);
-                  return;
-                }
-                item.onPress?.();
-              }}
-            >
-              <HymnosText className="text-gray-800">{item.title}</HymnosText>
-              {item.itemCustomView}
-              {item.nestedMenu && <Feather name="chevron-right" size={16} />}
-            </Pressable>
-          );
-        })}
+      {activeMenu.customView || (
+        <FlatList
+          contentContainerStyle={{ flex: 1, flexGrow: 0, minHeight: 20 }}
+          data={activeMenu.items}
+          keyExtractor={(item) => item.title}
+          renderItem={renderItem}
+        />
+      )}
     </View>
   );
 }

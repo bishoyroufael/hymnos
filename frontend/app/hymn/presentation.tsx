@@ -15,7 +15,6 @@ import {
   View,
 } from "react-native";
 import useHymnosState from "../../global";
-// import Toolbox from "@components/Toolbox";
 import HymnosText from "@components/base/HymnosText";
 import Loader from "@components/base/Loader";
 import SlideSettingsMenu from "@components/menus/SlideSettingsMenu";
@@ -23,6 +22,7 @@ import { addLastViewedHymn } from "@db/localstorage";
 import { usePresentationFonts } from "@hooks/usePresentationFonts";
 import { shareText } from "@utils/sharing";
 import { Image } from "expo-image";
+import useAutoSizeTextArea from "@hooks/useAutoSizeTextArea";
 
 export default function HymnPresentation() {
   const { uuid, isNew, startSlide } = useLocalSearchParams<{
@@ -37,7 +37,6 @@ export default function HymnPresentation() {
   }
 
   const { presentationSettings } = useHymnosState();
-
   const [isEditingMode, setIsEditingMode] = useState(false);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [isPresentationSettingsIconShown, setIsPresentationSettingsIconShown] =
@@ -47,26 +46,10 @@ export default function HymnPresentation() {
   const [backupSlides, setbackupSlides] = useState<Slide[]>([]); // will be used with editing toolbox
   const { keyEvent } = useKeyEvent();
 
-  // inspired from: https://medium.com/@oherterich/creating-a-textarea-with-dynamic-height-using-react-and-typescript-5ed2d78d9848
-  // re-called if node ref is updated, current text value changed (slide idx changed), or font is changed
-  const textAreaRef = useCallback(
-    (node: HTMLTextAreaElement | null) => {
-      if (node != null) {
-        // We need to reset the height momentarily to get the correct scrollHeight for the textarea
-        node.style.height = "0px";
-        const scrollHeight = node.scrollHeight;
-        // We then set the height directly, outside of the render loop
-        // Trying to set this with state or a ref will product an incorrect value.
-        node.style.height = scrollHeight + "px";
-      }
-    },
-    [slides, presentationSettings, currSlideIdx],
-  );
-
-  const focusRef = useRef(null);
+  const textAreaRef = useRef(null);
 
   const focusTextAreaAndMoveCaretToEnd = () => {
-    const input: HTMLTextAreaElement = focusRef.current;
+    const input: HTMLTextAreaElement = textAreaRef.current;
     if (input) {
       input.focus();
       const length = input.value.length;
@@ -112,26 +95,27 @@ export default function HymnPresentation() {
   // Handling key events
   // re-runs on keyEvent change
   useEffect(() => {
+    // console.log("useEffect of KeyEvent!");
     if (!slides || slides.length === 0 || !keyEvent) return; // Handle edge case
     handleKeyEvent(keyEvent);
   }, [keyEvent]);
 
-  const setSlidesStates = (s: Slide[]) => {
+  const updateSlides = (s: Slide[]) => {
     setSlides(s);
     setbackupSlides(_.cloneDeep(s));
   };
+
   // Fetch hymn from db using uuid once
   useEffect(() => {
+    // console.log("useEffect of fetching data!");
     get_slides_of_hymn(uuid)
       .then((s) => {
         if (isNew !== undefined && s.length == 0) {
-          const emptySlides: Slide[] = [
-            { uuid: Crypto.randomUUID(), lines: [], hymn_uuid: uuid },
-          ];
-          setSlidesStates(emptySlides);
+          const emptySlides: Slide[] = [createEmptySlide()];
+          updateSlides(emptySlides);
           setIsEditingMode(true);
         } else {
-          setSlidesStates(s);
+          updateSlides(s);
           const idxFound = s.findIndex((item) => item.uuid == startSlide);
           if (idxFound != -1) {
             setCurrSlideIdx(idxFound);
@@ -147,6 +131,7 @@ export default function HymnPresentation() {
 
   // Auto-hide the menu after a few seconds
   useEffect(() => {
+    // console.log("useEffect of autohiding presentation icons!");
     if (isPresentationSettingsIconShown && !isSettingsMenuOpen) {
       const timer = setTimeout(
         () => setIsPresentationSettingsIconShown(false),
@@ -156,6 +141,14 @@ export default function HymnPresentation() {
     }
   }, [isPresentationSettingsIconShown, isSettingsMenuOpen]);
 
+  useAutoSizeTextArea(
+    "presentation-text-area",
+    textAreaRef.current,
+    slides,
+    presentationSettings,
+    currSlideIdx,
+  );
+
   // Font loading
   const fontsLoaded = usePresentationFonts();
   if (!fontsLoaded) return null;
@@ -164,6 +157,7 @@ export default function HymnPresentation() {
     setSlides(_.cloneDeep(backupSlides));
     setIsEditingMode(false);
   };
+
   const deleteSlide = () => {
     if (slides.length == 1) {
       // one slide available, deletion should be prevented
@@ -178,36 +172,25 @@ export default function HymnPresentation() {
       return prevSlides.filter((_, index) => index !== currSlideIdx);
     });
   };
+
   const submitEdit = () => {
     update_hymn_with_slides(uuid, slides);
     setIsEditingMode(false);
   };
 
-  const addEmptyNextSlide = () => {
-    const emptySlide: Slide = {
-      uuid: Crypto.randomUUID(),
-      hymn_uuid: uuid,
-      lines: [],
-    };
-    setSlides((prevSlides) => [
-      ...prevSlides.slice(0, currSlideIdx + 1),
-      emptySlide,
-      ...prevSlides.slice(currSlideIdx + 1),
-    ]);
-    setCurrSlideIdx(currSlideIdx + 1);
-    focusTextAreaAndMoveCaretToEnd();
-  };
-  const addEmptyPreviousSlide = () => {
-    const emptySlide: Slide = {
-      uuid: Crypto.randomUUID(),
-      hymn_uuid: uuid,
-      lines: [],
-    };
-    setSlides((prevSlides) => [
-      ...prevSlides.slice(0, currSlideIdx),
-      emptySlide,
-      ...prevSlides.slice(currSlideIdx),
-    ]);
+  const createEmptySlide = (): Slide => ({
+    uuid: Crypto.randomUUID(),
+    hymn_uuid: uuid,
+    lines: [],
+  });
+
+  const addSlideAt = (position: "next" | "prev") => {
+    const newSlide = createEmptySlide();
+    setSlides((prev) => {
+      const idx = position === "next" ? currSlideIdx + 1 : currSlideIdx;
+      return [...prev.slice(0, idx), newSlide, ...prev.slice(idx)];
+    });
+    if (position === "next") setCurrSlideIdx((i) => i + 1);
     focusTextAreaAndMoveCaretToEnd();
   };
 
@@ -272,7 +255,6 @@ export default function HymnPresentation() {
           </View>
         )}
       </View>
-
       <ToolBox
         className="absolute top-4 z-10 right-4 w-[10%] h-[6%] flex flex-row justify-end items-center rounded-md"
         showOnlyIf={isPresentationSettingsIconShown && !isEditingMode}
@@ -325,18 +307,16 @@ export default function HymnPresentation() {
           },
         ]}
       />
-
       <PlusButton
         className="absolute right-8 ml-auto top-1/2 hover:scale-125 ease-in-out duration-200 z-10 animate-pulse"
         showOnlyIf={isPresentationSettingsIconShown && isEditingMode}
-        onPressCallback={addEmptyNextSlide}
+        onPressCallback={() => addSlideAt("next")}
       />
       <PlusButton
         className="absolute left-8 ml-auto top-1/2 hover:scale-125 ease-in-out duration-200 z-10 animate-pulse"
         showOnlyIf={isPresentationSettingsIconShown && isEditingMode}
-        onPressCallback={addEmptyPreviousSlide}
+        onPressCallback={() => addSlideAt("prev")}
       />
-
       {/* Hymn Text Display */}
       <Pressable
         className="flex-1 justify-center items-center cursor-default"
@@ -353,11 +333,8 @@ export default function HymnPresentation() {
               if (isEditingMode) return;
               handleKeyEvent(e.nativeEvent);
             }}
-            ref={(el) => {
-              // @ts-ignore
-              textAreaRef(el);
-              focusRef.current = el;
-            }}
+            id="presentation-text-area"
+            ref={textAreaRef}
             onChangeText={(updatedLineText) => {
               const updatedSlide = slides[currSlideIdx];
               updatedSlide.lines = updatedLineText.split("\n");
