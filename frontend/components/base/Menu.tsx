@@ -63,7 +63,7 @@ export default function Menu({
   return (
     <View
       {...rest}
-      className={`bg-slate-200 rounded-md p-2 flex flex-col gap-1 ${className} [@media(max-height:350px)]:h-32`} // fix: Mobile switches to landspace menu is cutoff
+      className={`bg-slate-200 rounded-md p-2 flex flex-col gap-1 ${className}`}
     >
       <View className="flex-row flex items-center">
         {menuStack.length > 0 && (
@@ -86,7 +86,8 @@ export default function Menu({
 
       {activeMenu.customView || (
         <FlatList
-          contentContainerStyle={{ flex: 1, flexGrow: 0, minHeight: 20 }}
+          // className="overflow-y-auto"
+          className="overflow-visible"
           data={activeMenu.items}
           keyExtractor={(item) => item.title}
           renderItem={renderItem}

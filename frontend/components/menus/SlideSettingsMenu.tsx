@@ -23,7 +23,7 @@ export default function SlideSettingsMenu() {
   // console.log("SLIDE SETTINGS MENU");
   return (
     <Menu
-      className="min-w-52"
+      className="min-w-52 [@media(max-height:450px)]:h-40 overflow-auto"
       title="Settings"
       items={[
         {
