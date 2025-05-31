@@ -14,7 +14,6 @@ import { useConfirmModal } from "@hooks/useConfirmModal";
 import Feather from "@expo/vector-icons/Feather";
 
 export default function HymnPack() {
-  // const [searchQuery, setSearchQuery] = useState("");
   const [hymnPack, setHymnPack] = useState<HymnsPack | null>({
     title: "مكتبه ترانيم جديده",
     author: "Hymnos App",

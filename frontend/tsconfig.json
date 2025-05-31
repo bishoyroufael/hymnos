@@ -6,9 +6,11 @@
     "baseUrl": ".",
     "paths": {
       "@components/*": ["components/*"],
+      "@fractions/*": ["fractions/*"],
       "@hooks/*": ["hooks/*"],
       "@db/*": ["db/*"],
-      "@utils/*": ["utils/*"]
+      "@utils/*": ["utils/*"],
+      "@assets/*": ["assets/*"]
     }
   }
 }

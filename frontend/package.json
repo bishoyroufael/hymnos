@@ -31,6 +31,7 @@
     "dexie-react-hooks": "^1.1.7",
     "dexie-syncable": "^4.0.1-beta.13",
     "expo": "~52.0.46",
+    "expo-checkbox": "~4.0.1",
     "expo-constants": "~17.0.8",
     "expo-crypto": "~14.0.2",
     "expo-document-picker": "~13.0.3",
@@ -64,6 +65,8 @@
     "react-native-web": "~0.19.13",
     "react-toastify": "^11.0.5",
     "tailwindcss": "^3.4.14",
+    "trie-search": "^2.2.0",
+    "usehooks-ts": "^3.1.1",
     "zustand": "^5.0.1"
   },
   "devDependencies": {

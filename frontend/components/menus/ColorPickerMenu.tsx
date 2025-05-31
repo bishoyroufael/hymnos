@@ -1,7 +1,6 @@
 import Menu from "@components/base/Menu";
 import Feather from "@expo/vector-icons/Feather";
-import useHymnosState from "global";
-import React, { useEffect } from "react";
+import React from "react";
 import { isMobile } from "react-device-detect";
 import { Pressable, View } from "react-native";
 
@@ -15,15 +14,11 @@ function ColorRow({
   currentColor: string;
 }) {
   // Define shades based on view type
-
-  // const { setPresentationSettings, presentationSettings } = useHymnosState();
-
   const shades = isMobile
     ? ["100", "500", "900"] // Mobile view: 1st, 3rd, 5th shades (3 swatches)
     : ["100", "300", "500", "700", "900"]; // Default/web view: all shades (5 swatches)
 
   // Set cell size based on view type for better touch accessibility
-
   const cellSize = isMobile ? "w-14 h-14" : "w-8 h-8";
 
   return (

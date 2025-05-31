@@ -10,6 +10,7 @@ import { emitError, emitInfo } from "@utils/notification";
 import * as DocumentPicker from "expo-document-picker";
 import { import_data } from "@db/dexie";
 import useHymnosState from "global";
+import Checkbox from "expo-checkbox";
 
 const handleImport = async (onImportCallback?: () => void) => {
   try {
@@ -38,9 +39,13 @@ interface HeaderProps {
 }
 
 export default function Header({ onUploadDataCallback }: HeaderProps) {
-  const [openCreateMenu, setOpenCreateMenu] = useState(false);
-  const [openSettingsMenu, setOpenSettingsMenu] = useState(false);
-  const { searchDebounceDelay, setSearchDebounceDelay } = useHymnosState();
+  const [openMenu, setOpenMenu] = useState<"create" | "settings" | null>(null);
+  const {
+    searchDebounceDelay,
+    setSearchDebounceDelay,
+    enableFuzzySearch,
+    setEnableFuzzySearch,
+  } = useHymnosState();
 
   return (
     <View
@@ -56,14 +61,18 @@ export default function Header({ onUploadDataCallback }: HeaderProps) {
             className="text-sky-700 hover:text-sky-800 duration-200"
           />
         </Pressable>
-        <Pressable onPress={() => setOpenCreateMenu((prev) => !prev)}>
+        <Pressable
+          onPress={() =>
+            setOpenMenu((prev) => (prev === "create" ? null : "create"))
+          }
+        >
           <Feather
-            name={!openCreateMenu ? "edit" : "x"}
+            name={openMenu == "create" ? "x" : "edit"}
             size={25}
             className="text-sky-700 hover:text-sky-800 duration-200"
           />
         </Pressable>
-        {openCreateMenu && (
+        {openMenu == "create" && (
           <View
             className="absolute top-14 left-12 right-12 w-auto"
             style={{ direction: "rtl" }}
@@ -103,19 +112,19 @@ export default function Header({ onUploadDataCallback }: HeaderProps) {
       <View className="flex-1 flex-row gap-4 items-center justify-end">
         <ToolBox
           showOnlyIf={true}
-          //   className="self-start border"
           actions={[
             {
               key: "settings",
-              iconName: openSettingsMenu ? "x" : "settings",
+              iconName: openMenu == "settings" ? "x" : "settings",
               iconClassName: "text-sky-700 hover:text-sky-800 duration-200",
-              onPress: () => {
-                setOpenSettingsMenu((prev) => !prev);
-              },
+              onPress: () =>
+                setOpenMenu((prev) =>
+                  prev === "settings" ? null : "settings",
+                ),
             },
           ]}
         />
-        {openSettingsMenu && (
+        {openMenu == "settings" && (
           <View className="absolute top-16 w-auto" style={{ direction: "rtl" }}>
             <Menu
               className="w-52 bg-slate-200 h-fit rounded-md p-2 gap-1 flex flex-col shadow"
@@ -136,9 +145,20 @@ export default function Header({ onUploadDataCallback }: HeaderProps) {
                       value={searchDebounceDelay.toString()}
                       onChangeText={(v) => {
                         const parsed = parseInt(v.replace(/[^0-9]/g, ""));
-                        if (Number.isNaN(parsed)) return;
-                        setSearchDebounceDelay(parsed);
+                        setSearchDebounceDelay(
+                          Number.isNaN(parsed) ? 0 : parsed,
+                        );
                       }}
+                    />
+                  ),
+                },
+                {
+                  title: "استخدام البحث الضبابي (Fuzzy Search)",
+                  itemCustomView: (
+                    <Checkbox
+                      value={enableFuzzySearch}
+                      onValueChange={setEnableFuzzySearch}
+                      color={enableFuzzySearch ? "cornflowerblue" : undefined}
                     />
                   ),
                 },

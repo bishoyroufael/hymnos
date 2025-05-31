@@ -1,12 +1,20 @@
+import HymnosText from "@components/base/HymnosText";
+import Loader from "@components/base/Loader";
 import PlusButton from "@components/base/PlusButton";
 import ToolBox from "@components/base/ToolBox";
+import SlideSettingsMenu from "@components/menus/SlideSettingsMenu";
 import { get_slides_of_hymn, update_hymn_with_slides } from "@db/dexie";
 import { Slide } from "@db/models";
+import useAutoSizeTextArea from "@hooks/useAutoSizeTextArea";
+import { useGlobalLocalStorage } from "@hooks/useGlobalLocalStorage";
+import { usePresentationFonts } from "@hooks/usePresentationFonts";
+import { shareText } from "@utils/sharing";
 import * as Crypto from "expo-crypto";
+import { Image } from "expo-image";
 import { useKeyEvent } from "expo-key-event";
 import { router, useLocalSearchParams } from "expo-router";
 import _ from "lodash";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   GestureResponderEvent,
@@ -15,14 +23,6 @@ import {
   View,
 } from "react-native";
 import useHymnosState from "../../global";
-import HymnosText from "@components/base/HymnosText";
-import Loader from "@components/base/Loader";
-import SlideSettingsMenu from "@components/menus/SlideSettingsMenu";
-import { addLastViewedHymn } from "@db/localstorage";
-import { usePresentationFonts } from "@hooks/usePresentationFonts";
-import { shareText } from "@utils/sharing";
-import { Image } from "expo-image";
-import useAutoSizeTextArea from "@hooks/useAutoSizeTextArea";
 
 export default function HymnPresentation() {
   const { uuid, isNew, startSlide } = useLocalSearchParams<{
@@ -36,6 +36,10 @@ export default function HymnPresentation() {
     return null;
   }
 
+  const lastViewedStorage = useGlobalLocalStorage<string[]>(
+    "lastViewedHymns",
+    [],
+  );
   const { presentationSettings } = useHymnosState();
   const [isEditingMode, setIsEditingMode] = useState(false);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
@@ -121,7 +125,9 @@ export default function HymnPresentation() {
             setCurrSlideIdx(idxFound);
           }
         }
-        addLastViewedHymn(uuid);
+        const currentLastViewed = lastViewedStorage.get();
+        currentLastViewed.push(uuid);
+        lastViewedStorage.set(_.takeRight([...new Set(currentLastViewed)], 10));
       })
       .catch((e) => {
         console.log(e);

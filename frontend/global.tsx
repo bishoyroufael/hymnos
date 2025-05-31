@@ -1,8 +1,7 @@
 // contain code regarding global state managment using Zustand
 
-import { Dimensions } from "react-native";
-import { create } from "zustand";
 import { RFPercentage } from "react-native-responsive-fontsize";
+import { create } from "zustand";
 
 interface PresentationSettings {
   backgroundColor: string;
@@ -13,10 +12,12 @@ interface PresentationSettings {
 
 interface HymnosState {
   searchDebounceDelay: number;
+  enableFuzzySearch: boolean;
   presentationSettings: PresentationSettings;
   setPresentationSettings: (
     newPresentationSettings: Partial<PresentationSettings>,
   ) => void;
+  setEnableFuzzySearch: (enable: boolean) => void;
   setActiveMenu: (menu: string | null) => void;
   syncProgressPercentage: number;
   setSearchDebounceDelay: (delay: number) => void;
@@ -27,16 +28,19 @@ interface HymnosState {
 }
 
 const useHymnosState = create<HymnosState>((set) => ({
-  searchDebounceDelay: 200,
+  searchDebounceDelay: 100,
+  enableFuzzySearch: false,
   presentationSettings: {
     backgroundColor: "slate-900",
     fontColor: "blue-100",
-    font: "Amiri_400Regular",
+    font: "Amiri_700Bold",
     fontSize: RFPercentage(7),
   },
   activeMenu: null,
   syncProgressPercentage: 0,
   currentView: "main", // Default to main menu view
+  setEnableFuzzySearch: (enable: boolean) =>
+    set(() => ({ enableFuzzySearch: enable })),
   setPresentationSettings: (
     newPresentationSettings: Partial<PresentationSettings>,
   ) =>

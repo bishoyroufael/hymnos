@@ -40,20 +40,20 @@ export default function FontMenu({ onFontSelect }: FontMenuProps) {
           <FontPreviewItem
             fontName="Amiri"
             previewText="تَوِّبْنِي فَأَتُوبَ"
-            fontFamily="Amiri_400Regular"
-            onSelect={() => onFontSelect("Amiri_400Regular")}
-          />
-          <FontPreviewItem
-            fontName="Baloo Bhaijaan 2"
-            previewText="تَوِّبْنِي فَأَتُوبَ"
-            fontFamily="BalooBhaijaan2_400Regular"
-            onSelect={() => onFontSelect("BalooBhaijaan2_400Regular")}
+            fontFamily="Amiri_700Bold"
+            onSelect={() => onFontSelect("Amiri_700Bold")}
           />
           <FontPreviewItem
             fontName="Zain"
             previewText="تَوِّبْنِي فَأَتُوبَ"
             fontFamily="Zain_700Bold"
             onSelect={() => onFontSelect("Zain_700Bold")}
+          />
+          <FontPreviewItem
+            fontName="Baloo Bhaijaan 2"
+            previewText="تَوِّبْنِي فَأَتُوبَ"
+            fontFamily="BalooBhaijaan2_700Bold"
+            onSelect={() => onFontSelect("BalooBhaijaan2_700Bold")}
           />
           <FontPreviewItem
             fontName="Lalezar"

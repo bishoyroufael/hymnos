@@ -1,4 +1,8 @@
-import { get_hymns_from_slides, search_in_slides } from "@db/dexie";
+import {
+  get_hymns_from_slides,
+  search_in_slides_fuzzy,
+  search_in_slides_prefix,
+} from "@db/dexie";
 import { Slide } from "@db/models";
 import useHymnosState from "global";
 import { debounce } from "lodash";
@@ -15,26 +19,31 @@ export default function SearchBar({ onPressItemCallback }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchIsLoading, setSearchIsLoading] = useState(false);
-  const { searchDebounceDelay } = useHymnosState();
+  const { searchDebounceDelay, enableFuzzySearch } = useHymnosState();
 
-  const searchInDb = useCallback(async (searchWord: string) => {
-    // console.log(searchWord);
-    const slides = (await search_in_slides(searchWord)) as Slide[];
-    const hymns = await get_hymns_from_slides(slides);
-    const hymnMap = Object.fromEntries(
-      hymns.map(({ uuid, title }) => [uuid, title]),
-    );
-    const sr: SearchResultsItem[] = slides.flatMap(
-      ({ hymn_uuid, lines, uuid }) => ({
-        hymn_uuid: hymn_uuid,
-        title: hymnMap[hymn_uuid],
-        searchLine: lines.join(" | "),
-        slide_uuid: uuid,
-      }),
-    );
-    setSearchIsLoading(false);
-    setSearchResults(sr);
-  }, []);
+  const searchInDb = useCallback(
+    async (searchWord: string) => {
+      const search_fn = enableFuzzySearch
+        ? search_in_slides_fuzzy
+        : search_in_slides_prefix;
+      const slides = (await search_fn(searchWord)) as Slide[];
+      const hymns = await get_hymns_from_slides(slides);
+      const hymnMap = Object.fromEntries(
+        hymns.map(({ uuid, title }) => [uuid, title]),
+      );
+      const sr: SearchResultsItem[] = slides.flatMap(
+        ({ hymn_uuid, lines, uuid }) => ({
+          hymn_uuid: hymn_uuid,
+          title: hymnMap[hymn_uuid],
+          searchLine: lines.join(" | "),
+          slide_uuid: uuid,
+        }),
+      );
+      setSearchIsLoading(false);
+      setSearchResults(sr);
+    },
+    [enableFuzzySearch],
+  );
 
   const debouncedSearch = useMemo(() => {
     return debounce(searchInDb, searchDebounceDelay);
@@ -42,14 +51,18 @@ export default function SearchBar({ onPressItemCallback }: SearchBarProps) {
 
   const onChangeText = (searchWord: string) => {
     setSearchQuery(searchWord);
-    if (searchWord.trim().length < 3) {
+    if (searchWord.trim().length == 0) {
       setSearchResults([]);
+      setShowSearchResults(false);
       return;
     }
+    setShowSearchResults(true);
     setSearchIsLoading(true);
     debouncedSearch(searchWord);
   };
-
+  const onFocus = () => {
+    setShowSearchResults(searchQuery.trim().length == 0 ? false : true);
+  };
   return (
     <View className="w-full">
       <TextInput
@@ -58,10 +71,7 @@ export default function SearchBar({ onPressItemCallback }: SearchBarProps) {
         placeholder="ابحث عن ترانيم.."
         placeholderTextColor="#6b7280" // text-gray-500
         value={searchQuery}
-        onFocus={() => setShowSearchResults(true)}
-        // onBlur={() => {
-        //   if (searchResults.length == 0) setShowSearchResults(false);
-        // }}
+        onFocus={onFocus}
         onChangeText={onChangeText}
       />
       {/* Drop Down Search Results */}

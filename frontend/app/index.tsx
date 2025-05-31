@@ -2,33 +2,17 @@ import HymnosPageWrapper from "@components/base/HymnosPageWrapper";
 import HymnosText from "@components/base/HymnosText";
 import ProgressBar from "@components/base/ProgressBar";
 import SearchBar from "@components/base/SearchBar";
-import {
-  HorizontalHymnList,
-  renderSkeletons,
-} from "@components/fractions/home-screen";
-import {
-  get_all_packs,
-  get_hymns_by_uuid,
-  insert_hymns_and_packs,
-  is_db_empty,
-} from "@db/dexie";
-import { getLastViewedHymns } from "@db/localstorage";
-import { Hymn, HymnsPack, Slide } from "@db/models";
+import { Hymn, HymnsPack } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
-import { AxiosResponse } from "axios";
+import { HorizontalHymnList, renderSkeletons } from "@fractions/home-screen";
+import { updatePacks } from "@fractions/home-screen/handlers";
+import { toggleFullScreen } from "@utils/ui";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import * as fzstd from "fzstd";
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import "../assets/global.css";
-import * as API from "../generated/";
-import useHymnosState from "../global";
-import { toggleFullScreen } from "@utils/ui";
-
-const HymnosAPI = new API.DefaultApi(
-  new API.Configuration({ basePath: "https://public-melons-tell.loca.lt" }),
-);
+import { useFetchInitialData } from "@fractions/home-screen/hooks";
 
 export default memo(function HomePage() {
   // used for skeleton
@@ -38,78 +22,19 @@ export default memo(function HomePage() {
   const [isFetchingFromRemote, setIsFetchingFromRemote] =
     useState<boolean>(false);
 
-  // non-reactive for passing to fetchDb, re-renders <ProgressBar/> only
-  const syncProgressCallback =
-    useHymnosState.getState().setSyncProgressPercentage;
-
-  const fetchInitialData = useCallback(() => {
-    (async () => {
-      // we shouldn't fetch anything if the database contain hymns
-      if (!(await is_db_empty())) {
-        // const allPacks = await get_all_packs();
-        // setHymnPacks(allPacks);
-        await updatePacks();
-
-        const lastViewedHymnsUuids = getLastViewedHymns();
-        // removes undefined elements from previously deleted items
-        const lastViewedHymns = await get_hymns_by_uuid(lastViewedHymnsUuids);
-        // console.log(lastViewedHymns)
-        setLastViewedHymns(lastViewedHymns);
-        return;
-      }
-      setIsFetchingFromRemote(true);
-      HymnosAPI.downloadLatestJsonDataLatestDownloadGet({
-        responseType: "arraybuffer",
-      }).then(
-        (res) => {
-          // Decompress response and add to database
-          const buffer: ArrayBuffer = (res as AxiosResponse<any, ArrayBuffer>)
-            .data;
-          const compressed = new Uint8Array(buffer);
-          const decompressed = fzstd.decompress(compressed);
-          // convert decompressed buffer to json
-          const json: API.HymnosItems = JSON.parse(
-            new TextDecoder().decode(decompressed),
-          );
-
-          const startTime = performance.now();
-          // todo: taking too much time, should be chunked up..
-          insert_hymns_and_packs(
-            json.hymns,
-            json.packs,
-            json.slides,
-            1000,
-            syncProgressCallback,
-          ).then(() => {
-            const endTime = performance.now();
-            console.log(
-              `Call to bulk import took ${endTime - startTime} milliseconds`,
-            );
-            // Add pack to list if not present
-            setHymnPacks(json.packs);
-            setIsFetchingFromRemote(false);
-          });
-        },
-        (r) => {
-          setIsFetchingFromRemote(false);
-          console.log(r);
-        },
-      );
-    })();
-  }, []);
+  const fetchInitialData = useFetchInitialData(
+    setHymnPacks,
+    setLastViewedHymns,
+    setIsFetchingFromRemote,
+  );
 
   // Fetch hymn packs from backend
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  const updatePacks = async () => {
-    const new_updated_packs = await get_all_packs();
-    setHymnPacks(new_updated_packs);
-  };
-
   return (
-    <HymnosPageWrapper onUploadDataCallback={updatePacks}>
+    <HymnosPageWrapper onUploadDataCallback={() => updatePacks(setHymnPacks)}>
       {/* Hero Section */}
       <View className="flex items-center justify-end mt-8 gap-y-4 z-20">
         <View className="flex flex-column items-center gap-6">

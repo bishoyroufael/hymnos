@@ -19,6 +19,7 @@ export default function Card({
   return (
     <Pressable
       {...rest}
+      disabled={isSkeleton}
       onPress={() => onPressCallback()}
       className={`border-2 border-gray-200 p-4 bg-gray-100 ${!isSkeleton ? "hover:bg-gray-200 hover:border-gray-300 duration-100 " : ""}rounded-lg w-48 h-28 justify-center`}
     >

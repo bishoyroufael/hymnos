@@ -45,7 +45,6 @@ db.slides.hook("updating", function (mods, primKey, obj, trans) {
       return { searchWords: searchWords };
     } else
       // "lines" property was deleted (typeof mods.lines === 'undefined') or changed to an unknown type. Remove indexes:
-      // return { linesWords: [] };
       return { searchWords: [] };
   }
 });
@@ -89,9 +88,11 @@ export async function insert_hymns_and_packs(
       }
     };
 
-    await bulkPutChunks(hymns, db.hymns);
-    await bulkPutChunks(packs, db.packs);
-    await bulkPutChunks(slides, db.slides);
+    await Promise.all([
+      bulkPutChunks(hymns, db.hymns),
+      bulkPutChunks(packs, db.packs),
+      bulkPutChunks(slides, db.slides),
+    ]);
 
     console.log("Added hymns, packs, and slides successfully!");
     onProgress(Math.round((completedItems / totalItems) * 100));
@@ -121,40 +122,56 @@ async function find_in_slides_by_prefixes(prefixes: string[], l: number = 10) {
   });
 }
 
-async function find_in_slides_hybrid(
+async function find_in_slides_fuse(
   query: string,
   prefixes: string[],
   l: number = 10,
 ) {
+  // const candidates = (
+  //   await Dexie.Promise.all(
+  //     prefixes.map((prefix) =>
+  //       db.slides.where("searchWords").equals(prefix).distinct(),
+  //     ),
+  //   )
+  // ).flat();
   const candidates = await db.slides
     .where("searchWords")
     .anyOf(prefixes)
+    .distinct()
     .toArray();
 
-  const fuse = new Fuse(candidates, {
-    keys: ["lines"],
+  const fuzzyCandidates = candidates.map((s) => {
+    return { ...s, searchLine: normalizeArabic(s.lines.join(" ")) };
+  });
+
+  const fuzz = new Fuse(fuzzyCandidates, {
+    keys: ["searchLine"],
     threshold: 0.3,
     shouldSort: true,
   });
 
-  return fuse
+  return fuzz
     .search(query)
     .slice(0, l)
     .map((result) => result.item);
 }
 
-export async function search_in_slides(
-  q: string,
-  mode: "by_prefixes" | "by_hybrid_score" = "by_prefixes",
-) {
-  // const startTime = performance.now();
+export async function search_in_slides_fuzzy(q: string) {
+  const normalizedQuery = normalizeArabic(q);
+  const prefixes = generateWordPrefixes(normalizedQuery);
+  try {
+    const slides = await find_in_slides_fuse(q, prefixes);
+    return slides;
+  } catch (r) {
+    console.log(r);
+    return [];
+  }
+}
+export async function search_in_slides_prefix(q: string) {
   const normalizedQuery = normalizeArabic(q);
   const prefixes = generateWordPrefixes(normalizedQuery);
   try {
     const slides = await find_in_slides_by_prefixes(prefixes);
-    // const slides = await find_in_slides_hybrid(q, prefixes);
-    // const endTime = performance.now();
-    // console.log(`took ${endTime - startTime} milliseconds | slides: ${slides}`);
     return slides;
   } catch (r) {
     console.log(r);

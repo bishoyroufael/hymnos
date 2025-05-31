@@ -12,7 +12,6 @@ import {
   get_slides_of_hymn,
   update_or_add_hymn,
 } from "@db/dexie";
-import { deleteHymnFromLocalStorage } from "@db/localstorage";
 import { Hymn, Slide } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
 import { HymnosDataExport, MetaData } from "@utils/exporter";
@@ -25,6 +24,7 @@ import { FlatList, Pressable, View } from "react-native";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import { shareText } from "@utils/sharing";
 import { toggleFullScreen } from "@utils/ui";
+import { useGlobalLocalStorage } from "@hooks/useGlobalLocalStorage";
 
 export default function HymnDetails() {
   const { uuid } = useLocalSearchParams<{ uuid: string }>();
@@ -33,6 +33,10 @@ export default function HymnDetails() {
     return null;
   }
 
+  const lastViewedStorage = useGlobalLocalStorage<string[]>(
+    "lastViewedHymns",
+    [],
+  );
   const [hymn, setHymn] = useState<Hymn | null>(null);
   const [hymnBackup, setHymnBackup] = useState<Hymn | null>(null);
   const [slidesInHymn, setSlidesInHymn] = useState<Slide[]>([]);
@@ -123,7 +127,8 @@ export default function HymnDetails() {
   const handleDeleteHymn = () => {
     delete_hymn_by_uuid(uuid).then(() => {
       setIsEditingHymn(false);
-      deleteHymnFromLocalStorage(uuid); // delete from LS if exists
+      const currentLastViewed = lastViewedStorage.get();
+      lastViewedStorage.set(_.without(currentLastViewed, uuid));
       emitInfo("تم مسح الترنيمه، جاري العوده الي الرئيسيه..", () =>
         router.navigate("/"),
       );
@@ -265,7 +270,6 @@ export default function HymnDetails() {
         </HymnosText>
         {slidesInHymn.length != 0 ? (
           <FlatList
-            className=""
             data={slidesInHymn}
             keyExtractor={(item) => item.uuid}
             contentContainerClassName="gap-y-2"
