@@ -1,118 +1,109 @@
-import React, { useState, useEffect } from "react";
-import "../global.css";
-import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-} from "react-native";
-import { Link } from "expo-router";
+import HymnosPageWrapper from "@components/base/HymnosPageWrapper";
+import HymnosText from "@components/base/HymnosText";
+import ProgressBar from "@components/base/ProgressBar";
+import SearchBar from "@components/base/SearchBar";
+import { Hymn, HymnsPack } from "@db/models";
+import Feather from "@expo/vector-icons/Feather";
+import { HorizontalHymnList, renderSkeletons } from "@fractions/home-screen";
+import { updatePacks } from "@fractions/home-screen/handlers";
+import { toggleFullScreen } from "@utils/ui";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { memo, useEffect, useState } from "react";
+import { ScrollView, View } from "react-native";
+import "../assets/global.css";
+import { useFetchInitialData } from "@fractions/home-screen/hooks";
 
-
-interface HymnPack {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface Hymn {
-  id: string;
-  title: string;
-}
-
-export default function HomePage() {
-  /*const [loaded, error] = useFonts({
-    Amiri_400Regular,
-    Rubik_400Regular,
-    BalooBhaijaan2_400Regular,
-  });*/
-  const [searchQuery, setSearchQuery] = useState("");
-  const [hymnPacks, setHymnPacks] = useState<HymnPack[]>([]);
+export default memo(function HomePage() {
+  // used for skeleton
+  const [hymnPacks, setHymnPacks] = useState<HymnsPack[]>([]);
+  // we should think of a mechanism how to store the last viewed hymns in the database
   const [lastViewedHymns, setLastViewedHymns] = useState<Hymn[]>([]);
+  const [isFetchingFromRemote, setIsFetchingFromRemote] =
+    useState<boolean>(false);
 
-  const fetchHymnPacks = async () => {
-    // Replace with your actual backend fetch
-    const fetchedPacks: HymnPack[] = [
-      {
-        id: "1",
-        name: "Classic Hymns",
-        description: "Traditional church hymns",
-      },
-      {
-        id: "2",
-        name: "Modern Worship",
-        description: "Contemporary worship songs",
-      },
-    ];
-    setHymnPacks(fetchedPacks);
-  };
+  const fetchInitialData = useFetchInitialData(
+    setHymnPacks,
+    setLastViewedHymns,
+    setIsFetchingFromRemote,
+  );
 
-  const fetchLastViewedHymns = async () => {
-    // Replace with your actual backend fetch
-    const fetchedHymns: Hymn[] = [
-      { id: "1", title: "Amazing Grace" },
-      { id: "2", title: "How Great Thou Art" },
-    ];
-    setLastViewedHymns(fetchedHymns);
-  };
   // Fetch hymn packs from backend
   useEffect(() => {
-    fetchHymnPacks();
-    fetchLastViewedHymns();
-  },[] 
-);
+    fetchInitialData();
+  }, [fetchInitialData]);
 
   return (
-    <View className="flex justify-center items-center h-full w-full">
-      <View className="flex p-4 gap-y-4 w-3/4 border-2">
-        {/* Search Bar */}
-        <View className="flex items-center justify-center mt-8 gap-y-4">
-          <Link href="/hymn/presentation" className="underline text-blue-500">
-            Go to Hymn Presentation Page
-          </Link>
-          <Link href="/hymn/pack" className="underline text-blue-500">
-            Go to Hymn Pack Page
-          </Link>
-          <Text className="text-2xl font-bold">Hymnos</Text>
-          <TextInput
-            className="w-full p-4 border rounded-lg border-gray-300 text-lg"
-            placeholder="Search Hymns..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+    <HymnosPageWrapper onUploadDataCallback={() => updatePacks(setHymnPacks)}>
+      {/* Hero Section */}
+      <View className="flex items-center justify-end mt-8 gap-y-4 z-20">
+        <View className="flex flex-column items-center gap-6">
+          {/* <HymnosText className="text-7xl md:text-9xl font-light text-gray-400 hover:text-sky-400 duration-500 drop-shadow-[0_5.0px_1.0px_rgba(0,0,0.9,0.8)]">
+            ϩⲩⲙⲛⲟⲥ
+          </HymnosText> */}
+          <Image
+            source={require("../public/logo512.png")}
+            className="w-48 h-48 drop-shadow-[0_5.0px_4.0px_rgba(0,0,0.8,0.8)] hover:drop-shadow-[0_8.0px_8.0px_rgba(0,0,0.8,0.8)] hover:-translate-y-2 duration-500"
           />
+          <HymnosText className="text-md text-gray-600">
+            مكتبة شاملة لعرض الترانيم والليتورجيا الكنسية.{" "}
+          </HymnosText>
         </View>
-
-        {/* Hymn Packs Section */}
-        <View className="gap-y-4">
-          <Text className="text-xl font-bold">Hymn Packs</Text>
-          <FlatList
-            data={hymnPacks}
-            keyExtractor={(item) => item.id}
-            horizontal
-            renderItem={({ item }) => (
-              <TouchableOpacity className="p-4 bg-gray-100 rounded-lg w-48 mr-2">
-                <Text className="font-semibold">{item.name}</Text>
-                <Text className="text-gray-600 mt-2">{item.description}</Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-
-        {/* Last Viewed Hymns */}
-        <View className="gap-y-4">
-          <Text className="text-xl font-bold">Last Viewed Hymns</Text>
-          <FlatList
-            data={lastViewedHymns}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View className="p-4 bg-gray-100 rounded-lg mb-2">
-                <Text className="font-semibold">{item.title}</Text>
-              </View>
-            )}
-          />
-        </View>
+        {/* Progress Bar */}
+        <ProgressBar />
+        <SearchBar
+          onPressItemCallback={(item) => {
+            toggleFullScreen();
+            router.push(
+              `/hymn/presentation?uuid=${item.hymn_uuid}&startSlide=${item.slide_uuid}`,
+            );
+          }}
+        />
       </View>
-    </View>
+      {/* Library Section */}
+      <ScrollView contentContainerClassName="gap-y-4">
+        <View className="gap-y-4">
+          <View className="flex flex-row justify-between items-center gap-4">
+            <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
+            <HymnosText className="text-2xl font-medium text-gray-800">
+              مكاتب الترانيم
+            </HymnosText>
+            <Feather name="folder" size={20} className="text-gray-800" />
+          </View>
+          <HorizontalHymnList
+            data={hymnPacks}
+            isLoading={isFetchingFromRemote}
+            skeletonElement={renderSkeletons()}
+            emptyResultsElement={<></>}
+            onCardPress={(item) => {
+              router.navigate(`/hymn/pack?uuid=${item.uuid}`);
+            }}
+            renderCardDescription={(item) => item.description}
+          />
+        </View>
+        <View className="gap-y-4">
+          <View className="flex flex-row justify-between items-center gap-4">
+            <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
+            <HymnosText className="text-2xl font-medium text-gray-800">
+              الترانيم السابقه
+            </HymnosText>
+            <Feather name="music" size={20} className="text-gray-800" />
+          </View>
+          <HorizontalHymnList
+            data={lastViewedHymns}
+            isLoading={isFetchingFromRemote}
+            skeletonElement={renderSkeletons()}
+            emptyResultsElement={<></>}
+            onCardPress={(item) => {
+              toggleFullScreen();
+              router.navigate(`/hymn/presentation?uuid=${item.uuid}`);
+            }}
+            renderCardDescription={(item) =>
+              `المؤلف: ${item.author || "مجهول"}\nالملحن: ${item.composer || "مجهول"}`
+            }
+          />
+        </View>
+      </ScrollView>
+    </HymnosPageWrapper>
   );
-}
+});

@@ -1,47 +1,62 @@
 // contain code regarding global state managment using Zustand
 
+import { RFPercentage } from "react-native-responsive-fontsize";
 import { create } from "zustand";
 
 interface PresentationSettings {
   backgroundColor: string;
   fontColor: string;
   font: string;
-  fontSize: number; // Add fontSize
+  fontSize: number;
 }
 
 interface HymnosState {
-  isPresentationSettingsIconShown: boolean;
-  isSettingsMenuOpen: boolean;
+  searchDebounceDelay: number;
+  enableFuzzySearch: boolean;
   presentationSettings: PresentationSettings;
   setPresentationSettings: (
-    newPresentationSettings: Partial<PresentationSettings>
-  ) => void; // Allow partial updates
-  setIsPresentationSettingsIconShown: (isShown: boolean) => void;
-  setIsSettingsMenuOpen: (isOpen: boolean) => void;
+    newPresentationSettings: Partial<PresentationSettings>,
+  ) => void;
+  setEnableFuzzySearch: (enable: boolean) => void;
+  setActiveMenu: (menu: string | null) => void;
+  syncProgressPercentage: number;
+  setSearchDebounceDelay: (delay: number) => void;
+  setSyncProgressPercentage: (progress: number) => void;
+  activeMenu: string | null;
+  currentView: "main" | "nested"; // New state to track the current view
+  setCurrentView: (view: "main" | "nested") => void; // Setter for current view
 }
 
 const useHymnosState = create<HymnosState>((set) => ({
-  isPresentationSettingsIconShown: false,
-  isSettingsMenuOpen: false,
+  searchDebounceDelay: 100,
+  enableFuzzySearch: false,
   presentationSettings: {
     backgroundColor: "slate-900",
     fontColor: "blue-100",
-    font: "Amiri_400Regular",
-    fontSize: 60, // Default font size
+    font: "Amiri_700Bold",
+    fontSize: RFPercentage(7),
   },
+  activeMenu: null,
+  syncProgressPercentage: 0,
+  currentView: "main", // Default to main menu view
+  setEnableFuzzySearch: (enable: boolean) =>
+    set(() => ({ enableFuzzySearch: enable })),
   setPresentationSettings: (
-    newPresentationSettings: Partial<PresentationSettings>
+    newPresentationSettings: Partial<PresentationSettings>,
   ) =>
     set((state) => ({
       presentationSettings: {
         ...state.presentationSettings,
-        ...newPresentationSettings, // Merge new settings with existing ones
+        ...newPresentationSettings,
       },
     })),
-  setIsPresentationSettingsIconShown: (isShown: boolean) =>
-    set(() => ({ isPresentationSettingsIconShown: isShown })),
-  setIsSettingsMenuOpen: (isOpen: boolean) =>
-    set(() => ({ isSettingsMenuOpen: isOpen })),
+  setSearchDebounceDelay: (delay: number) =>
+    set(() => ({ searchDebounceDelay: delay })),
+  setSyncProgressPercentage: (progress) =>
+    set(() => ({ syncProgressPercentage: progress })),
+  setActiveMenu: (menu: string | null) => set(() => ({ activeMenu: menu })),
+  setCurrentView: (view: "main" | "nested") =>
+    set(() => ({ currentView: view })),
 }));
 
 export default useHymnosState;
