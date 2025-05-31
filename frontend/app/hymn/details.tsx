@@ -87,15 +87,19 @@ export default function HymnDetails() {
           slides: data.slides,
           metadata: metadata,
         };
-        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-          JSON.stringify(dataExport),
-        )}`;
-        const link = document.createElement("a");
-        link.href = jsonString;
-        link.download = `hymn_export_${uuid}.json`;
-        link.click();
+        const blob = new Blob([JSON.stringify(dataExport)], {
+          type: "application/json",
+        });
 
-        // ✅ move this here
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `hymn_export_${uuid}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url); // Clean up memory
+
         setIsExporting(false);
       })
       .catch((error) => {
