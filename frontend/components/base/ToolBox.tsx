@@ -2,6 +2,7 @@ import { View, Pressable, ViewProps } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import ConfirmModal from "./ConfirmModal"; // your existing modal
 import { useConfirmModal } from "@hooks/useConfirmModal";
+import { useEffect } from "react";
 
 interface ToolBoxAction {
   key: string;
@@ -16,14 +17,21 @@ interface ToolBoxAction {
 interface ToolBoxProps extends ViewProps {
   showOnlyIf: boolean;
   actions: ToolBoxAction[];
+  onConfirmModalVisibleChange?: (visible: boolean) => void;
 }
 
 export default function ToolBox({
   showOnlyIf,
   actions,
+  onConfirmModalVisibleChange,
   ...rest
 }: ToolBoxProps) {
   const confirmModal = useConfirmModal();
+
+  // sync visibility state with parent caller state
+  useEffect(() => {
+    onConfirmModalVisibleChange?.(confirmModal.visible);
+  }, [confirmModal.visible, onConfirmModalVisibleChange]);
 
   if (!showOnlyIf || !actions.length) return null;
 

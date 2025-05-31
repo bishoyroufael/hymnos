@@ -32,7 +32,7 @@ export default function Card({
         </View>
       ) : (
         <>
-          <HymnosText className="font-medium text-gray-800 line-clamp-2">
+          <HymnosText className="font-medium text-gray-800 line-clamp-1">
             {title}
           </HymnosText>
           <HymnosText className="text-gray-600 mt-2 whitespace-pre-line line-clamp-3">
