@@ -49,6 +49,7 @@ export default function HymnPresentation() {
   const [currSlideIdx, setCurrSlideIdx] = useState<number>(0);
   const [backupSlides, setbackupSlides] = useState<Slide[]>([]); // will be used with editing toolbox
   const { keyEvent } = useKeyEvent();
+  const [isEditToolboxModalOpen, setEditToolboxModalOpen] = useState(false);
 
   const textAreaRef = useRef(null);
 
@@ -81,7 +82,10 @@ export default function HymnPresentation() {
   const handleSlidePress = (e: GestureResponderEvent) => {
     setIsPresentationSettingsIconShown(true);
     setIsSettingsMenuOpen(false);
-
+    // Prevent moving to next slide if user is editing inside the textarea
+    if (isEditingMode && document.activeElement == textAreaRef.current) {
+      return;
+    }
     setCurrSlideIdx((prevIdx) => {
       const screenWidth = Dimensions.get("screen").width;
       const slidesWithEndLength = slides.length + 1;
@@ -137,15 +141,23 @@ export default function HymnPresentation() {
 
   // Auto-hide the menu after a few seconds
   useEffect(() => {
-    // console.log("useEffect of autohiding presentation icons!");
-    if (isPresentationSettingsIconShown && !isSettingsMenuOpen) {
+    console.log("useEffect of autohiding presentation icons!");
+    if (
+      isPresentationSettingsIconShown &&
+      !isSettingsMenuOpen &&
+      !isEditToolboxModalOpen
+    ) {
       const timer = setTimeout(
         () => setIsPresentationSettingsIconShown(false),
         3000,
       );
       return () => clearTimeout(timer);
     }
-  }, [isPresentationSettingsIconShown, isSettingsMenuOpen]);
+  }, [
+    isPresentationSettingsIconShown,
+    isSettingsMenuOpen,
+    isEditToolboxModalOpen,
+  ]);
 
   useAutoSizeTextArea(
     "presentation-text-area",
@@ -290,6 +302,7 @@ export default function HymnPresentation() {
       <ToolBox
         className="absolute m-auto left-0 top-4 z-10 right-0 bg-gray-600 w-[10%] h-[6%] flex flex-row justify-center items-center rounded-md"
         showOnlyIf={isPresentationSettingsIconShown && isEditingMode}
+        onConfirmModalVisibleChange={setEditToolboxModalOpen}
         actions={[
           {
             key: "delete",
