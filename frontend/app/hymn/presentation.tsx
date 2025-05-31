@@ -23,6 +23,7 @@ import {
   View,
 } from "react-native";
 import useHymnosState from "../../global";
+import { ToastContainer } from "react-toastify";
 
 export default function HymnPresentation() {
   const { uuid, isNew, startSlide } = useLocalSearchParams<{
@@ -141,7 +142,7 @@ export default function HymnPresentation() {
 
   // Auto-hide the menu after a few seconds
   useEffect(() => {
-    console.log("useEffect of autohiding presentation icons!");
+    // console.log("useEffect of autohiding presentation icons!");
     if (
       isPresentationSettingsIconShown &&
       !isSettingsMenuOpen &&
@@ -246,6 +247,7 @@ export default function HymnPresentation() {
       className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
       onPointerMove={() => setIsPresentationSettingsIconShown(true)}
     >
+      <ToastContainer />
       {/* Icons/Tools */}
       <View className="absolute top-4 left-4 z-10 w-auto">
         <ToolBox
