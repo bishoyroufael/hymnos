@@ -1,0 +1,1 @@
+uv run datamodel-codegen --input openapi/index.yaml --output src/models/openapi.py

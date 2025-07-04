@@ -1,87 +1,137 @@
-import {
-  get_hymns_from_slides,
-  search_in_slides_fuzzy,
-  search_in_slides_prefix,
-} from "@db/dexie";
-import { Slide } from "@db/models";
+import { search_hymn, search_slide_columns } from "@db/utils/search";
+import { PGlite } from "@electric-sql/pglite/dist/index.cjs";
 import useHymnosState from "global";
-import { debounce } from "lodash";
-import React, { useCallback, useMemo, useState } from "react";
+import { sortBy, uniqBy } from "lodash";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { TextInput, View } from "react-native";
 import SearchResultsList, { SearchResultsItem } from "./SearchResultsList";
 
+const runSearch = async (db: PGlite, searchWord: string) => {
+  try {
+    const raw_slide_results = await search_slide_columns(db, searchWord);
+    const raw_hymn_results = await search_hymn(db, searchWord);
+
+    const slides_results = raw_slide_results.map((r) => {
+      const sri: SearchResultsItem = {
+        _slide_uuid: r.slide_id,
+        title: r.content,
+        subTitle: `${r.hymn_name}`,
+        _hymn_uuid: r.hymn_id,
+        titleIconName: "align-right",
+        subTitleIconName: "music",
+        score: r.score,
+      };
+      return sri;
+    });
+
+    const hymn_results = raw_hymn_results.map((r) => {
+      const sri: SearchResultsItem = {
+        title: r.name,
+        subTitle: `${r.author || "غير محدد"} | ${r.composer || "غير محدد"} `,
+        _hymn_uuid: r.id,
+        titleIconName: "music",
+        subTitleIconName: "user",
+        score: r.score,
+      };
+      return sri;
+    });
+
+    const all_results = [...hymn_results, ...slides_results];
+    const unique_results = sortBy(
+      uniqBy(all_results, (item) => `${item.title}|${item.subTitle}`),
+      (item) => item.score,
+    );
+    return unique_results;
+
+    // const allResults = [...hymnResults, ...slideResults];
+    // return allResults;
+  } catch (error) {
+    console.error("Search error:", error);
+    return [];
+  }
+};
+
 interface SearchBarProps {
+  db: PGlite;
   onPressItemCallback: (item: SearchResultsItem) => void;
 }
+export interface SearchFns {
+  hymns: (query: string) => Promise<any>;
+  slides: (query: string) => Promise<any>;
+}
 
-export default function SearchBar({ onPressItemCallback }: SearchBarProps) {
-  const [searchResults, setSearchResults] = useState([]);
+export default memo(function SearchBar({
+  db,
+  onPressItemCallback,
+}: SearchBarProps) {
+  const [searchResults, setSearchResults] = useState<SearchResultsItem[]>([]);
+  const [resultsLoading, setResultsLoading] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [searchIsLoading, setSearchIsLoading] = useState(false);
-  const { searchDebounceDelay, enableFuzzySearch } = useHymnosState();
 
-  const searchInDb = useCallback(
-    async (searchWord: string) => {
-      const search_fn = enableFuzzySearch
-        ? search_in_slides_fuzzy
-        : search_in_slides_prefix;
-      const slides = (await search_fn(searchWord)) as Slide[];
-      const hymns = await get_hymns_from_slides(slides);
-      const hymnMap = Object.fromEntries(
-        hymns.map(({ uuid, title }) => [uuid, title]),
-      );
-      const sr: SearchResultsItem[] = slides.flatMap(
-        ({ hymn_uuid, lines, uuid }) => ({
-          hymn_uuid: hymn_uuid,
-          title: hymnMap[hymn_uuid],
-          searchLine: lines.join(" | "),
-          slide_uuid: uuid,
-        }),
-      );
-      setSearchIsLoading(false);
-      setSearchResults(sr);
-    },
-    [enableFuzzySearch],
+  const searchDebounceDelay = useHymnosState(
+    (state) => state.searchDebounceDelay,
   );
 
-  const debouncedSearch = useMemo(() => {
-    return debounce(searchInDb, searchDebounceDelay);
-  }, [searchDebounceDelay, searchInDb]);
+  // const debouncedSearch = useCallback(
+  //   debounce(
+  //     async (db: PGlite, query: string) => {
+  //       const results = await runSearch(db, query);
+  //       setSearchResults(results);
+  //       setResultsLoading(false);
+  //     },
+  //     searchDebounceDelay,
+  //     { trailing: true },
+  //   ),
+  //   [searchDebounceDelay],
+  // );
 
-  const onChangeText = (searchWord: string) => {
+  // Do the search on query change
+  useEffect(() => {
+    setResultsLoading(true);
+    // debouncedSearch(db, searchQuery);
+    (async () => {
+      const results = await runSearch(db, searchQuery);
+      setSearchResults(results);
+      setResultsLoading(false);
+    })();
+  }, [searchQuery]);
+
+  const onChangeText = useCallback((searchWord: string) => {
     setSearchQuery(searchWord);
-    if (searchWord.trim().length == 0) {
-      setSearchResults([]);
-      setShowSearchResults(false);
-      return;
-    }
     setShowSearchResults(true);
-    setSearchIsLoading(true);
-    debouncedSearch(searchWord);
-  };
-  const onFocus = () => {
-    setShowSearchResults(searchQuery.trim().length == 0 ? false : true);
-  };
+  }, []);
+
+  const onFocus = useCallback(() => {
+    setShowSearchResults(searchQuery.trim().length > 0);
+  }, [searchQuery]);
+
+  const onBlur = useCallback(() => {
+    // we should use a ref to search results to check if the cursor is selecting
+    setTimeout(() => {
+      setShowSearchResults(false);
+    }, 100);
+  }, []);
+
   return (
     <View className="w-full">
       <TextInput
         style={{ fontFamily: "Rubik_400Regular", direction: "rtl" }}
         className="md:w-1/2 md:focus:w-full w-full self-center p-4 border-2 rounded-lg border-gray-400 text-lg text-gray-800 outline-none shadow focus:border-gray-800 duration-500"
         placeholder="ابحث عن ترانيم.."
-        placeholderTextColor="#6b7280" // text-gray-500
+        placeholderTextColor="#6b7280"
         value={searchQuery}
         onFocus={onFocus}
+        onBlur={onBlur}
         onChangeText={onChangeText}
       />
-      {/* Drop Down Search Results */}
       {showSearchResults && (
         <SearchResultsList
-          isLoading={searchIsLoading}
           onPressItemCallback={onPressItemCallback}
-          items={searchResults}
+          searchResults={searchResults}
+          resultsLoading={resultsLoading}
         />
       )}
     </View>
   );
-}
+});

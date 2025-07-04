@@ -4,17 +4,9 @@ import EditableTextInput from "@components/base/EditableTextInput";
 import ToolBox from "@components/base/ToolBox";
 import HymnosText from "@components/base/HymnosText";
 import Loader from "@components/base/Loader";
-import {
-  delete_hymn_by_uuid,
-  DEXIE_VERSION,
-  export_hymn,
-  get_hymn_by_uuid,
-  get_slides_of_hymn,
-  update_or_add_hymn,
-} from "@db/dexie";
-import { Hymn, Slide } from "@db/models";
+import { DEXIE_VERSION } from "@db/base";
+// import { Hymn, Slide } from "@db/legacy_models";
 import Feather from "@expo/vector-icons/Feather";
-import { HymnosDataExport, MetaData } from "@utils/exporter";
 import { emitError, emitInfo } from "@utils/notification";
 import Constants from "expo-constants";
 import { router, useLocalSearchParams } from "expo-router";
@@ -24,7 +16,16 @@ import { FlatList, Pressable, View } from "react-native";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import { shareText } from "@utils/sharing";
 import { toggleFullScreen } from "@utils/ui";
-import { useGlobalLocalStorage } from "@hooks/useGlobalLocalStorage";
+import { get_hymn_using_id } from "@db/crud/read";
+import useHymnosState from "global";
+import { usePGliteContext } from "context/PGliteContext";
+import { components as OPENAPI } from "@db/models";
+import { upsert_hymn_safe } from "@db/crud/update";
+import { delete_hymn_safe } from "@db/crud/delete";
+import { export_hymn, zipBlobsAndDownload } from "@db/utils/export";
+
+type HymnView = OPENAPI["schemas"]["HymnView"];
+type SlideView = OPENAPI["schemas"]["SlideView"];
 
 export default function HymnDetails() {
   const { uuid } = useLocalSearchParams<{ uuid: string }>();
@@ -33,13 +34,12 @@ export default function HymnDetails() {
     return null;
   }
 
-  const lastViewedStorage = useGlobalLocalStorage<string[]>(
-    "lastViewedHymns",
-    [],
-  );
-  const [hymn, setHymn] = useState<Hymn | null>(null);
-  const [hymnBackup, setHymnBackup] = useState<Hymn | null>(null);
-  const [slidesInHymn, setSlidesInHymn] = useState<Slide[]>([]);
+  const { db } = usePGliteContext();
+  const lastViewedHymnsUuids = useHymnosState.getState().lastViewedHymns;
+  const setLastViewedHymnsUuids = useHymnosState.getState().setLastViewedHymns;
+
+  const [hymn, setHymn] = useState<HymnView | null>(null);
+  const [hymnBackup, setHymnBackup] = useState<HymnView | null>(null);
   const [isEditingHymn, setIsEditingHymn] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
@@ -49,7 +49,7 @@ export default function HymnDetails() {
 
   const confirmModal = useConfirmModal();
 
-  const renderItem = ({ item }: { item: Slide }) => (
+  const renderItem = ({ item }: { item: SlideView }) => (
     <View
       className={`border-2 border-gray-200 flex flex-row w-full p-1 bg-gray-100 ${!isEditingHymn ? "hover:bg-gray-200 hover:border-gray-300 duration-100" : ""} rounded-lg`}
     >
@@ -58,15 +58,14 @@ export default function HymnDetails() {
         className="p-4 rounded-lg flex-1"
         onPress={() => {
           toggleFullScreen();
-          router.navigate(
-            `/hymn/presentation?uuid=${uuid}&startSlide=${item.uuid}`,
-          );
+          router.navigate(`/presentation/${uuid}?startSlide=${item.slide_id}`);
         }}
       >
         <HymnosText
           className={`whitespace-pre-line text-3xl font-light text-center ${isEditingHymn ? "text-gray-500" : "text-gray-800"}`}
         >
-          {item.lines.join("\n")}
+          {item.columns[0]?.header ? item.columns[0].header + "\n" : ""}
+          {item.columns[0]?.content}
         </HymnosText>
       </Pressable>
     </View>
@@ -74,49 +73,20 @@ export default function HymnDetails() {
 
   const handleExport = () => {
     setIsExporting(true);
-    export_hymn(uuid)
-      .then((data) => {
-        const metadata: MetaData = {
-          hymnos_version: Constants.expoConfig.version,
-          dexie_version: DEXIE_VERSION.toString(),
-          user_agent: window.navigator.userAgent,
-        };
-        const dataExport: HymnosDataExport = {
-          hymns: [data.hymn],
-          packs: [],
-          slides: data.slides,
-          metadata: metadata,
-        };
-        const blob = new Blob([JSON.stringify(dataExport)], {
-          type: "application/json",
-        });
-
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `hymn_export_${uuid}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url); // Clean up memory
-
+    export_hymn(db, uuid).then((blobs) => {
+      zipBlobsAndDownload(blobs, uuid).then(() => {
         setIsExporting(false);
-      })
-      .catch((error) => {
-        console.log(error);
-        setIsExporting(false); // also ensure false on error
       });
+    });
   };
 
   // Fetch hymn pack details from backend
   useEffect(() => {
-    get_hymn_by_uuid(uuid)
+    get_hymn_using_id(db, uuid)
       .then((h) => {
+        // console.log(h);
         setHymn(h);
         setHymnBackup(_.cloneDeep(h));
-        get_slides_of_hymn(uuid).then((slides) => {
-          setSlidesInHymn(slides);
-        });
       })
       .catch((e) => {
         console.log(e);
@@ -129,13 +99,11 @@ export default function HymnDetails() {
   }
 
   const handleDeleteHymn = () => {
-    delete_hymn_by_uuid(uuid).then(() => {
+    delete_hymn_safe(db, hymn.id).then(() => {
       setIsEditingHymn(false);
-      const currentLastViewed = lastViewedStorage.get();
-      lastViewedStorage.set(_.without(currentLastViewed, uuid));
-      emitInfo("تم مسح الترنيمه، جاري العوده الي الرئيسيه..", () =>
-        router.navigate("/"),
-      );
+      setLastViewedHymnsUuids(_.without(lastViewedHymnsUuids, uuid));
+      emitInfo("تم مسح الترنيمه، جاري العوده الي الرئيسيه..");
+      router.navigate("/");
     });
   };
   const handleCancel = () => {
@@ -143,17 +111,19 @@ export default function HymnDetails() {
     setIsEditingHymn(false);
   };
   const handleSubmit = () => {
-    if (hymn.title.trim().length < 10) {
-      emitError("Hymn title should have more than 10 characters");
+    if (hymn.name.trim().length < 10) {
+      emitError("يجب ان يكون عنوان الترنيمه مكون من عشره حروف علي الاقل..");
       return;
     }
-    update_or_add_hymn(hymn).then(() => {
+
+    upsert_hymn_safe(db, hymn).then(() => {
       setIsEditingHymn(false);
+      emitInfo("تم التعديل بنجاح!");
     });
   };
 
   function handleShare(): void {
-    shareText(hymn.title, window.location.href);
+    shareText(hymn.name, window.location.href);
   }
 
   function handleOnEdit(): void {
@@ -161,7 +131,7 @@ export default function HymnDetails() {
   }
 
   return (
-    <HymnosPageWrapper>
+    <>
       <ConfirmModal
         visible={confirmModal.visible}
         onConfirm={confirmModal.onConfirm}
@@ -174,8 +144,8 @@ export default function HymnDetails() {
           <EditableTextInput
             rtl
             placeholder="اكتب اسم الترنيمه.."
-            refKey={"title"}
-            value={hymn.title}
+            refKey={"name"}
+            value={hymn.name || ""}
             isEditing={isEditingHymn}
             className={`flex-1 max-w-full text-3xl font-semibold pt-2 pb-2 outline-none text-gray-800 ${isEditingHymn ? "animate-pulse" : ""}`}
             onUpdateText={handleInputChange}
@@ -243,10 +213,10 @@ export default function HymnDetails() {
             rtl
             placeholder="اكتب اسم المؤلف.."
             refKey={"author"}
-            value={hymn.author}
+            value={hymn.author || ""}
             isEditing={isEditingHymn}
             className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
-            valueIfEmpty="مجهول"
+            valueIfEmpty="غير محدد"
             onUpdateText={handleInputChange}
           />
         </View>
@@ -258,10 +228,10 @@ export default function HymnDetails() {
             rtl
             placeholder="اكتب اسم الملحن.."
             refKey={"composer"}
-            value={hymn.composer}
+            value={hymn.composer || ""}
             isEditing={isEditingHymn}
             className={`text-gray-800 outline-none ${isEditingHymn ? "animate-pulse" : ""}`}
-            valueIfEmpty="مجهول"
+            valueIfEmpty="غير محدد"
             onUpdateText={handleInputChange}
           />
         </View>
@@ -270,12 +240,14 @@ export default function HymnDetails() {
       {/* Hymn Titles */}
       <View className="gap-4 flex-grow">
         <HymnosText className="text-2xl font-semibold text-gray-800">
-          كلام الترنيمه
+          كلمات الترنيمه :
         </HymnosText>
-        {slidesInHymn.length != 0 ? (
+        {hymn.slides.length != 0 ? (
           <FlatList
-            data={slidesInHymn}
-            keyExtractor={(item) => item.uuid}
+            data={hymn.slides}
+            // it's okay to used index as key since order won't change
+            // uuid doesn't work since chorus slides are repeated and their uuids will clash
+            keyExtractor={(item, _idx) => _idx.toString()}
             contentContainerClassName="gap-y-2"
             renderItem={renderItem}
           />
@@ -283,7 +255,7 @@ export default function HymnDetails() {
           <Pressable
             onPress={() => {
               toggleFullScreen();
-              router.navigate(`/hymn/presentation?uuid=${hymn.uuid}&isNew`);
+              router.navigate(`/presentation/${hymn.id}`);
             }}
             className="flex-1 flex justify-center self-center bg-gray-100 rounded-lg hover:bg-gray-200 w-full duration-100"
           >
@@ -298,6 +270,6 @@ export default function HymnDetails() {
           </Pressable>
         )}
       </View>
-    </HymnosPageWrapper>
+    </>
   );
 }

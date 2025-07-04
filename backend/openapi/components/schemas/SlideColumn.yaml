@@ -1,0 +1,17 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  slide_id:
+    type: string
+    format: uuid
+  position:
+    type: integer
+  content:
+    type: string
+  header:
+    type: string
+required:
+  - id
+  - slide_id

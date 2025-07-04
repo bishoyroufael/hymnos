@@ -1,0 +1,17 @@
+type: object
+properties:
+  block_id:
+    type: string
+    format: uuid
+  name:
+    type: string
+  position:
+    type: integer
+  slides:
+    type: array
+    items:
+      - $ref: "./SlideView.yaml"
+required:
+  - block_id
+  - name
+  - position

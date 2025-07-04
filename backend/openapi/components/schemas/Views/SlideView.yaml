@@ -1,0 +1,13 @@
+type: object
+properties:
+  slide_id:
+    type: string
+  position:
+    type: integer
+  columns:
+    type: array
+    items:
+      $ref: "./SlideColumnView.yaml"
+required:
+  - slide_id
+  - position

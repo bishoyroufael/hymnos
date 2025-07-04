@@ -2,51 +2,16 @@ import HymnosText from "@components/base/HymnosText";
 import Menu from "@components/base/Menu";
 import ToolBox from "@components/base/ToolBox";
 import Feather from "@expo/vector-icons/Feather";
+import { usePGliteContext } from "context/PGliteContext";
 import { router } from "expo-router";
-import React, { useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
-import { HymnosDataExport } from "@utils/exporter";
-import { emitError, emitInfo } from "@utils/notification";
-import * as DocumentPicker from "expo-document-picker";
-import { import_data } from "@db/dexie";
 import useHymnosState from "global";
-import Checkbox from "expo-checkbox";
+import React, { useState } from "react";
+import { Pressable, View } from "react-native";
 
-const handleImport = async (onImportCallback?: () => void) => {
-  try {
-    const doc = await DocumentPicker.getDocumentAsync({
-      type: "application/json",
-    });
-
-    if (doc && doc.assets && doc.assets.length > 0) {
-      const file = doc.assets[0].file;
-      const content = await file.text();
-
-      const hymnosData: HymnosDataExport = JSON.parse(content);
-      await import_data(hymnosData);
-
-      onImportCallback?.();
-
-      emitInfo("تم اضافه المعلومات بنجاح!");
-    }
-  } catch (e) {
-    emitError("Error occurred while importing: " + e);
-  }
-};
-
-interface HeaderProps {
-  onUploadDataCallback?: () => void;
-}
-
-export default function Header({ onUploadDataCallback }: HeaderProps) {
+export default function Header() {
   const [openMenu, setOpenMenu] = useState<"create" | "settings" | null>(null);
-  const {
-    searchDebounceDelay,
-    setSearchDebounceDelay,
-    enableFuzzySearch,
-    setEnableFuzzySearch,
-  } = useHymnosState();
-
+  const { db } = usePGliteContext();
+  const importData = useHymnosState((state) => state.importUserData);
   return (
     <View
       style={{ direction: "rtl" }}
@@ -84,14 +49,14 @@ export default function Header({ onUploadDataCallback }: HeaderProps) {
                 {
                   title: "ترنيمة",
                   onPress: () => {
-                    router.navigate("/create/hymn");
+                    router.navigate("/hymn/create");
                   },
                   itemCustomView: <Feather name="music" size={20} />,
                 },
                 {
                   title: "مكتبة ترانيم",
                   onPress: () => {
-                    router.navigate("/create/pack");
+                    router.navigate("/pack/create");
                   },
                   itemCustomView: <Feather name="folder" size={20} />,
                 },
@@ -132,35 +97,8 @@ export default function Header({ onUploadDataCallback }: HeaderProps) {
               items={[
                 {
                   title: "رفع ترنيمه او مكتبه",
-                  onPress: () => handleImport(onUploadDataCallback),
+                  onPress: () => importData(db),
                   itemCustomView: <Feather name="upload" size={20} />,
-                },
-                {
-                  title: "وقت رد البحث",
-                  itemCustomView: (
-                    <TextInput
-                      keyboardType="numeric"
-                      maxLength={4}
-                      className="border w-1/2 p-2 rounded-md border-gray-400 bg-gray-200"
-                      value={searchDebounceDelay.toString()}
-                      onChangeText={(v) => {
-                        const parsed = parseInt(v.replace(/[^0-9]/g, ""));
-                        setSearchDebounceDelay(
-                          Number.isNaN(parsed) ? 0 : parsed,
-                        );
-                      }}
-                    />
-                  ),
-                },
-                {
-                  title: "استخدام البحث الضبابي (Fuzzy Search)",
-                  itemCustomView: (
-                    <Checkbox
-                      value={enableFuzzySearch}
-                      onValueChange={setEnableFuzzySearch}
-                      color={enableFuzzySearch ? "cornflowerblue" : undefined}
-                    />
-                  ),
                 },
               ]}
             />

@@ -1,5 +1,7 @@
+import ConfirmModal from "@components/base/ConfirmModal";
 import HymnosText from "@components/base/HymnosText";
 import Feather from "@expo/vector-icons/Feather";
+import { useConfirmModal } from "@hooks/useConfirmModal";
 import React, { useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, ScrollView, View, ViewProps } from "react-native";
 
@@ -8,6 +10,7 @@ interface MenuItem {
   onPress?: () => void;
   nestedMenu?: MenuProps;
   itemCustomView?: JSX.Element;
+  confirm?: boolean;
 }
 
 interface MenuProps extends ViewProps {
@@ -25,6 +28,7 @@ export default function Menu({
   ...rest
 }: MenuProps) {
   const [menuStack, setMenuStack] = useState<number[]>([]); // stack of indices into items/nestedMenus
+  const confirmModal = useConfirmModal();
 
   // Traverse current path to get the active menu
   const activeMenu = useMemo(() => {
@@ -38,7 +42,7 @@ export default function Menu({
     return current;
   }, [title, customView, items, menuStack]);
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({ item, index }: { item: MenuItem; index: number }) => {
     const isDisabled = !(item.nestedMenu || item.onPress);
     return (
       <Pressable
@@ -50,7 +54,11 @@ export default function Menu({
             setMenuStack((prev) => [...prev, index]);
             return;
           }
-          item.onPress?.();
+          if (item.confirm) {
+            confirmModal.show(() => item.onPress?.());
+          } else {
+            item.onPress?.();
+          }
         }}
       >
         <HymnosText className="text-gray-800">{item.title}</HymnosText>
@@ -65,6 +73,11 @@ export default function Menu({
       {...rest}
       className={`bg-slate-200 rounded-md p-2 flex flex-col gap-1 ${className}`}
     >
+      <ConfirmModal
+        visible={confirmModal.visible}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={confirmModal.hide}
+      />
       <View className="flex-row flex items-center">
         {menuStack.length > 0 && (
           <Pressable

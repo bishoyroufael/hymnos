@@ -1,64 +1,88 @@
-import React from "react";
-import { FlatList, View, Text, Pressable } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
 import HymnosText from "@components/base/HymnosText";
-import Loader from "@components/base/Loader";
+import Feather from "@expo/vector-icons/Feather";
+import React, { memo, useCallback } from "react";
+import { FlatList, Pressable, View, ViewProps } from "react-native";
 
 export interface SearchResultsItem {
-  hymn_uuid: string;
   title: string;
-  searchLine: string;
-  slide_uuid: string;
+  subTitle: string;
+  subTitleIconName: string;
+  titleIconName: string;
+  _hymn_uuid: string;
+  _slide_uuid?: string;
+  score: number;
 }
 
-interface SearchResultsListProps {
-  items: SearchResultsItem[];
+interface SearchResultsListProps extends ViewProps {
+  searchResults: SearchResultsItem[];
+  resultsLoading: boolean;
   onPressItemCallback: (item: SearchResultsItem) => void;
-  isLoading: boolean;
 }
 
-export default function SearchResultsList({
-  items,
-  onPressItemCallback,
-  isLoading,
-}: SearchResultsListProps) {
-  const renderItem = ({ item }) => (
+// Memoize individual search result item
+const SearchResultItem = memo(
+  ({ item, onPress }: { item: SearchResultsItem; onPress: () => void }) => (
     <Pressable
       className="p-2 border-b border-gray-300 transition duration-100 ease-in-out hover:border-gray-400"
-      onPress={() => {
-        // hymn is added to localstorage
-        onPressItemCallback(item);
-      }}
+      onPress={onPress}
     >
       <View className="gap-1">
-        <HymnosText className="text-lg text-gray-600">
-          {item.searchLine}
-        </HymnosText>
-
         <View className="flex flex-row justify-end items-center gap-1">
-          <HymnosText className="text-sm font-semibold text-gray-800">
+          <HymnosText className="text-lg text-gray-600">
             {item.title}
           </HymnosText>
-          <Feather name="music" size={15} className="text-gray-800" />
+          <Feather
+            name={item.titleIconName as any}
+            size={20}
+            className="text-gray-800"
+          />
+        </View>
+        <View className="flex flex-row justify-end items-center gap-1">
+          <HymnosText className="text-sm font-semibold text-gray-800">
+            {item.subTitle}
+          </HymnosText>
+          <Feather
+            name={item.subTitleIconName as any}
+            size={15}
+            className="text-gray-800"
+          />
         </View>
       </View>
     </Pressable>
+  ),
+);
+
+export default memo(function SearchResultsList({
+  searchResults,
+  resultsLoading,
+  onPressItemCallback,
+}: SearchResultsListProps) {
+  // Memoize the render function to prevent recreation
+  const renderItem = useCallback(
+    ({ item }: { item: SearchResultsItem }) => (
+      <SearchResultItem item={item} onPress={() => onPressItemCallback(item)} />
+    ),
+    [onPressItemCallback],
+  );
+
+  // Memoize key extractor
+  const keyExtractor = useCallback(
+    (item: SearchResultsItem, index: number) =>
+      item._slide_uuid || item._hymn_uuid || index.toString(),
+    [],
   );
 
   return (
     <View className="w-full p-2 rounded-lg bg-gray-200 absolute top-full mt-1 shadow border-2 border-gray-300 hover:border-gray-400 duration-100">
-      {isLoading ? (
-        <Loader />
-      ) : items.length == 0 ? (
-        <HymnosText className="p-2">لا يوجد نتائج...</HymnosText>
-      ) : (
-        <FlatList
-          data={items}
-          className="h-fit max-h-72"
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={renderItem}
-        />
-      )}
+      <FlatList
+        ListEmptyComponent={
+          <HymnosText className="p-2">لا يوجد نتائج...</HymnosText>
+        }
+        data={searchResults}
+        className={`h-fit max-h-72 ${resultsLoading ? "opacity-50 pointer-events-none" : "opacity-100"} transition-opacity duration-100 ease-in-out`}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+      />
     </View>
   );
-}
+});

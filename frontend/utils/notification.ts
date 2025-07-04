@@ -3,7 +3,7 @@ import { Slide, toast } from "react-toastify";
 export const emitError = (msg: string) => {
   toast.error(msg, {
     position: "bottom-center",
-    autoClose: 4000,
+    autoClose: 5000,
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: false,
@@ -17,7 +17,7 @@ export const emitError = (msg: string) => {
 export const emitInfo = (msg: string, onCloseCallback?: () => void) => {
   toast.success(msg, {
     position: "bottom-center",
-    autoClose: 3000,
+    autoClose: 5000,
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: false,
@@ -34,7 +34,7 @@ export const emitInfo = (msg: string, onCloseCallback?: () => void) => {
 export const emitWarning = (msg: string) => {
   toast.warning(msg, {
     position: "bottom-center",
-    autoClose: 3000,
+    autoClose: 5000,
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: false,

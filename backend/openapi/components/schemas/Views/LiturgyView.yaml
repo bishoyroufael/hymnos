@@ -1,0 +1,15 @@
+type: object
+description: A view to show liturgy and its blocks and slides
+properties:
+  liturgy_id:
+    type: string
+    format: uuid
+  liturgy_name:
+    type: string
+  blocks:
+    type: array
+    items:
+      $ref: "./BlockView.yaml"
+required:
+  - liturgy_id
+  - liturgy_name

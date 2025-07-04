@@ -2,47 +2,56 @@ import {
   getFontFamilyFromClassName,
   useRubikFonts,
 } from "@hooks/useRubikFonts";
-import React from "react";
+import React, { forwardRef } from "react";
 import { TextInput, TextInputProps } from "react-native";
 
-interface EditableTextInputProps extends TextInputProps {
-  refKey: string;
+type EditableTextInputProps = TextInputProps & {
   placeholder: string;
   isEditing: boolean;
   value: string;
   valueIfEmpty?: string;
   rtl?: boolean;
+  className?: string;
+  refKey?: string;
   onUpdateText: (key: string, value: string) => void;
-}
+};
 
-export default function EditableTextInput({
-  className,
-  rtl,
-  refKey,
-  placeholder,
-  isEditing,
-  value,
-  valueIfEmpty,
-  onUpdateText,
-  ...rest
-}: EditableTextInputProps) {
-  const fontsLoaded = useRubikFonts();
-  if (!fontsLoaded) return null;
+const EditableTextInput = forwardRef<TextInput, EditableTextInputProps>(
+  (
+    {
+      className,
+      rtl,
+      refKey,
+      placeholder,
+      isEditing,
+      value,
+      valueIfEmpty,
+      onUpdateText,
+      ...rest
+    },
+    ref,
+  ) => {
+    // const fontsLoaded = useRubikFonts();
+    // if (!fontsLoaded) return null;
 
-  return (
-    <TextInput
-      style={{
-        direction: rtl ? "rtl" : "ltr",
-        fontFamily: getFontFamilyFromClassName(className),
-      }} // should be switched when there's multiple languages
-      className={className}
-      placeholderTextColor={"#aaaaaa"}
-      placeholder={placeholder}
-      caretHidden={!isEditing}
-      readOnly={!isEditing}
-      value={!isEditing && !value && valueIfEmpty ? valueIfEmpty : value}
-      onChangeText={(updatedText) => onUpdateText(refKey, updatedText)}
-      {...rest}
-    />
-  );
-}
+    return (
+      <TextInput
+        ref={ref}
+        style={{
+          direction: rtl ? "rtl" : "ltr",
+          fontFamily: getFontFamilyFromClassName(className),
+        }}
+        className={className}
+        placeholderTextColor={"#aaaaaa"}
+        placeholder={placeholder}
+        caretHidden={!isEditing}
+        readOnly={!isEditing}
+        value={!isEditing && !value && valueIfEmpty ? valueIfEmpty : value}
+        onChangeText={(updatedText) => onUpdateText(refKey, updatedText)}
+        {...rest}
+      />
+    );
+  },
+);
+
+export default EditableTextInput;

@@ -1,0 +1,35 @@
+openapi: 3.0.0
+paths: {}
+info:
+  title: Hymnos Models API
+  version: 1.0.0
+components:
+  schemas:
+    Content:
+      $ref: "./components/schemas/Content.yaml"
+    Hymn:
+      $ref: "./components/schemas/Hymn.yaml"
+    Liturgy:
+      $ref: "./components/schemas/Liturgy.yaml"
+    LiturgyBlock:
+      $ref: "./components/schemas/LiturgyBlock.yaml"
+    Bible:
+      $ref: "./components/schemas/Bible.yaml"
+    Pack:
+      $ref: "./components/schemas/Pack.yaml"
+    PackItem:
+      $ref: "./components/schemas/PackItem.yaml"
+    Slide:
+      $ref: "./components/schemas/Slide.yaml"
+    SlideColumn:
+      $ref: "./components/schemas/SlideColumn.yaml"
+    Tag:
+      $ref: "./components/schemas/Tag.yaml"
+    TagAssignment:
+      $ref: "./components/schemas/TagAssignment.yaml"
+    Tables:
+      $ref: "./components/schemas/Tables.yaml"
+    HymnView:
+      $ref: "./components/schemas/Views/HymnView.yaml"
+    PackView:
+      $ref: "./components/schemas/Views/PackView.yaml"

@@ -8,8 +8,8 @@ interface HymnosTextProps extends TextProps {
 }
 
 export default function HymnosText({ children, style, className, ...rest }: HymnosTextProps) {
-  const fontsLoaded = useRubikFonts();
-  if (!fontsLoaded) return null;
+  // const fontsLoaded = useRubikFonts();
+  // if (!fontsLoaded) return null;
 
   return (
     <Text

@@ -1,0 +1,14 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  liturgy_id:
+    type: string
+  name:
+    type: string
+  position:
+    type: integer
+required:
+  - id
+  - liturgy_id

@@ -8,3 +8,11 @@ export const toggleFullScreen = () => {
     docElem.requestFullscreen();
   }
 };
+
+export const exitFullScreen = () => {
+  if (document.fullscreenElement) {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    }
+  }
+};

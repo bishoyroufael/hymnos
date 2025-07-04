@@ -1,0 +1,18 @@
+type: object
+description: >-
+  Supertype for all content items like hymns, liturgies, and bible
+  readings.
+properties:
+  id:
+    type: string
+    description: Unique identifier for the content item.
+    format: uuid
+  type:
+    $ref: "./ContentType.yaml"
+  created_at:
+    type: string
+    description: timestamp when the content was created.
+    format: date
+required:
+  - id
+  - type

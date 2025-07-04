@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from brotli_asgi import BrotliMiddleware
 from pydantic import TypeAdapter
 from utils.openapi import custom_openapi
-from models.hymnos import *
 from routers import auth, data
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -36,16 +35,7 @@ app.add_middleware(BrotliMiddleware)
 app.include_router(auth.router)
 app.include_router(data.router)
 
-# @app.get("/test")
-# async def test() -> CustomType:
-#     return {"Status": "Ok!"}
 
 @app.get("/")
 async def read_root():
     return {"Status": "Ok!"}
-
-# @app.get("/dbopenapi.json")
-# async def db_models():
-#     ta = TypeAdapter(Union[HymnsPack, Hymn, Tag, Slide])
-#     ta_schema = ta.json_schema()
-#     return ta_schema

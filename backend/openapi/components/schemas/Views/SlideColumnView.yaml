@@ -1,0 +1,16 @@
+type: object
+description: A column in a slide
+properties:
+  id:
+    type: string
+  position:
+    type: integer
+  header:
+    type: string
+  content:
+    type: string
+required:
+  - id
+  - position
+  - header
+  - content

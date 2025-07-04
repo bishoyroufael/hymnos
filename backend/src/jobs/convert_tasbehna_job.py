@@ -14,10 +14,14 @@ def run_tasbehna_convert_job():
 
     # temp for hot reload
     if len(list(BLOBS_FOLDER.glob("*.zstd"))) > 0:
-        print("[job-info] skipping write to disk..")
-        return
+        [f.unlink() for f in BLOBS_FOLDER.iterdir()]
+        # print("[job-info] skipping write to disk..")
+        # return
+
 
     blob_uuid = uuid4() 
+    with open(BLOBS_FOLDER / f"raw_{blob_uuid}.json", "wb") as f:
+        f.write(items.model_dump_json().encode())
     # zstd compression of pack
     with open(BLOBS_FOLDER / f"{blob_uuid}.json.zstd", "wb") as f:
         f.write(zstd.compress(items.model_dump_json().encode()))

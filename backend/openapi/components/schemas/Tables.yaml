@@ -1,0 +1,42 @@
+type: object
+properties:
+  contents:
+    type: array
+    items:
+      $ref: "./Content.yaml"
+  hymns:
+    type: array
+    items:
+      $ref: "./Hymn.yaml"
+  liturgies:
+    type: array
+    items:
+      $ref: "./Liturgy.yaml"
+  liturgies_blocks:
+    type: array
+    items:
+      $ref: "./LiturgyBlock.yaml"
+  bible:
+    type: array
+    items:
+      $ref: "./Bible.yaml"
+  packs:
+    type: array
+    items:
+      $ref: "./Pack.yaml"
+  packs_items:
+    type: array
+    items:
+      $ref: "./PackItem.yaml"
+  slides:
+    type: array
+    items:
+      $ref: "./Slide.yaml"
+  slide_columns:
+    type: array
+    items:
+      $ref: "./SlideColumn.yaml"
+  tags:
+    type: array
+    items:
+      $ref: "./Tag.yaml"

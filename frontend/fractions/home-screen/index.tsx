@@ -36,8 +36,8 @@ export const CreateOrUploadToolBox = ({ onAddCallback, onUploadCallback }) => {
 };
 
 interface HymnBase {
-  uuid: string;
-  title: string;
+  id: string;
+  name: string;
 }
 
 type HorizontalListProps<T extends HymnBase> = {
@@ -62,13 +62,13 @@ export function HorizontalHymnList<T extends HymnBase>({
       ListEmptyComponent={isLoading ? skeletonElement : emptyResultsElement}
       // className="scrollbar-none scrollbar-corner-stone-500"
       contentContainerClassName="gap-4"
-      data={data}
+      data={isLoading ? [] : data}
       inverted
-      keyExtractor={(item) => item.uuid} // uuid must be defined
+      keyExtractor={(item) => item.id} // uuid must be defined
       horizontal
       renderItem={({ item }) => (
         <Card
-          title={item.title}
+          title={item.name}
           description={renderCardDescription(item)}
           onPressCallback={() => onCardPress(item)}
         />

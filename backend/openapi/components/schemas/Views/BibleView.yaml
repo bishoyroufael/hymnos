@@ -1,0 +1,17 @@
+type: object
+properties:
+  bible_id:
+    type: string
+    format: uuid
+  reference:
+    type: string
+  translation:
+    type: string
+  slides:
+    type: array
+    items:
+      $ref: "./SlideView.yaml"
+required:
+  - bible_id
+  - reference
+  - translation
