@@ -1,4 +1,5 @@
 import HymnosText from "@components/base/HymnosText";
+import Loader from "@components/base/Loader";
 import PlusButton from "@components/base/PlusButton";
 import ToolBox from "@components/base/ToolBox";
 import SlideSettingsMenu from "@components/menus/SlideSettingsMenu";
@@ -10,12 +11,11 @@ import {
   useSlideNavigation,
   useUIState,
 } from "@fractions/presentation/hooks";
-import useAutoSizeTextArea from "@hooks/useAutoSizeTextArea";
+import { exitFullScreen } from "@utils/ui";
 import { usePGliteContext } from "context/PGliteContext";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { FlatList, Text } from "react-native";
+import React from "react";
 import {
   NativeSyntheticEvent,
   Pressable,
@@ -23,9 +23,6 @@ import {
   View,
 } from "react-native";
 import useHymnosState from "../../global";
-import { exitFullScreen, toggleFullScreen } from "@utils/ui";
-import { usePresentationFonts } from "@hooks/usePresentationFonts";
-import Loader from "@components/base/Loader";
 
 export default function HymnPresentation() {
   const presentationSettings = useHymnosState(
@@ -75,7 +72,6 @@ export default function HymnPresentation() {
     currSlideIdx,
     setCurrSlideIdx,
     isEditingMode,
-    textAreaRef,
     setIsPresentationSettingsIconShown,
     setIsSettingsMenuOpen,
   );
@@ -93,36 +89,17 @@ export default function HymnPresentation() {
     handleKeyEvent(e.nativeEvent); // This would need to be passed from useSlideNavigation
   };
 
-  const textAreaResizeRef = useAutoSizeTextArea([
-    data,
-    presentationSettings,
-    currSlideIdx,
-  ]);
+  const toggleSettingsicons = () => setIsPresentationSettingsIconShown(true);
+  // Loading state
+  if (!data.viewObject) {
+    return <Loader />;
+  }
 
-  const renderItem = ({ item }) => (
-    <SlideColumn
-      presentationSettings={presentationSettings}
-      key={item.id}
-      id={item.id}
-      ref={(r) => {
-        [textAreaResizeRef, textAreaRef].forEach((ref: any) => {
-          if (typeof ref === "function") {
-            ref(r);
-          } else if (ref && typeof ref === "object") {
-            ref.current = r;
-          }
-        });
-      }}
-      isEditingMode={isEditingMode}
-      handleSlidePress={handleSlidePress}
-      onKeyPress={onKeyPress}
-      setData={setData}
-      columnData={item}
-    />
-  );
+  const currentSlide = data.viewObject.slides[currSlideIdx];
+  const slidesLength = data.viewObject.slides.length;
 
   // Handle Showing Last Empty Slide
-  if (currSlideIdx == data.viewObject?.slides.length) {
+  if (currSlideIdx == slidesLength) {
     return (
       <Pressable
         onPress={handleSlidePress}
@@ -138,11 +115,11 @@ export default function HymnPresentation() {
     );
   }
 
-  const toggleSettingsicons = () => setIsPresentationSettingsIconShown(true);
   return (
-    <View
-      className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor}`}
+    <Pressable
+      className={`flex w-full h-full p-2 bg-${presentationSettings.backgroundColor} cursor-default`}
       onPointerMove={toggleSettingsicons}
+      onPress={handleSlidePress}
     >
       {/* Settings Menu */}
       <View className="absolute top-4 left-4 z-10 w-auto">
@@ -242,20 +219,25 @@ export default function HymnPresentation() {
 
       {/* Main Content Area */}
       <View className="gap-2 w-[80%] h-full self-center">
-        <FlatList
-          className="w-full justify-center"
-          horizontal
-          data={data.viewObject?.slides[currSlideIdx]?.columns}
-          renderItem={renderItem}
-        />
+        {currentSlide.columns.map((columnData) => (
+          <SlideColumn
+            presentationSettings={presentationSettings}
+            key={columnData.id}
+            id={columnData.id}
+            isEditingMode={isEditingMode}
+            onKeyPress={onKeyPress}
+            setData={setData}
+            columnData={columnData}
+          />
+        ))}
       </View>
 
       {/* Slide Counter */}
       <HymnosText
-        className={`absolute text-${presentationSettings.fontColor} bottom-0 text-xl m-2`}
+        className={`absolute text-${presentationSettings.fontColor} bottom-0 text-xl m-2 opacity-70`}
       >
         {currSlideIdx + 1} | {data.viewObject?.slides.length}
       </HymnosText>
-    </View>
+    </Pressable>
   );
 }

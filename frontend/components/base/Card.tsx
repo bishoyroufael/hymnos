@@ -1,5 +1,5 @@
 import HymnosText from "@components/base/HymnosText";
-import React from "react";
+import React, { Component } from "react";
 import { Pressable, PressableProps, View } from "react-native";
 
 interface CardProps extends PressableProps {
@@ -7,6 +7,7 @@ interface CardProps extends PressableProps {
   description?: string;
   onPressCallback?: () => void;
   isSkeleton?: boolean;
+  customView?: JSX.Element;
 }
 
 export default function Card({
@@ -14,6 +15,8 @@ export default function Card({
   description,
   onPressCallback,
   isSkeleton,
+  customView,
+  className,
   ...rest
 }: CardProps) {
   return (
@@ -21,7 +24,7 @@ export default function Card({
       {...rest}
       disabled={isSkeleton}
       onPress={() => onPressCallback()}
-      className={`border-2 border-gray-200 p-4 bg-gray-100 ${!isSkeleton ? "hover:bg-gray-200 hover:border-gray-300 duration-100 " : ""}rounded-lg w-48 h-28 justify-center`}
+      className={`border-2 border-gray-200 p-4 bg-gray-100 ${!isSkeleton ? "hover:bg-gray-200 hover:border-gray-300 duration-100 " : ""}rounded-lg w-48 h-28 justify-center ${className}`}
     >
       {isSkeleton ? (
         <View className="animate-pulse w-full h-full space-y-2 justify-center">
@@ -30,6 +33,8 @@ export default function Card({
           <View className="w-full bg-gray-300 h-2 rounded-lg" />
           <View className="w-full bg-gray-300 h-2 rounded-lg" />
         </View>
+      ) : customView ? (
+        <>{customView}</>
       ) : (
         <>
           <HymnosText className="font-medium text-gray-800 line-clamp-1">

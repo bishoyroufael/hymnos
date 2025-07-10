@@ -2,7 +2,7 @@ import { search_hymn, search_slide_columns } from "@db/utils/search";
 import { PGlite } from "@electric-sql/pglite/dist/index.cjs";
 import useHymnosState from "global";
 import { sortBy, uniqBy } from "lodash";
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { TextInput, View } from "react-native";
 import SearchResultsList, { SearchResultsItem } from "./SearchResultsList";
 
@@ -27,7 +27,7 @@ const runSearch = async (db: PGlite, searchWord: string) => {
     const hymn_results = raw_hymn_results.map((r) => {
       const sri: SearchResultsItem = {
         title: r.name,
-        subTitle: `${r.author || "غير محدد"} | ${r.composer || "غير محدد"} `,
+        subTitle: `${r.author || "غير محدد"} | ${r.composer || "غير محدد"}`,
         _hymn_uuid: r.id,
         titleIconName: "music",
         subTitleIconName: "user",
@@ -39,7 +39,7 @@ const runSearch = async (db: PGlite, searchWord: string) => {
     const all_results = [...hymn_results, ...slides_results];
     const unique_results = sortBy(
       uniqBy(all_results, (item) => `${item.title}|${item.subTitle}`),
-      (item) => item.score,
+      (item) => 1 - item.score,
     );
     return unique_results;
 
@@ -68,6 +68,7 @@ export default memo(function SearchBar({
   const [resultsLoading, setResultsLoading] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const searchContainerRef = useRef(null);
 
   const searchDebounceDelay = useHymnosState(
     (state) => state.searchDebounceDelay,
@@ -106,15 +107,16 @@ export default memo(function SearchBar({
     setShowSearchResults(searchQuery.trim().length > 0);
   }, [searchQuery]);
 
-  const onBlur = useCallback(() => {
-    // we should use a ref to search results to check if the cursor is selecting
-    setTimeout(() => {
-      setShowSearchResults(false);
-    }, 100);
+  const onBlur = useCallback((event) => {
+    // Check if the new focus target is within the search container
+    if (searchContainerRef.current?.contains(event.relatedTarget)) {
+      return; // Don't hide if focus is moving within search area
+    }
+    setShowSearchResults(false);
   }, []);
 
   return (
-    <View className="w-full">
+    <View className="w-full" ref={searchContainerRef}>
       <TextInput
         style={{ fontFamily: "Rubik_400Regular", direction: "rtl" }}
         className="md:w-1/2 md:focus:w-full w-full self-center p-4 border-2 rounded-lg border-gray-400 text-lg text-gray-800 outline-none shadow focus:border-gray-800 duration-500"

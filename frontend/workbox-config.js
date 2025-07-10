@@ -1,19 +1,16 @@
 module.exports = {
-  globDirectory: 'dist/',
+  globDirectory: "dist/",
   globPatterns: [
-    '**/*.{css,js,ico,png,html,json,svg,ttf,woff2,woff,eot}'
+    "**/*.{css,js,ico,png,html,json,svg,ttf,woff2,woff,eot,wasm,data,gz}",
   ],
-  swDest: 'dist/sw.js',
-  ignoreURLParametersMatching: [
-    /^utm_/,
-    /^fbclid$/
-  ],
+  swDest: "dist/sw.js",
+  ignoreURLParametersMatching: [/^utm_/, /^fbclid$/],
   runtimeCaching: [
     {
       urlPattern: /\.(?:ttf|woff2?|eot)$/,
-      handler: 'CacheFirst',
+      handler: "CacheFirst",
       options: {
-        cacheName: 'fonts-cache',
+        cacheName: "fonts-cache",
         expiration: {
           maxEntries: 50,
           maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
@@ -22,14 +19,25 @@ module.exports = {
     },
     {
       urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
-      handler: 'CacheFirst',
+      handler: "CacheFirst",
       options: {
-        cacheName: 'images-cache',
+        cacheName: "images-cache",
         expiration: {
           maxEntries: 100,
           maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
         },
       },
-    }
-  ]
+    },
+    {
+      urlPattern: /\.(?:wasm|data|gz)$/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "wasm-cache",
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 60 * 60 * 24 * 365, // 30 days
+        },
+      },
+    },
+  ],
 };

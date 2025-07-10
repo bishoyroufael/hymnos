@@ -13,6 +13,7 @@ import useHymnosState from "global";
 import React, { memo, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import "../assets/global.css";
+import Card from "@components/base/Card";
 
 type Pack = OPENAPI["schemas"]["Pack"];
 type HymnView = OPENAPI["schemas"]["HymnView"];
@@ -85,7 +86,7 @@ export default memo(function HomePage() {
         />
       </View>
       {/* Library Section */}
-      <ScrollView contentContainerClassName="gap-y-4">
+      <ScrollView contentContainerClassName="gap-y-4 min-h-80">
         <View className="gap-y-4">
           <View className="flex flex-row justify-between items-center gap-4">
             <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
@@ -98,7 +99,19 @@ export default memo(function HomePage() {
             data={hymnPacks}
             isLoading={loadingData}
             skeletonElement={renderSkeletons()}
-            emptyResultsElement={<></>}
+            emptyResultsElement={
+              <Card
+                className="group"
+                onPressCallback={() => router.navigate("/pack/create")}
+                customView={
+                  <Feather
+                    name="plus"
+                    size={30}
+                    className="text-gray-400 text-center group-hover:scale-125 duration-200 transition ease-in-out"
+                  />
+                }
+              />
+            }
             onCardPress={(item) => {
               router.navigate(`/pack/${item.id}`);
             }}

@@ -61,6 +61,7 @@ export function HorizontalHymnList<T extends HymnBase>({
     <FlatList
       ListEmptyComponent={isLoading ? skeletonElement : emptyResultsElement}
       // className="scrollbar-none scrollbar-corner-stone-500"
+      // className="border"
       contentContainerClassName="gap-4"
       data={isLoading ? [] : data}
       inverted

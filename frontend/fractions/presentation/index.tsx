@@ -1,102 +1,86 @@
-import React, { forwardRef, memo, useEffect, useRef } from "react";
-import {
-  GestureResponderEvent,
-  NativeSyntheticEvent,
-  Pressable,
-  TextInput,
-  TextInputKeyPressEventData,
-} from "react-native";
+import EditableTextInput from "@components/base/EditableTextInput";
 import { components as OPENAPI } from "@db/models";
 import { AbstractData } from "@fractions/presentation/types";
-import useHymnosState from "global";
-import EditableTextInput from "@components/base/EditableTextInput";
 import { PresentationSettings } from "global.interfaces";
-import useAutoSizeTextArea from "@hooks/useAutoSizeTextArea";
+import React from "react";
+import {
+  NativeSyntheticEvent,
+  TextInputKeyPressEventData,
+  View,
+} from "react-native";
 
 type SlideColumnView = OPENAPI["schemas"]["SlideColumnView"];
 
 interface SlideColumnProps {
   id: string;
   isEditingMode: boolean;
-  handleSlidePress: (e: GestureResponderEvent) => void;
   onKeyPress: (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => void;
   setData: React.Dispatch<React.SetStateAction<AbstractData>>;
   columnData: SlideColumnView;
   presentationSettings: PresentationSettings;
 }
 
-const SlideColumn = forwardRef<TextInput, SlideColumnProps>(
-  (
-    {
-      id,
-      isEditingMode,
-      handleSlidePress,
-      onKeyPress,
-      setData,
-      columnData,
-      presentationSettings,
-    },
-    ref,
-  ) => {
+const SlideColumn = ({
+  id,
+  isEditingMode,
+  onKeyPress,
+  setData,
+  columnData,
+  presentationSettings,
+}: SlideColumnProps) => {
+  const onChangeTextContent = (_key: string, updatedLineText: string) => {
+    // we need to keep track of columns
+    setData((prev) => ({
+      ...prev,
+      viewObject: {
+        ...prev.viewObject,
+        slides: prev.viewObject.slides.map((slide) => ({
+          ...slide,
+          columns: slide.columns.map((c) =>
+            c === columnData ? { ...c, [_key]: updatedLineText } : c,
+          ),
+        })),
+      },
+    }));
+  };
 
-    const onChangeTextContent = (_key: string, updatedLineText: string) => {
-      // we need to keep track of columns
-      setData((prev) => ({
-        ...prev,
-        viewObject: {
-          ...prev.viewObject,
-          slides: prev.viewObject.slides.map((slide) => ({
-            ...slide,
-            columns: slide.columns.map((c) =>
-              c === columnData ? { ...c, [_key]: updatedLineText } : c,
-            ),
-          })),
-        },
-      }));
-    };
-
-    return (
-      <Pressable
-        className="flex-1 justify-center items-center cursor-default"
-        onPress={handleSlidePress}
-        id={id}
-      >
-        {(isEditingMode || columnData?.header) && (
-          <EditableTextInput
-            id={`header-${id}`}
-            className={`w-full text-center opacity-70 text-${presentationSettings.fontColor} outline-none resize-none ${isEditingMode ? `animate-pulse focus:outline-${presentationSettings.fontColor}` : ""} rounded-lg scrollbar-hide`}
-            placeholder="اكتب عنوان.."
-            style={{
-              fontFamily: presentationSettings.font,
-              fontSize: presentationSettings.fontSize / 2,
-            }}
-            value={columnData.header}
-            isEditing={isEditingMode}
-            refKey={"header"}
-            onUpdateText={onChangeTextContent}
-          />
-        )}
-
+  return (
+    <View className="flex-1 justify-center items-center cursor-default" id={id}>
+      {(isEditingMode || columnData.header) && (
         <EditableTextInput
-          id={`column-${id}`}
-          ref={ref}
-          placeholderTextColor="#aaaaaa"
-          placeholder={"اكتب كلام الترنيمه..."}
-          multiline={true}
-          onKeyPress={onKeyPress}
-          className={`w-full text-center text-${presentationSettings.fontColor} outline-none resize-none ${isEditingMode ? `animate-pulse focus:outline-${presentationSettings.fontColor}` : ""} rounded-lg scrollbar-hide`}
+          id={`header-${id}`}
+          className={`w-full text-center opacity-70 text-${presentationSettings.fontColor} outline-none resize-none ${isEditingMode ? `animate-pulse focus:outline-${presentationSettings.fontColor}` : ""} rounded-lg scrollbar-hide`}
+          placeholder="اكتب عنوان.."
           style={{
             fontFamily: presentationSettings.font,
-            fontSize: presentationSettings.fontSize,
+            fontSize: presentationSettings.fontSize / 2,
           }}
-          value={columnData?.content}
-          refKey={"content"}
+          value={columnData.header}
           isEditing={isEditingMode}
+          refKey={"header"}
           onUpdateText={onChangeTextContent}
         />
-      </Pressable>
-    );
-  },
-);
+      )}
+
+      <EditableTextInput
+        id={`column-${id}`}
+        // ref={ref}
+        placeholderTextColor="#aaaaaa"
+        placeholder={"اكتب كلام الترنيمه..."}
+        multiline={true}
+        onKeyPress={onKeyPress}
+        className={`w-full text-center text-${presentationSettings.fontColor} outline-none resize-none ${isEditingMode ? `animate-pulse focus:outline-${presentationSettings.fontColor}` : ""} rounded-lg scrollbar-hide`}
+        style={{
+          fontFamily: presentationSettings.font,
+          fontSize: presentationSettings.fontSize,
+        }}
+        value={columnData.content}
+        refKey={"content"}
+        isEditing={isEditingMode}
+        onUpdateText={onChangeTextContent}
+      />
+    </View>
+  );
+};
 
 export default SlideColumn;

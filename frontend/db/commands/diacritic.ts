@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS diacritic_map (
 
 export const SQL_INSERT_DIACRITIC_MAP = `
 INSERT INTO diacritic_map (diacritic, replacement) VALUES
+-- Diacritic marks (remove these)
 ('ً', ''),  -- FATHATAN
 ('ٌ', ''),  -- DAMMATAN
 ('ٍ', ''),  -- KASRATAN
@@ -17,5 +18,11 @@ INSERT INTO diacritic_map (diacritic, replacement) VALUES
 ('ٓ', ''),  -- MADDAH
 ('ٔ', ''),  -- HAMZA ABOVE
 ('ٕ', ''),  -- HAMZA BELOW
-('ـ', '');  -- TATWEEL
+('ـ', ''),  -- TATWEEL
+-- Character normalization (replace these)
+('أ', 'ا'),  -- ALEF WITH HAMZA ABOVE
+('إ', 'ا'),  -- ALEF WITH HAMZA BELOW
+('آ', 'ا'),  -- ALEF WITH MADDA ABOVE
+('ة', 'ه'),  -- TEH MARBUTA
+('ى', 'ي');  -- ALEF MAKSURA
 `;

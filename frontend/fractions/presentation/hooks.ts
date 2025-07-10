@@ -76,7 +76,6 @@ export const useSlideNavigation = (
   currSlideIdx: number,
   setCurrSlideIdx: (idx: number | ((prev: number) => number)) => void,
   isEditingMode: boolean,
-  textAreaRef: any,
   setIsPresentationSettingsIconShown: any,
   setIsSettingsMenuOpen: any,
 ) => {
@@ -101,7 +100,10 @@ export const useSlideNavigation = (
   const handleSlidePress = (e: GestureResponderEvent) => {
     setIsPresentationSettingsIconShown(true);
     setIsSettingsMenuOpen(false);
-    if (isEditingMode && document.activeElement == textAreaRef.current) {
+    if (
+      isEditingMode &&
+      ["TEXTAREA", "INPUT"].includes(document.activeElement.tagName) // User is focusing on column to edit
+    ) {
       return;
     }
     setCurrSlideIdx((prevIdx) => {

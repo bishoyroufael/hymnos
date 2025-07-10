@@ -16,12 +16,12 @@ export async function search_slide_columns(db: PGlite, query: string) {
         s.content_id,
         h.name AS hymn_name,
         h.id AS hymn_id,
-      1 - ($1 <<-> ${idx_shared_str}) AS score
+      1 - (remove_diacritics($1) <-> ${idx_shared_str}) AS score
       FROM slide_column sc
       JOIN slide s ON sc.slide_id = s.id
       JOIN hymn h ON s.content_id = h.id
-      WHERE $1 <%${idx_shared_str} 
-      ORDER BY $1 <<->${idx_shared_str} 
+      WHERE remove_diacritics($1) <%${idx_shared_str} 
+      ORDER BY remove_diacritics($1) <->${idx_shared_str} 
       LIMIT 10;
       `,
     [query],
@@ -52,10 +52,10 @@ export async function search_hymn(db: PGlite, query: string) {
   `;
   const results = await db.query(
     `SELECT *,
-      1 - ($1 <<-> ${idx_shared_str}) AS score
+      1 - (remove_diacritics($1) <-> ${idx_shared_str}) AS score
       FROM hymn
-      WHERE $1 <%${idx_shared_str} 
-      ORDER BY $1 <<->${idx_shared_str} 
+      WHERE remove_diacritics($1) <%${idx_shared_str} 
+      ORDER BY remove_diacritics($1) <->${idx_shared_str} 
       LIMIT 10;
       `,
     [query],
