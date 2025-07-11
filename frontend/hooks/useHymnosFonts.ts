@@ -8,7 +8,12 @@ import {
   Rubik_600SemiBold,
   Rubik_700Bold,
 } from "@expo-google-fonts/rubik";
+import { Amiri_700Bold } from "@expo-google-fonts/amiri";
+import { Zain_700Bold } from "@expo-google-fonts/zain";
+import { BalooBhaijaan2_700Bold } from "@expo-google-fonts/baloo-bhaijaan-2";
+import { Lalezar_400Regular } from "@expo-google-fonts/lalezar";
 
+// Mapping of tailwindcss classes to font names
 export const fontWeightMap: Record<string, string> = {
   "font-light": "Rubik_300Light",
   "font-regular": "Rubik_400Regular",
@@ -17,13 +22,18 @@ export const fontWeightMap: Record<string, string> = {
   "font-bold": "Rubik_700Bold",
 };
 
-export function useRubikFonts() {
+export function useHymnosFonts() {
   const [fontsLoaded] = useFonts({
     Rubik_300Light,
     Rubik_400Regular,
     Rubik_500Medium,
     Rubik_600SemiBold,
     Rubik_700Bold,
+    // Presentation Fonts
+    Amiri_700Bold,
+    Zain_700Bold,
+    BalooBhaijaan2_700Bold,
+    Lalezar_400Regular,
   });
 
   useEffect(() => {

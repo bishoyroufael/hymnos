@@ -1,16 +1,17 @@
-import React from "react"
-import { Text, TextProps, View } from "react-native"
-import { getFontFamilyFromClassName, useRubikFonts } from "@hooks/useRubikFonts";
-
+import { getFontFamilyFromClassName } from "@hooks/useHymnosFonts";
+import React from "react";
+import { Text, TextProps } from "react-native";
 
 interface HymnosTextProps extends TextProps {
   children: React.ReactNode;
 }
 
-export default function HymnosText({ children, style, className, ...rest }: HymnosTextProps) {
-  // const fontsLoaded = useRubikFonts();
-  // if (!fontsLoaded) return null;
-
+export default function HymnosText({
+  children,
+  style,
+  className,
+  ...rest
+}: HymnosTextProps) {
   return (
     <Text
       {...rest}

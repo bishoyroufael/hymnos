@@ -38,6 +38,12 @@ export default function FontMenu({ onFontSelect }: FontMenuProps) {
       customView={
         <>
           <FontPreviewItem
+            fontName="Rubik"
+            previewText="تَوِّبْنِي فَأَتُوبَ"
+            fontFamily="Rubik_700Bold"
+            onSelect={() => onFontSelect("Rubik_700Bold")}
+          />
+          <FontPreviewItem
             fontName="Amiri"
             previewText="تَوِّبْنِي فَأَتُوبَ"
             fontFamily="Amiri_700Bold"

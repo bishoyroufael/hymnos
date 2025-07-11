@@ -72,6 +72,7 @@ const SlideColumn = ({
         style={{
           fontFamily: presentationSettings.font,
           fontSize: presentationSettings.fontSize,
+          lineHeight: presentationSettings.fontSize * 1.5,
         }}
         value={columnData.content}
         refKey={"content"}

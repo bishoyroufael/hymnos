@@ -15,7 +15,7 @@ const useHymnosState = create<HymnosState>()(
       presentationSettings: {
         backgroundColor: "slate-900",
         fontColor: "blue-100",
-        font: "Amiri_700Bold",
+        font: "Rubik_700Bold",
         fontSize: RFPercentage(6),
       },
       syncProgressPercentage: 0,
@@ -40,7 +40,7 @@ const useHymnosState = create<HymnosState>()(
     }),
     {
       name: "hymnos-storage",
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) =>
         Object.fromEntries(
           Object.entries(state).filter(

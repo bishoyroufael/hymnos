@@ -1,12 +1,6 @@
-import { getFontFamilyFromClassName } from "@hooks/useRubikFonts";
-import React, {
-  Ref,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import Loader from "@components/base/Loader";
+import { getFontFamilyFromClassName } from "@hooks/useHymnosFonts";
+import React, { useCallback, useLayoutEffect, useRef } from "react";
 import { TextInput, TextInputProps } from "react-native";
 
 type EditableTextInputProps = TextInputProps & {
@@ -34,18 +28,16 @@ const EditableTextInput = ({
   sizeChangeDeps = [],
   ...rest
 }: EditableTextInputProps) => {
-  const multilineCenterRef = useRef(null);
-
-  // Dynamically change textAreaHeight if deps changed
-  // i.e happens if presentation settings changed
-  useLayoutEffect(() => {
-    if (multilineCenterRef && multilineCenterRef.current && rest.multiline) {
-      const node = multilineCenterRef.current;
-      node.style.height = "0px";
-      const scrollHeight = node.scrollHeight;
-      node.style.height = scrollHeight + "px";
-    }
-  }, sizeChangeDeps);
+  const multilineCenterRef =
+    // Dynamically change textAreaHeight if deps changed
+    // i.e happens if presentation settings changed
+    useCallback((node) => {
+      if (node && rest.multiline) {
+        node.style.height = "0px";
+        const scrollHeight = node.scrollHeight;
+        node.style.height = scrollHeight + "px";
+      }
+    }, sizeChangeDeps);
 
   return (
     <TextInput
@@ -62,7 +54,7 @@ const EditableTextInput = ({
       placeholder={placeholder}
       caretHidden={!isEditing}
       readOnly={!isEditing}
-      numberOfLines={value.split("\n").length}
+      // numberOfLines={value.split("\n").length}
       value={!isEditing && !value && valueIfEmpty ? valueIfEmpty : value}
       onChangeText={(updatedText) => {
         onUpdateText(refKey, updatedText);
