@@ -206,15 +206,15 @@ export const useEditingMode = (
 };
 
 export const useSlideActions = (
-  data: any,
+  data: AbstractData,
   currSlideIdx: number,
   setData: React.Dispatch<React.SetStateAction<AbstractData>>,
   setCurrSlideIdx: any,
   focusTextAreaAndMoveCaretToEnd: () => void,
 ) => {
   const handleShare = () => {
-    const currSlide = data.slides[currSlideIdx];
-    shareText(currSlide.lines.join("\n"), window.location.href);
+    const currSlide = data.viewObject.slides[currSlideIdx];
+    shareText(currSlide.columns[0].content, window.location.href);
   };
 
   const addSlideAt = (position: "next" | "prev") => {

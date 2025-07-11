@@ -1,21 +1,34 @@
 import Footer from "@components/base/Footer";
 import Header from "@components/base/Header";
-import HymnosText from "@components/base/HymnosText";
-import { router } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, View, Text } from "react-native";
+import { ScrollView, View } from "react-native";
 import { ToastContainer } from "react-toastify";
 
+interface HymnosPageWrapperProps {
+  presentationMode?: boolean;
+  children: React.ReactNode;
+}
+
 // wrapper that is shared to style all pages in the app
-export default function HymnosPageWrapper({ children }) {
+export default function HymnosPageWrapper({
+  children,
+  presentationMode = false,
+}: HymnosPageWrapperProps) {
   return (
     <View className="flex h-full w-full justify-between">
+      <ToastContainer />
       <ScrollView contentContainerClassName="justify-between h-full w-full flex">
-        <Header />
-        <View className="flex gap-y-4 p-4 self-center justify-start w-10/12 flex-grow">
+        {!presentationMode && <Header />}
+        <View
+          className={
+            !presentationMode
+              ? "flex flex-grow gap-y-4 p-4 self-center justify-start w-10/12"
+              : "flex flex-grow self-start justify-center w-full h-full"
+          }
+        >
           {children}
         </View>
-        <Footer />
+        {!presentationMode && <Footer />}
       </ScrollView>
     </View>
   );

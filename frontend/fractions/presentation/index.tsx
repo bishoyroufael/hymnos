@@ -64,7 +64,6 @@ const SlideColumn = ({
 
       <EditableTextInput
         id={`column-${id}`}
-        // ref={ref}
         placeholderTextColor="#aaaaaa"
         placeholder={"اكتب كلام الترنيمه..."}
         multiline={true}
@@ -78,6 +77,7 @@ const SlideColumn = ({
         refKey={"content"}
         isEditing={isEditingMode}
         onUpdateText={onChangeTextContent}
+        sizeChangeDeps={[presentationSettings]}
       />
     </View>
   );

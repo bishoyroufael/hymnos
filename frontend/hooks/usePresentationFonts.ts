@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { Amiri_700Bold } from "@expo-google-fonts/amiri";
 import { Zain_700Bold } from "@expo-google-fonts/zain";

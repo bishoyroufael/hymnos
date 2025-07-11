@@ -1,19 +1,17 @@
 import ConfirmModal from "@components/base/ConfirmModal";
-import ToolBox from "@components/base/ToolBox";
 import EditableTextInput from "@components/base/EditableTextInput";
-import HymnosPageWrapper from "@components/base/HymnosPageWrapper";
+import HymnosText from "@components/base/HymnosText";
+import ToolBox from "@components/base/ToolBox";
+import { upsert_hymn_safe } from "@db/crud/update";
+import { components as OPENAPI } from "@db/models";
+import Feather from "@expo/vector-icons/Feather";
+import { useConfirmModal } from "@hooks/useConfirmModal";
+import { emitError } from "@utils/notification";
+import { usePGliteContext } from "context/PGliteContext";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
-import HymnosText from "@components/base/HymnosText";
-import { emitError } from "@utils/notification";
-import { useConfirmModal } from "@hooks/useConfirmModal";
-import Feather from "@expo/vector-icons/Feather";
-import { components as OPENAPI } from "@db/models";
-import { createEmptySlide } from "@fractions/presentation/handlers";
-import { upsert_hymn_safe } from "@db/crud/update";
-import { usePGliteContext } from "context/PGliteContext";
 type HymnView = OPENAPI["schemas"]["HymnView"];
 
 export default function HymnDetails() {

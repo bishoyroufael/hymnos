@@ -5,22 +5,12 @@ import { Slot, usePathname } from "expo-router";
 
 export default function Layout() {
   const path = usePathname();
-  const disableHeaderFooter = path.startsWith("/presentation");
-
-  if (disableHeaderFooter) {
-    return (
-      <TypographyProvider>
-        <PGliteProvider>
-          <Slot />
-        </PGliteProvider>
-      </TypographyProvider>
-    );
-  }
+  const isPresentationPage = path.startsWith("/presentation");
 
   return (
     <TypographyProvider>
       <PGliteProvider>
-        <HymnosPageWrapper>
+        <HymnosPageWrapper presentationMode={isPresentationPage}>
           <Slot />
         </HymnosPageWrapper>
       </PGliteProvider>

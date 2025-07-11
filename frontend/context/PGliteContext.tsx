@@ -7,7 +7,6 @@ import { useFetchInitialData } from "@fractions/home-screen/hooks";
 import { usePGlite } from "@hooks/usePGlite";
 import useHymnosState from "global";
 import { createContext, ReactNode, useContext, useEffect } from "react";
-import { ToastContainer } from "react-toastify";
 
 import { components as OPENAPI } from "@db/models";
 
@@ -34,7 +33,6 @@ export const PGliteProvider = ({ children }: { children: ReactNode }) => {
   return (
     <PGliteContext.Provider value={{ db }}>
       {/* <Button title="Download SQL Statments" onPress={_dumpPG} /> */}
-      <ToastContainer />
       {loading || isloadingData ? (
         <Loader progressComponent={<ProgressBar />} />
       ) : (
