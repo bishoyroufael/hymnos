@@ -56,7 +56,6 @@ export default function HymnPresentation() {
     cancelEditing,
     submitEdit,
     deleteSlide,
-    focusTextAreaAndMoveCaretToEnd,
   } = useEditingMode(db, data, setData, currSlideIdx, setCurrSlideIdx);
 
   const {
@@ -80,8 +79,7 @@ export default function HymnPresentation() {
     data,
     currSlideIdx,
     setData,
-    setCurrSlideIdx,
-    focusTextAreaAndMoveCaretToEnd,
+    setCurrSlideIdx
   );
 
   const onKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {

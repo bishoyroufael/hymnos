@@ -7,13 +7,13 @@ import { HorizontalHymnList, renderSkeletons } from "@fractions/home-screen";
 import { getAllPacks, getHymnsUsingId } from "@fractions/home-screen/handlers";
 import { toggleFullScreen } from "@utils/ui";
 import { usePGliteContext } from "context/PGliteContext";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import useHymnosState from "global";
 import React, { memo, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import "../assets/global.css";
 import Card from "@components/base/Card";
+import Logo from "@components/base/Logo";
 
 type Pack = OPENAPI["schemas"]["Pack"];
 type HymnView = OPENAPI["schemas"]["HymnView"];
@@ -63,10 +63,7 @@ export default memo(function HomePage() {
       {/* Hero Section */}
       <View className="flex items-center justify-end mt-8 gap-y-4 z-20">
         <View className="flex flex-column items-center gap-6">
-          <Image
-            source={require("../public/logo512.png")}
-            className="w-48 h-48 drop-shadow-[0_5.0px_4.0px_rgba(0,0,0.8,0.8)] hover:drop-shadow-[0_8.0px_8.0px_rgba(0,0,0.8,0.8)] hover:-translate-y-2 duration-500"
-          />
+          <Logo />
           <HymnosText className="text-md text-gray-600">
             مكتبة شاملة لعرض الترانيم والليتورجيا الكنسية.{" "}
           </HymnosText>

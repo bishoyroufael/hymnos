@@ -2,7 +2,6 @@ import Footer from "@components/base/Footer";
 import Header from "@components/base/Header";
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { ToastContainer } from "react-toastify";
 
 interface HymnosPageWrapperProps {
   presentationMode?: boolean;
@@ -16,7 +15,6 @@ export default function HymnosPageWrapper({
 }: HymnosPageWrapperProps) {
   return (
     <View className="flex h-full w-full justify-between">
-      <ToastContainer />
       <ScrollView contentContainerClassName="justify-between h-full w-full flex">
         {!presentationMode && <Header />}
         <View

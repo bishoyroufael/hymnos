@@ -1,6 +1,6 @@
 // hooks/useHymnData.ts
 import { get_hymn_using_id } from "@db/crud/read";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 // import { Slide } from "@db/legacy_models";
 import { shareText } from "@utils/sharing";
 import { useKeyEvent } from "expo-key-event";
@@ -9,14 +9,13 @@ import _ from "lodash";
 import { useRef } from "react";
 import { Dimensions, GestureResponderEvent } from "react-native";
 import useHymnosState from "../../global";
-// import { update_hymn_with_slides } from "@db/crud/update";
-// import { emitInfo } from "@utils/notification";
 import { components as OPENAPI } from "@db/models";
 import { PGlite } from "@electric-sql/pglite/dist/index.cjs";
 import { createEmptySlide } from "@fractions/presentation/handlers";
 import { AbstractData } from "@fractions/presentation/types";
 import { upsert_hymn_safe } from "@db/crud/update";
 import { emitInfo } from "@utils/notification";
+import * as ScreenOrientation from "expo-screen-orientation";
 
 type HymnView = OPENAPI["schemas"]["HymnView"];
 type SlideView = OPENAPI["schemas"]["SlideView"];
@@ -142,18 +141,8 @@ export const useEditingMode = (
   const [isEditingMode, setIsEditingMode] = useState(false);
   const textAreaRef = useRef(null);
 
-  const focusTextAreaAndMoveCaretToEnd = () => {
-    const input: HTMLTextAreaElement = textAreaRef.current;
-    if (input) {
-      input.focus();
-      const length = input.value.length;
-      input.setSelectionRange(length, length);
-    }
-  };
-
   const handleOnEdit = () => {
     setIsEditingMode(true);
-    focusTextAreaAndMoveCaretToEnd();
   };
 
   const cancelEditing = () => {
@@ -201,7 +190,6 @@ export const useEditingMode = (
     cancelEditing,
     submitEdit,
     deleteSlide,
-    focusTextAreaAndMoveCaretToEnd,
   };
 };
 
@@ -210,7 +198,6 @@ export const useSlideActions = (
   currSlideIdx: number,
   setData: React.Dispatch<React.SetStateAction<AbstractData>>,
   setCurrSlideIdx: any,
-  focusTextAreaAndMoveCaretToEnd: () => void,
 ) => {
   const handleShare = () => {
     const currSlide = data.viewObject.slides[currSlideIdx];
@@ -234,7 +221,6 @@ export const useSlideActions = (
       };
     });
     if (position === "next") setCurrSlideIdx((i: number) => i + 1);
-    focusTextAreaAndMoveCaretToEnd();
   };
 
   return { handleShare, addSlideAt };
@@ -245,6 +231,17 @@ export const useUIState = () => {
   const [isPresentationSettingsIconShown, setIsPresentationSettingsIconShown] =
     useState(false);
   const [isEditToolboxModalOpen, setEditToolboxModalOpen] = useState(false);
+
+  // Force Landscape Orientation
+  useMemo(() => {
+    async function forceLandscapeMode() {
+      await ScreenOrientation.lockPlatformAsync({
+        screenOrientationLockWeb:
+          ScreenOrientation.WebOrientationLock.LANDSCAPE,
+      });
+    }
+    forceLandscapeMode();
+  }, []);
 
   useEffect(() => {
     if (

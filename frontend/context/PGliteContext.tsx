@@ -32,7 +32,6 @@ export const PGliteProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <PGliteContext.Provider value={{ db }}>
-      {/* <Button title="Download SQL Statments" onPress={_dumpPG} /> */}
       {loading || isloadingData ? (
         <Loader progressComponent={<ProgressBar />} />
       ) : (
