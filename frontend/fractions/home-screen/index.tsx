@@ -35,24 +35,25 @@ export const CreateOrUploadToolBox = ({ onAddCallback, onUploadCallback }) => {
   );
 };
 
-interface HymnBase {
+interface CardItemBase {
   id: string;
-  name: string;
 }
 
-type HorizontalListProps<T extends HymnBase> = {
+type HorizontalListProps<T extends CardItemBase> = {
   data: T[];
   isLoading: boolean;
   renderCardDescription: (item: T) => string;
+  renderCardName: (item: T) => string;
   onCardPress: (item: T) => void;
   skeletonElement: JSX.Element;
   emptyResultsElement: JSX.Element;
 };
 
-export function HorizontalHymnList<T extends HymnBase>({
+export function HorizontalHymnList<T extends CardItemBase>({
   data,
   isLoading,
   renderCardDescription,
+  renderCardName,
   onCardPress,
   skeletonElement,
   emptyResultsElement,
@@ -69,7 +70,7 @@ export function HorizontalHymnList<T extends HymnBase>({
       horizontal
       renderItem={({ item }) => (
         <Card
-          title={item.name}
+          title={renderCardName(item)}
           description={renderCardDescription(item)}
           onPressCallback={() => onCardPress(item)}
         />

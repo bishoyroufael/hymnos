@@ -1,18 +1,21 @@
+# Names are the same in singular form
+# as in the migrations done in pglite
+# on the frontend side
 type: object
 properties:
-  contents:
+  content:
     type: array
     items:
       $ref: "./Content.yaml"
-  hymns:
+  hymn:
     type: array
     items:
       $ref: "./Hymn.yaml"
-  liturgies:
+  liturgy:
     type: array
     items:
       $ref: "./Liturgy.yaml"
-  liturgies_blocks:
+  liturgy_block:
     type: array
     items:
       $ref: "./LiturgyBlock.yaml"
@@ -20,23 +23,35 @@ properties:
     type: array
     items:
       $ref: "./Bible.yaml"
-  packs:
+  bible_book:
+    type: array
+    items:
+      $ref: "./BibleBook.yaml"
+  bible_chapter:
+    type: array
+    items:
+      $ref: "./BibleChapter.yaml"
+  bible_translation:
+    type: array
+    items:
+      $ref: "./BibleTranslation.yaml"
+  pack:
     type: array
     items:
       $ref: "./Pack.yaml"
-  packs_items:
+  pack_item:
     type: array
     items:
       $ref: "./PackItem.yaml"
-  slides:
+  slide:
     type: array
     items:
       $ref: "./Slide.yaml"
-  slide_columns:
+  slide_column:
     type: array
     items:
       $ref: "./SlideColumn.yaml"
-  tags:
+  tag:
     type: array
     items:
       $ref: "./Tag.yaml"

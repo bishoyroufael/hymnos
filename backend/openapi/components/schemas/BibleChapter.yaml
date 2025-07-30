@@ -1,0 +1,14 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  bible_book_id:
+    type: string
+    format: uuid
+  number:
+    type: integer
+required:
+  - id
+  - bible_book_id
+  - number

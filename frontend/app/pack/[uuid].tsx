@@ -1,25 +1,23 @@
 import ConfirmModal from "@components/base/ConfirmModal";
 import EditableTextInput from "@components/base/EditableTextInput";
-import ToolBox from "@components/base/ToolBox";
 import HymnosText from "@components/base/HymnosText";
 import Loader from "@components/base/Loader";
 import SearchBar from "@components/base/SearchBar";
-import { DEXIE_VERSION, SIZE_PER_PAGE } from "@db/base";
+import ToolBox from "@components/base/ToolBox";
+import { delete_pack_safe } from "@db/crud/delete";
+import { get_pack_using_id_paged } from "@db/crud/read";
+import { upset_pack_safe } from "@db/crud/update";
+import { ContentType, components as OPENAPI } from "@db/models";
+import { export_pack, zipBlobsAndDownload } from "@db/utils/export";
 import Feather from "@expo/vector-icons/Feather";
 import { emitError, emitInfo, emitWarning } from "@utils/notification";
-import Constants from "expo-constants";
+import { shareText } from "@utils/sharing";
+import { usePGliteContext } from "context/PGliteContext";
 import { router, useLocalSearchParams } from "expo-router";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { Dimensions, FlatList, Pressable, View } from "react-native";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
-import { shareText } from "@utils/sharing";
-import { export_pack, zipBlobsAndDownload } from "@db/utils/export";
-import { get_pack_using_id_paged } from "@db/crud/read";
-import { ContentType, components as OPENAPI } from "@db/models";
-import { usePGliteContext } from "context/PGliteContext";
-import { upset_pack_safe } from "@db/crud/update";
-import { delete_pack_safe } from "@db/crud/delete";
 
 type HymnView = OPENAPI["schemas"]["HymnView"];
 type PackItemView = OPENAPI["schemas"]["PackItemView"];
@@ -79,7 +77,7 @@ export default function HymnPack() {
         className="p-4 rounded-lg flex-1"
         onPress={() => {
           router.navigate(
-            item.type == ContentType.hymn ? `/hymn/${item.id}` : "/",
+            item.type == ContentType.hymn ? `/hymn/${item.id}` : `/presentation/${item.id}`,
           );
         }}
       >
@@ -303,28 +301,25 @@ export default function HymnPack() {
               onPressItemCallback={(item) => {
                 setPack((prev) => {
                   const foundIdx = prev.items.findIndex((itm) => {
-                    if (itm.type == ContentType.hymn) {
-                      return itm.id == item._hymn_uuid;
-                    }
-                    return false; //for now, todo: logic for other objects
+                    return itm.id == item._resource_uuid;
                   });
 
                   if (foundIdx != -1) {
-                    emitWarning("الترنيمه موجوده في المكتبه بالفعل!");
+                    emitWarning("موجود بالفعل في المكتبه!");
                     return prev;
                   }
-                  const withAddedHymn = prev;
+                  const withAddedContent = prev;
                   const packItemView: PackItemView = {
-                    id: item._hymn_uuid,
+                    id: item._resource_uuid,
                     type: ContentType.hymn,
                   };
-                  withAddedHymn.items.push(packItemView);
+                  withAddedContent.items.push(packItemView);
 
-                  upset_pack_safe(db, withAddedHymn).then((newPack) => {
-                    emitInfo("تم اضافه الترنيمه الي المكتبه!");
+                  upset_pack_safe(db, withAddedContent).then((newPack) => {
+                    emitInfo("تم الإضافه الي المكتبه بنجاح!");
                     setPack(newPack);
                   });
-                  return withAddedHymn;
+                  return withAddedContent;
                 });
               }}
             />

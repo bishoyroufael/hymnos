@@ -9,11 +9,10 @@
     "web": "expo start --web",
     "prebuild": "node auto-version.js",
     "build:web": "npm run prebuild && rm -rf dist/ && npx expo export -p web -c && npx workbox-cli generateSW workbox-config.js",
-    "generate-api-stubs": "openapi-generator-cli generate -g typescript-axios -i http://127.0.0.1:8000/openapi.json -o generated",
     "generate-db-models": "npx openapi-typescript ../backend/openapi/index.yaml --output db/models.ts --enum --export-type"
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.3.2",
+    "@electric-sql/pglite": "^0.3.5",
     "@expo-google-fonts/amiri": "^0.2.3",
     "@expo-google-fonts/baloo-bhaijaan-2": "^0.2.3",
     "@expo-google-fonts/cairo": "^0.3.0",

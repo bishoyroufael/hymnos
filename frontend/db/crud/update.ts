@@ -1,14 +1,72 @@
 import { PGlite, Results } from "@electric-sql/pglite/dist/index.cjs";
 import { components, ContentType } from "@db/models";
-import { get_hymn_using_id, get_pack_using_id_paged } from "@db/crud/read";
+import {
+  get_content_slides,
+  get_hymn_using_id,
+  get_pack_using_id_paged,
+} from "@db/crud/read";
 import _, { update } from "lodash";
 
 type HymnView = components["schemas"]["HymnView"];
 type PackView = components["schemas"]["PackView"];
+type SlideView = components["schemas"]["SlideView"];
+type ContentSlidesView = components["schemas"]["ContentSlidesView"];
+
+export async function upsert_slides_safe(
+  db: PGlite,
+  updated_slides: ContentSlidesView,
+) {
+  await db.transaction(async (tx) => {
+    // Delete all slides and re-insert updated ones for simplicity
+    // i.e avoids clashes and constraints errors
+    await tx.query(`DELETE FROM slide WHERE content_id = $1;`, [
+      updated_slides.content_id,
+    ]);
+
+    for (const updated_slide of updated_slides.slides) {
+      await tx.query(
+        `
+        INSERT INTO slide (id, content_id, position)
+        VALUES ($1,$2,$3)
+        ON CONFLICT(id) DO UPDATE SET
+        position=EXCLUDED.position;
+        `,
+        [
+          updated_slide.slide_id,
+          updated_slides.content_id,
+          updated_slide.position,
+        ],
+      );
+
+      for (const updated_column of updated_slide.columns) {
+        await tx.query(
+          `
+          INSERT INTO slide_column (id, slide_id, position, content, header)
+          VALUES ($1,$2,$3,$4,$5)
+          ON CONFLICT(id) DO UPDATE SET
+          position=EXCLUDED.position,
+          content=EXCLUDED.content,
+          header=EXCLUDED.header;
+          `,
+          [
+            updated_column.id,
+            updated_slide.slide_id,
+            updated_column.position,
+            updated_column.content,
+            updated_column.header,
+          ],
+        );
+      }
+    }
+  });
+
+  return await get_content_slides(db, updated_slides.content_id);
+}
 
 export async function upsert_hymn_safe(db: PGlite, updated_hymn: HymnView) {
   await db.transaction(async (tx) => {
     const old_hymn = await get_hymn_using_id(tx, updated_hymn.id);
+
     // Insert Content Safe
     await tx.query(
       `

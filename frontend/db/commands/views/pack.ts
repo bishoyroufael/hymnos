@@ -1,4 +1,4 @@
-const SQL_PACK_VIEW = `
+const SQL_HYMN_VIEW = `
 CREATE OR REPLACE VIEW view_hymn_json AS
 SELECT
   h.id AS hymn_id,
@@ -42,4 +42,4 @@ FROM hymn h
 JOIN content c ON c.id = h.id;
 `;
 
-export default SQL_PACK_VIEW;
+export default SQL_HYMN_VIEW;

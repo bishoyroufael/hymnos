@@ -10,7 +10,7 @@ const useHymnosState = create<HymnosState>()(
     (set) => ({
       isloadingData: true,
       importUserDataStatus: "idle",
-      lastViewedHymns: [],
+      lastViewedContent: [],
       searchDebounceDelay: 100,
       presentationSettings: {
         backgroundColor: "slate-900",
@@ -19,8 +19,8 @@ const useHymnosState = create<HymnosState>()(
         fontSize: RFPercentage(6),
       },
       syncProgressPercentage: 0,
-      setLastViewedHymns: (newLastViewedHymns: string[]) =>
-        set(() => ({ lastViewedHymns: newLastViewedHymns })),
+      setLastViewedContent: (newLastViewedHymns: string[]) =>
+        set(() => ({ lastViewedContent: newLastViewedHymns })),
       setIsloadingData: (isFetching: boolean) =>
         set(() => ({ isloadingData: isFetching })),
       setPresentationSettings: (

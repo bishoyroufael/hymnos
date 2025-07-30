@@ -1,17 +1,22 @@
 type: object
 properties:
-  bible_id:
+  id:
     type: string
     format: uuid
-  reference:
+  type:
+    $ref: "../ContentType.yaml"
+  created_at:
     type: string
   translation:
-    type: string
-  slides:
-    type: array
-    items:
-      $ref: "./SlideView.yaml"
+    $ref: "../BibleTranslation.yaml"
+  books_count:
+    type: integer
+  chapters_count:
+    type: integer
 required:
-  - bible_id
-  - reference
+  - id
+  - type
+  - created_at
   - translation
+  - books_count
+  - chapters_count

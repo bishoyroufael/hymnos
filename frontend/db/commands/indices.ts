@@ -1,10 +1,9 @@
-const SQL_INDICES = `
+export const SQL_INDICES = `
 -- ===========================
 -- 6. Indexes (Optional but Recommended)
 -- ===========================
 
 -- For faster joins / search
-SET pg_trgm.similarity_threshold = 0.4;
 CREATE INDEX IF NOT EXISTS idx_slides_content_id ON slide(content_id);
 CREATE INDEX IF NOT EXISTS idx_slide_columns_slide_id ON slide_column(slide_id);
 CREATE INDEX IF NOT EXISTS idx_tag_assignment_content_id ON tag_assignment(content_id);
@@ -56,5 +55,3 @@ INCLUDE (content_id);
 CREATE INDEX IF NOT EXISTS idx_content_type_created_at 
 ON content(type, created_at, id);
 `;
-
-export default SQL_INDICES;

@@ -1,0 +1,42 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  type:
+    $ref: "../ContentType.yaml"
+  created_at:
+    type: string
+  canon_order:
+    type: integer
+  name_id:
+    type: string
+  name_lang:
+    type: string
+  name_lang_abbr:
+    type: string
+  bible:
+    id:
+      type: string
+      format: uuid
+    translation:
+      $ref: "../BibleTranslation.yaml"
+  chapters_count:
+    type: integer
+  chapters:
+    type: array
+    items:
+      id:
+        type: string
+      number:
+        type: integer
+required:
+  - id
+  - type
+  - created_at
+  - canon_order
+  - name_id
+  - name_lang
+  - bible
+  - chapters_count
+  - chapters

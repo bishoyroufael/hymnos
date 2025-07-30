@@ -32,8 +32,8 @@ export default function HymnDetails() {
   }
 
   const { db } = usePGliteContext();
-  const lastViewedHymnsUuids = useHymnosState.getState().lastViewedHymns;
-  const setLastViewedHymnsUuids = useHymnosState.getState().setLastViewedHymns;
+  const lastViewedContentsUuids = useHymnosState.getState().lastViewedContent;
+  const setLastViewedContent = useHymnosState.getState().setLastViewedContent;
 
   const [hymn, setHymn] = useState<HymnView | null>(null);
   const [hymnBackup, setHymnBackup] = useState<HymnView | null>(null);
@@ -81,7 +81,6 @@ export default function HymnDetails() {
   useEffect(() => {
     get_hymn_using_id(db, uuid)
       .then((h) => {
-        // console.log(h);
         setHymn(h);
         setHymnBackup(_.cloneDeep(h));
       })
@@ -98,7 +97,7 @@ export default function HymnDetails() {
   const handleDeleteHymn = () => {
     delete_hymn_safe(db, hymn.id).then(() => {
       setIsEditingHymn(false);
-      setLastViewedHymnsUuids(_.without(lastViewedHymnsUuids, uuid));
+      setLastViewedContent(_.without(lastViewedContentsUuids, uuid));
       emitInfo("تم مسح الترنيمه، جاري العوده الي الرئيسيه..");
       router.navigate("/");
     });

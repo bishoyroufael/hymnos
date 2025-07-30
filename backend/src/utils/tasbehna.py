@@ -43,7 +43,7 @@ def n_create_hymn(tasbe7na_hymn) -> Tables:
     if (chorus := tasbe7na_hymn.get("chorus")):
         for n, text in enumerate(chorus): # Array
             slide = Slide(id=str(uuid4()), content_id=hymn_content.id)
-            column = SlideColumn(id=str(uuid4()), slide_id=slide.id, content=text, header= "(ق)" if n==0 else None, position=0)
+            column = SlideColumn(id=str(uuid4()), content_type=ContentType.hymn, slide_id=slide.id, content=text, header= "(ق)" if n==0 else None, position=0)
             # append to chorus specific variables
             chorus_slides.append(slide)
             chorus_columns.append(column)
@@ -62,7 +62,7 @@ def n_create_hymn(tasbe7na_hymn) -> Tables:
     for verse in tasbe7na_hymn.get("verses"):
         for n, text in enumerate(verse): # Array
             slide = Slide(id=str(uuid4()), content_id=hymn_content.id)
-            column = SlideColumn(id=str(uuid4()), slide_id=slide.id, content=text, header=f"({v_num})".translate(translation_table) if n==0 else None, position=0)
+            column = SlideColumn(id=str(uuid4()), content_type=ContentType.hymn, slide_id=slide.id, content=text, header=f"({v_num})".translate(translation_table) if n==0 else None, position=0)
             slides_in_hymn.append(slide)
             all_columns.append(column)
         v_num+=1
@@ -79,7 +79,7 @@ def n_create_hymn(tasbe7na_hymn) -> Tables:
     assert_unique_slide_constraints(slides_in_hymn)
     assert_valid_slide_columns(all_columns, slides_in_hymn)
 
-    return Tables(contents=[hymn_content], hymns=[hymn_obj], slides=slides_in_hymn, slide_columns=all_columns)
+    return Tables(content=[hymn_content], hymn=[hymn_obj], slide=slides_in_hymn, slide_column=all_columns)
 
 
 from collections import Counter
@@ -128,25 +128,25 @@ def combine_song(title: Optional[str], verses: Optional[List[List[str]]], chorus
         parts.extend(line for verse in verses for line in (verse + (chorus or [])))
     return '. '.join(parts).replace("\n", ". ")
 
-def convert_tasbe7na_to_hymnos(hymns_tasbe7na):
+def _convert_tasbe7na_to_hymnos(hymns_tasbe7na):
     arabic_hymns = [h for h in hymns_tasbe7na if (detect(combine_song(h.get('title'), h.get('verses'), h.get('chorus')), low_memory=False)['lang'] in ['ar', 'arz', 'fa'] )] 
-    all_tables = Tables(contents=[], hymns=[], slide_columns=[],slides=[])
+    all_tables = Tables(content=[], hymn=[], slide_column=[], slide=[])
     for h in arabic_hymns:
         tables = n_create_hymn(h)
-        all_tables.contents.extend(tables.contents)
-        all_tables.slides.extend(tables.slides)
-        all_tables.slide_columns.extend(tables.slide_columns)
-        all_tables.hymns.extend(tables.hymns)
+        all_tables.content.extend(tables.content)
+        all_tables.slide.extend(tables.slide)
+        all_tables.slide_column.extend(tables.slide_column)
+        all_tables.hymn.extend(tables.hymn)
     # Create Pack for hymns
     hymn_pack = Pack(id=str(uuid4()), name="Hymnos Arabic Hymns", author="Hymnos App", description="Collection of Arabic Hymns")
-    hymn_pack_items = [PackItem(pack_id=hymn_pack.id, content_id=c.id) for c in all_tables.contents]
-    all_tables.packs = [hymn_pack]
-    all_tables.packs_items = hymn_pack_items
+    hymn_pack_items = [PackItem(pack_id=hymn_pack.id, content_id=c.id) for c in all_tables.content]
+    all_tables.pack = [hymn_pack]
+    all_tables.pack_item = hymn_pack_items
     return all_tables
 
 
 # Main function to download, check, and extract the file
-def get_tasbe7na_hymns(file_url: str):
+def _get_tasbe7na_hymns(file_url: str):
     temp_file_path = Path(".temp.zip")
     download_file(file_url, temp_file_path)
 

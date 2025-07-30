@@ -6,7 +6,10 @@ interface BlobsExportMap {
   hymn?: Blob;
   liturgy?: Blob;
   liturgy_block?: Blob;
+  bible_translation?: Blob;
   bible?: Blob;
+  bible_chapter?: Blob;
+  bible_book?: Blob;
   slide?: Blob;
   slide_column?: Blob;
   tags?: Blob;
@@ -93,6 +96,55 @@ export async function export_pack(
     )
   ).blob;
 
+  const bible_books_ids = (
+    await db.query(
+      `SELECT bible_book_id FROM bible_chapter WHERE id=ANY(ARRAY[${contentQuotedIds}])`,
+    )
+  ).rows.map((r: { bible_book_id: string }) => r.bible_book_id);
+
+  const bibleBooksQuotedIds = bible_books_ids
+    .map((id) => `'${id}'::uuid`)
+    .join(", ");
+
+  const bible_chapter_blob = (
+    await db.query(
+      `COPY (SELECT * FROM bible_chapter WHERE id=ANY(ARRAY[${contentQuotedIds}])) TO '/dev/blob' WITH (FORMAT CSV, HEADER)`,
+    )
+  ).blob;
+
+  const bible_books_blob = (
+    await db.query(
+      `COPY (SELECT * FROM bible_book WHERE id=ANY(ARRAY[${bibleBooksQuotedIds}])) TO '/dev/blob' WITH (FORMAT CSV, HEADER)`,
+    )
+  ).blob;
+
+  const bible_ids = (
+    await db.query(
+      `SELECT bible_id FROM bible_book WHERE id=ANY(ARRAY[${bibleBooksQuotedIds}])`,
+    )
+  ).rows.map((r: { bible_id: string }) => r.bible_id);
+  const bibleQuotedIds = bible_ids.map((id) => `'${id}'::uuid`).join(", ");
+  const bible_blob = (
+    await db.query(
+      `COPY (SELECT * FROM bible WHERE id=ANY(ARRAY[${bibleQuotedIds}])) TO '/dev/blob' WITH (FORMAT CSV, HEADER)`,
+    )
+  ).blob;
+
+  const bible_translation_ids = (
+    await db.query(
+      `SELECT translation_id FROM bible WHERE id=ANY(ARRAY[${bibleQuotedIds}])`,
+    )
+  ).rows.map((r: { translation_id: string }) => r.translation_id);
+  const bibleTranslationQuotedIds = bible_translation_ids
+    .map((id) => `'${id}'`)
+    .join(", ");
+
+  const bible_translation_blob = (
+    await db.query(
+      `COPY (SELECT * FROM bible_translation WHERE id=ANY(ARRAY[${bibleTranslationQuotedIds}])) TO '/dev/blob' WITH (FORMAT CSV, HEADER)`,
+    )
+  ).blob;
+
   const slides_blob = (
     await db.query(
       `COPY (SELECT * FROM slide WHERE content_id=ANY(ARRAY[${contentQuotedIds}])) TO '/dev/blob' WITH (FORMAT CSV, HEADER)`,
@@ -119,6 +171,10 @@ export async function export_pack(
     slide_column: slide_columns_blob,
     pack: pack_blob,
     pack_item: pack_items_blob,
+    bible_translation: bible_translation_blob,
+    bible: bible_blob,
+    bible_book: bible_books_blob,
+    bible_chapter: bible_chapter_blob,
   };
 }
 
@@ -127,7 +183,23 @@ export const zipBlobsAndDownload = async (
   id: string,
 ) => {
   const zip = new JSZip();
+  const order_str = `content.csv
+tag.csv
+tag_assignment.csv
+pack.csv
+pack_item.csv
+hymn.csv
+liturgy.csv
+liturgy_block.csv
+bible_translation.csv
+bible.csv
+bible_book.csv
+bible_chapter.csv
+slide.csv
+slide_column.csv`;
 
+  const content_blob = new Blob([order_str], { type: "text/plain" });
+  zip.file("order", content_blob);
   // Add blobs to the zip with a filename
   Object.entries(blobMap).forEach(([name, blob]) => {
     zip.file(`${name}.csv`, blob);

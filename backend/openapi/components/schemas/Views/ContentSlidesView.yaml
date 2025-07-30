@@ -1,0 +1,14 @@
+type: object
+properties:
+  content_id:
+    type: string
+    format: uuid
+  content_type:
+    $ref: "../ContentType.yaml"
+  slides:
+    type: array
+    items:
+      $ref: "./SlideView.yaml"
+required:
+  - content_type
+  - slides

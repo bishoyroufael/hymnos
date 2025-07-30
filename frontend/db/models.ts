@@ -44,8 +44,29 @@ export type components = {
         Bible: {
             /** Format: uuid */
             id: string;
-            reference: string;
-            translation?: string;
+            translation_id: string;
+        };
+        BibleBook: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            bible_id: string;
+            canon_order: number;
+            name_id?: string;
+            name_lang: string;
+            name_lang_abbr?: string;
+        };
+        BibleChapter: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            bible_book_id: string;
+            number: number;
+        };
+        BibleTranslation: {
+            id: string;
+            abbr: string;
+            name: string;
         };
         /** @description A collection of content items grouped together. */
         Pack: {
@@ -92,16 +113,81 @@ export type components = {
             content_type: components["schemas"]["ContentType"];
         };
         Tables: {
-            contents?: components["schemas"]["Content"][];
-            hymns?: components["schemas"]["Hymn"][];
-            liturgies?: components["schemas"]["Liturgy"][];
-            liturgies_blocks?: components["schemas"]["LiturgyBlock"][];
+            content?: components["schemas"]["Content"][];
+            hymn?: components["schemas"]["Hymn"][];
+            liturgy?: components["schemas"]["Liturgy"][];
+            liturgy_block?: components["schemas"]["LiturgyBlock"][];
             bible?: components["schemas"]["Bible"][];
-            packs?: components["schemas"]["Pack"][];
-            packs_items?: components["schemas"]["PackItem"][];
-            slides?: components["schemas"]["Slide"][];
-            slide_columns?: components["schemas"]["SlideColumn"][];
-            tags?: components["schemas"]["Tag"][];
+            bible_book?: components["schemas"]["BibleBook"][];
+            bible_chapter?: components["schemas"]["BibleChapter"][];
+            bible_translation?: components["schemas"]["BibleTranslation"][];
+            pack?: components["schemas"]["Pack"][];
+            pack_item?: components["schemas"]["PackItem"][];
+            slide?: components["schemas"]["Slide"][];
+            slide_column?: components["schemas"]["SlideColumn"][];
+            tag?: components["schemas"]["Tag"][];
+        };
+        BibleView: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["ContentType"];
+            created_at: string;
+            translation: components["schemas"]["BibleTranslation"];
+            books_count: number;
+            chapters_count: number;
+        };
+        BibleBookView: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["ContentType"];
+            created_at: string;
+            canon_order: number;
+            name_id: string;
+            name_lang: string;
+            name_lang_abbr?: string;
+            bible: unknown;
+            chapters_count: number;
+            chapters: unknown[];
+        };
+        BibleChapterView: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["ContentType"];
+            created_at: string;
+            number: number;
+            book: {
+                /** Format: uuid */
+                id?: string;
+                name_id?: string;
+                name_lang?: string;
+                name_lang_abbr?: string;
+            };
+            bible: {
+                /** Format: uuid */
+                id?: string;
+                translation?: components["schemas"]["BibleTranslation"];
+            };
+            slides: components["schemas"]["SlideView"][];
+            display_name: string;
+            short_display_name: string;
+        };
+        BibleBooksPagedView: {
+            items: components["schemas"]["BibleBook"][];
+            pagination: components["schemas"]["PaginationInfo"];
+            bible_data: components["schemas"]["Bible"];
+            translation_data: components["schemas"]["BibleTranslation"];
+        };
+        BibleChaptersPagedView: {
+            items: components["schemas"]["BibleChapter"][];
+            pagination: components["schemas"]["PaginationInfo"];
+            book_data: components["schemas"]["BibleBook"];
+            translation_data: components["schemas"]["BibleTranslation"];
+        };
+        ContentSlidesView: {
+            /** Format: uuid */
+            content_id?: string;
+            content_type: components["schemas"]["ContentType"];
+            slides: components["schemas"]["SlideView"][];
         };
         /** @description A database view for ease of use on frontend side */
         HymnView: {
@@ -164,9 +250,7 @@ export type components = {
             block_id: string;
             name: string;
             position: number;
-            slides?: [
-                components["schemas"]["SlideView"]
-            ];
+            slides?: components["schemas"]["SlideView"][];
         };
         /** @description A view to show liturgy and its blocks and slides */
         LiturgyView: {
@@ -174,13 +258,6 @@ export type components = {
             liturgy_id: string;
             liturgy_name: string;
             blocks?: components["schemas"]["BlockView"][];
-        };
-        BibleView: {
-            /** Format: uuid */
-            bible_id: string;
-            reference: string;
-            translation: string;
-            slides?: components["schemas"]["SlideView"][];
         };
         /** @description A pack item showing its type (hymn, bible, liturgy) and id only */
         PackItemView: {
@@ -201,6 +278,9 @@ export type $defs = Record<string, never>;
 export enum ContentType {
     hymn = "hymn",
     liturgy = "liturgy",
-    bible = "bible"
+    liturgy_block = "liturgy_block",
+    bible = "bible",
+    bible_book = "bible_book",
+    bible_chapter = "bible_chapter"
 }
 export type operations = Record<string, never>;

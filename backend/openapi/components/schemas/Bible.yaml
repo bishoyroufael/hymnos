@@ -3,10 +3,8 @@ properties:
   id:
     type: string
     format: uuid
-  reference:
-    type: string
-  translation:
+  translation_id:
     type: string
 required:
   - id
-  - reference
+  - translation_id

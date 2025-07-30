@@ -8,7 +8,7 @@ export interface SearchResultsItem {
   subTitle: string;
   subTitleIconName: string;
   titleIconName: string;
-  _hymn_uuid: string;
+  _resource_uuid: string;
   _slide_uuid?: string;
   score: number;
 }
@@ -68,7 +68,7 @@ export default memo(function SearchResultsList({
   // Memoize key extractor
   const keyExtractor = useCallback(
     (item: SearchResultsItem, index: number) =>
-      item._slide_uuid || item._hymn_uuid || index.toString(),
+      item._slide_uuid || item._resource_uuid || index.toString(),
     [],
   );
 

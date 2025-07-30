@@ -72,13 +72,13 @@ const SlideColumn = ({
         style={{
           fontFamily: presentationSettings.font,
           fontSize: presentationSettings.fontSize,
-          lineHeight: presentationSettings.fontSize * 1.5,
+          lineHeight: presentationSettings.fontSize * 2,
         }}
         value={columnData.content}
         refKey={"content"}
         isEditing={isEditingMode}
         onUpdateText={onChangeTextContent}
-        sizeChangeDeps={[presentationSettings]}
+        sizeChangeDeps={[presentationSettings, columnData.content]}
       />
     </View>
   );

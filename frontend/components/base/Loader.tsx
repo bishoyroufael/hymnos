@@ -16,7 +16,7 @@ export default function Loader({ message, progressComponent }: LoaderProps) {
         <Logo isPulsing={true} />
       </View>
       {message && <Text className="animate-pulse">{message}</Text>}
-      <View className="w-1/2">{progressComponent}</View>
+      <View className="w-1/6">{progressComponent}</View>
     </View>
   );
 }

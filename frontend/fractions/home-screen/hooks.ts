@@ -13,14 +13,15 @@ import {
 import { PGlite } from "@electric-sql/pglite/dist/index.cjs";
 import {
   SQL_CREATE_INDEXES_VIEWS,
+  SQL_CREATE_VIEWS_FUNCTIONS,
   SQL_INITIAL_MIGRATIONS,
 } from "@db/commands/migrations";
 import { is_database_empty } from "@fractions/home-screen/handlers";
 import { components as OPENAPI } from "@db/models";
 import { SQL_INSERT_DIACRITIC_MAP } from "@db/commands/diacritic";
 import { SQL_REMOVE_DIACRITICS } from "@db/commands/functions/remove_diacritics";
-
-type Tables = OPENAPI["schemas"]["Tables"];
+import { Asset } from "expo-asset";
+import { import_tables_from_zip } from "@db/utils/import";
 
 export function useFetchInitialData(db: PGlite) {
   // -reactive for passing to fetchDb, re-renders <ProgressBar/> only
@@ -55,35 +56,30 @@ async function _import_from_assets(
   db: PGlite,
   syncProgressCallback: (p: number) => void,
 ) {
-  const response = await fetch(
-    "/web_assets/b5ca3d5a-6ecd-4bcd-b278-9cacda44ab9f.json.zstd",
+  const [hymnsAsset] = await Asset.loadAsync(
+    require("../../assets/hymns_pglite_import.zip"),
   );
-  const compressed = new Uint8Array(await response.arrayBuffer());
-  const decompressed = fzstd.decompress(compressed);
-  const json: Tables = JSON.parse(new TextDecoder().decode(decompressed));
-  const startTime = performance.now();
-  // insert in tables
-  const _insert_content_q = insertContents(json.contents);
-  const _insert_hymns_q = insertHymns(json.hymns);
-  const _insert_slides_q = insertSlides(json.slides);
-  const _insert_slides_columns_q = insertSlideColumns(json.slide_columns);
-  const _insert_packs_q = insertPacks(json.packs);
-  const _insert_packs_items_q = insertPackItems(json.packs_items);
-  // syncProgressCallback
+  const [biblesAsset] = await Asset.loadAsync(
+    require("../../assets/bibles_pglite_import.zip"),
+  );
+
+  const hymnsTablesZipFile = await (await fetch(hymnsAsset.localUri!)).blob();
+  const biblesTablesZipFile = await (await fetch(biblesAsset.localUri!)).blob();
+
+  syncProgressCallback(25);
   await db.exec(SQL_INITIAL_MIGRATIONS);
   await db.exec(SQL_INSERT_DIACRITIC_MAP);
   await db.exec(SQL_REMOVE_DIACRITICS);
-  await db.exec(_insert_content_q);
-  syncProgressCallback(25);
-  await db.exec(_insert_hymns_q);
+
+  // var s = performance.now();
   syncProgressCallback(50);
-  await db.exec(_insert_slides_q);
+  await import_tables_from_zip(db, hymnsTablesZipFile, true);
   syncProgressCallback(75);
-  await db.exec(_insert_slides_columns_q);
-  await db.exec(_insert_packs_q);
-  await db.exec(_insert_packs_items_q);
+  await import_tables_from_zip(db, biblesTablesZipFile, true);
+  await db.exec(SQL_CREATE_VIEWS_FUNCTIONS);
+  // var e = performance.now();
+  syncProgressCallback(90);
   await db.exec(SQL_CREATE_INDEXES_VIEWS);
   syncProgressCallback(100);
-  const endTime = performance.now();
-  console.log(`Call to bulk import took ${endTime - startTime} milliseconds`);
+  // console.log(`Data import with Indexes took ${(e - s) / 1000}s`);
 }

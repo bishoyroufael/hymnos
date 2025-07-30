@@ -1,3 +1,5 @@
+pglite-test/
+*.zip
 # Editors
 .vscode/
 .idea/

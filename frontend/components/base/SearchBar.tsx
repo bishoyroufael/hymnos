@@ -5,6 +5,7 @@ import { sortBy, uniqBy } from "lodash";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { TextInput, View } from "react-native";
 import SearchResultsList, { SearchResultsItem } from "./SearchResultsList";
+import { ContentType } from "@db/models";
 
 const runSearch = async (db: PGlite, searchWord: string) => {
   try {
@@ -15,10 +16,10 @@ const runSearch = async (db: PGlite, searchWord: string) => {
       const sri: SearchResultsItem = {
         _slide_uuid: r.slide_id,
         title: r.content,
-        subTitle: `${r.hymn_name}`,
-        _hymn_uuid: r.hymn_id,
+        subTitle: r.name,
+        _resource_uuid: r.content_id,
         titleIconName: "align-right",
-        subTitleIconName: "music",
+        subTitleIconName: r.type == ContentType.hymn ? "music" : "book",
         score: r.score,
       };
       return sri;
@@ -28,7 +29,7 @@ const runSearch = async (db: PGlite, searchWord: string) => {
       const sri: SearchResultsItem = {
         title: r.name,
         subTitle: `${r.author || "غير محدد"} | ${r.composer || "غير محدد"}`,
-        _hymn_uuid: r.id,
+        _resource_uuid: r.id,
         titleIconName: "music",
         subTitleIconName: "user",
         score: r.score,
@@ -120,7 +121,7 @@ export default memo(function SearchBar({
       <TextInput
         style={{ fontFamily: "Rubik_400Regular", direction: "rtl" }}
         className="md:w-1/2 md:focus:w-full w-full self-center p-4 border-2 rounded-lg border-gray-400 text-lg text-gray-800 outline-none shadow focus:border-gray-800 duration-500"
-        placeholder="ابحث عن ترانيم.."
+        placeholder="ابحث عن اي شيء.."
         placeholderTextColor="#6b7280"
         value={searchQuery}
         onFocus={onFocus}

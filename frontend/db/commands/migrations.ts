@@ -1,9 +1,12 @@
 import { SQL_INIT_DIACRITIC } from "@db/commands/diacritic";
+import { SQL_GET_BIBLE_BOOKS_PAGED } from "@db/commands/functions/get_bible_books_paged";
+import { SQL_GET_BIBLE_CHAPTERS_PAGED } from "@db/commands/functions/get_bible_chapters_paged";
+import { SQL_GET_CONTENT_SLIDES } from "@db/commands/functions/get_content_slides";
 import SQL_GET_PACK_PAGED from "@db/commands/functions/get_pack_paged";
-import SQL_INDICES from "@db/commands/indices";
+import { SQL_INDICES } from "@db/commands/indices";
 import SQL_BIBLE_VIEW from "@db/commands/views/bible";
 import SQL_LITURGY_VIEW from "@db/commands/views/liturgy";
-import SQL_PACK_VIEW from "@db/commands/views/pack";
+import SQL_HYMN_VIEW from "@db/commands/views/pack";
 import SQL_SLIDE_VIEW from "@db/commands/views/slide";
 
 export const SQL_TABLE_INFO: string = `
@@ -27,7 +30,7 @@ create schema public;
 
 export const SQL_INITIAL_MIGRATIONS: string = `
 DO $$ BEGIN
-    CREATE TYPE content_type AS ENUM ('hymn', 'liturgy', 'bible');
+    CREATE TYPE content_type AS ENUM ('hymn', 'liturgy', 'bible', 'liturgy_block', 'bible_book', 'bible_chapter');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -35,7 +38,7 @@ END $$;
 -- ===========================
 -- 0. Diacritics
 -- ===========================
-${SQL_INIT_DIACRITIC}
+-- ${SQL_INIT_DIACRITIC}
 
 -- ===========================
 -- 1. Supertype Table
@@ -91,10 +94,38 @@ CREATE TABLE IF NOT EXISTS liturgy_block (
 
 
 -- Bible readings
+CREATE TABLE bible_translation (
+    id TEXT PRIMARY KEY,
+    abbr TEXT UNIQUE NOT NULL,
+    name TEXT UNIQUE NOT NULL
+);
+
+
 CREATE TABLE IF NOT EXISTS bible (
     id UUID PRIMARY KEY REFERENCES content(id) ON DELETE CASCADE,
-    reference TEXT NOT NULL,
-    translation TEXT
+    translation_id TEXT NOT NULL REFERENCES bible_translation(id)
+);
+
+
+CREATE TABLE IF NOT EXISTS bible_book (
+    id UUID PRIMARY KEY REFERENCES content(id) ON DELETE CASCADE,
+    bible_id UUID REFERENCES bible(id) ON DELETE CASCADE,
+    canon_order INTEGER NOT NULL,
+    name_id TEXT NOT NULL,
+    name_lang TEXT NOT NULL,
+    name_lang_abbr TEXT,
+    UNIQUE (bible_id, canon_order),
+    UNIQUE (bible_id, name_id),
+    UNIQUE (bible_id, name_lang),
+    UNIQUE (name_lang, name_lang_abbr)
+);
+
+
+CREATE TABLE IF NOT EXISTS bible_chapter (
+    id UUID PRIMARY KEY REFERENCES content(id) ON DELETE CASCADE,
+    bible_book_id UUID REFERENCES bible_book(id) ON DELETE CASCADE,
+    number INTEGER NOT NULL,
+    UNIQUE (bible_book_id, number)
 );
 
 -- ===========================
@@ -135,9 +166,14 @@ CREATE TABLE IF NOT EXISTS tag_assignment (
 
 export const SQL_CREATE_INDEXES_VIEWS = `
 ${SQL_INDICES}
+`;
+
+export const SQL_CREATE_VIEWS_FUNCTIONS = `
 ${SQL_SLIDE_VIEW}
-${SQL_PACK_VIEW}
-${SQL_LITURGY_VIEW}
-${SQL_BIBLE_VIEW}
+${SQL_HYMN_VIEW}
 ${SQL_GET_PACK_PAGED}
+${SQL_BIBLE_VIEW}
+${SQL_GET_BIBLE_BOOKS_PAGED}
+${SQL_GET_BIBLE_CHAPTERS_PAGED}
+${SQL_GET_CONTENT_SLIDES}
 `;

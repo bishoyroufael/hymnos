@@ -54,7 +54,7 @@ const EditableTextInput = ({
       placeholder={placeholder}
       caretHidden={!isEditing}
       readOnly={!isEditing}
-      // numberOfLines={value.split("\n").length}
+      numberOfLines={value.split("\n").length}
       value={!isEditing && !value && valueIfEmpty ? valueIfEmpty : value}
       onChangeText={(updatedText) => {
         onUpdateText(refKey, updatedText);

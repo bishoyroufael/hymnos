@@ -23,6 +23,7 @@ import {
   View,
 } from "react-native";
 import useHymnosState from "../../global";
+import { ContentType } from "@db/models";
 
 export default function HymnPresentation() {
   const presentationSettings = useHymnosState(
@@ -51,7 +52,6 @@ export default function HymnPresentation() {
   const {
     isEditingMode,
     setIsEditingMode,
-    textAreaRef,
     handleOnEdit,
     cancelEditing,
     submitEdit,
@@ -79,7 +79,7 @@ export default function HymnPresentation() {
     data,
     currSlideIdx,
     setData,
-    setCurrSlideIdx
+    setCurrSlideIdx,
   );
 
   const onKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
@@ -146,33 +146,36 @@ export default function HymnPresentation() {
       </View>
 
       {/* Action Buttons - View Mode */}
-      <ToolBox
-        className="absolute top-4 z-10 right-4 w-[10%] h-[6%] flex flex-row justify-end items-center rounded-md"
-        showOnlyIf={isPresentationSettingsIconShown && !isEditingMode}
-        actions={[
-          {
-            key: "info",
-            iconName: "info",
-            onPress: () => {
-              exitFullScreen();
-              router.navigate(`/hymn/${uuid}`);
+      {/* temporary: Hide completely for the bible */}
+      {data.viewObject.content_type != ContentType.bible_chapter && (
+        <ToolBox
+          className="absolute top-4 z-10 right-4 w-[10%] h-[6%] flex flex-row justify-end items-center rounded-md"
+          showOnlyIf={isPresentationSettingsIconShown && !isEditingMode}
+          actions={[
+            {
+              key: "info",
+              iconName: "info",
+              onPress: () => {
+                exitFullScreen();
+                router.navigate(`/hymn/${uuid}`);
+              },
+              iconClassName: `text-${presentationSettings.fontColor}`,
             },
-            iconClassName: `text-${presentationSettings.fontColor}`,
-          },
-          {
-            key: "share",
-            iconName: "share-2",
-            onPress: handleShare,
-            iconClassName: `text-${presentationSettings.fontColor}`,
-          },
-          {
-            key: "edit",
-            iconName: "edit",
-            onPress: handleOnEdit,
-            iconClassName: `text-${presentationSettings.fontColor}`,
-          },
-        ]}
-      />
+            {
+              key: "share",
+              iconName: "share-2",
+              onPress: handleShare,
+              iconClassName: `text-${presentationSettings.fontColor}`,
+            },
+            {
+              key: "edit",
+              iconName: "edit",
+              onPress: handleOnEdit,
+              iconClassName: `text-${presentationSettings.fontColor}`,
+            },
+          ]}
+        />
+      )}
 
       {/* Action Buttons - Edit Mode */}
       <ToolBox

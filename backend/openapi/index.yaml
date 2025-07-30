@@ -15,6 +15,12 @@ components:
       $ref: "./components/schemas/LiturgyBlock.yaml"
     Bible:
       $ref: "./components/schemas/Bible.yaml"
+    BibleBook:
+      $ref: "./components/schemas/BibleBook.yaml"
+    BibleChapter:
+      $ref: "./components/schemas/BibleChapter.yaml"
+    BibleTranslation:
+      $ref: "./components/schemas/BibleTranslation.yaml"
     Pack:
       $ref: "./components/schemas/Pack.yaml"
     PackItem:
@@ -29,6 +35,18 @@ components:
       $ref: "./components/schemas/TagAssignment.yaml"
     Tables:
       $ref: "./components/schemas/Tables.yaml"
+    BibleView:
+      $ref: "./components/schemas/Views/BibleView.yaml"
+    BibleBookView:
+      $ref: "./components/schemas/Views/BibleBookView.yaml"
+    BibleChapterView:
+      $ref: "./components/schemas/Views/BibleChapterView.yaml"
+    BibleBooksPagedView:
+      $ref: "./components/schemas/Views/BibleBooksPagedView.yaml"
+    BibleChaptersPagedView:
+      $ref: "./components/schemas/Views/BibleChaptersPagedView.yaml"
+    ContentSlidesView:
+      $ref: "./components/schemas/Views/ContentSlidesView.yaml"
     HymnView:
       $ref: "./components/schemas/Views/HymnView.yaml"
     PackView:

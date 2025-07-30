@@ -1,1 +1,1 @@
-uv run datamodel-codegen --input openapi/index.yaml --output src/models/openapi.py
+uv run datamodel-codegen --input openapi/index.yaml --output src/models/openapi.py --input-file-type openapi --use-subclass-enum

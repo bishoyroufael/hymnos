@@ -10,7 +10,7 @@ properties:
   slides:
     type: array
     items:
-      - $ref: "./SlideView.yaml"
+      $ref: "./SlideView.yaml"
 required:
   - block_id
   - name

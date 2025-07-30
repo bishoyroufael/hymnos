@@ -4,7 +4,6 @@ import { SearchResultsItem } from "@components/base/SearchResultsList";
 import { components as OPENAPI } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
 import { HorizontalHymnList, renderSkeletons } from "@fractions/home-screen";
-import { getAllPacks, getHymnsUsingId } from "@fractions/home-screen/handlers";
 import { toggleFullScreen } from "@utils/ui";
 import { usePGliteContext } from "context/PGliteContext";
 import { router } from "expo-router";
@@ -14,15 +13,28 @@ import { ScrollView, View } from "react-native";
 import "../assets/global.css";
 import Card from "@components/base/Card";
 import Logo from "@components/base/Logo";
+import {
+  get_all_bibles,
+  get_all_packs,
+  get_hymns_using_ids,
+} from "@db/crud/read";
+import { LastViewedCardDetails } from "@fractions/home-screen/types";
+import { get_last_viewed_content_details } from "@fractions/home-screen/handlers";
 
 type Pack = OPENAPI["schemas"]["Pack"];
+type BibleView = OPENAPI["schemas"]["BibleView"];
 type HymnView = OPENAPI["schemas"]["HymnView"];
 
 export default memo(function HomePage() {
   // used for skeleton
-  const [hymnPacks, setHymnPacks] = useState<Pack[]>([]);
-  const [lastViewedHymns, setLastViewedHymns] = useState<HymnView[]>([]);
-  const lastViewedHymnsUuids = useHymnosState.getState().lastViewedHymns;
+  const [homeData, setHomeData] = useState<{
+    packs: Pack[];
+    bibles: BibleView[];
+  }>({ packs: [], bibles: [] });
+  const [lastViewedContent, setLastViewedContent] = useState<
+    LastViewedCardDetails[]
+  >([]);
+  const lastViewedContentsUuids = useHymnosState.getState().lastViewedContent;
   const [loadingData, setLoadingData] = useState(false);
   const { db } = usePGliteContext();
   const importUserDataStatus = useHymnosState(
@@ -33,10 +45,18 @@ export default memo(function HomePage() {
   useEffect(() => {
     setLoadingData(true);
     (async () => {
-      const packs = await getAllPacks(db);
-      const lvHymns = await getHymnsUsingId(db, lastViewedHymnsUuids);
-      setHymnPacks(packs);
-      setLastViewedHymns(lvHymns);
+      const packs = await get_all_packs(db);
+      const bibles = await get_all_bibles(db);
+      const lvContents = [];
+      for (const contentUuid of lastViewedContentsUuids) {
+        const content = await get_last_viewed_content_details(db, contentUuid);
+        // Get only valid ones
+        if (content) {
+          lvContents.push(content);
+        }
+      }
+      setHomeData({ packs, bibles });
+      setLastViewedContent(lvContents);
       setLoadingData(false);
     })();
   }, []);
@@ -47,15 +67,16 @@ export default memo(function HomePage() {
       setLoadingData(true);
     } else if (importUserDataStatus === "done") {
       (async () => {
-        await refreshPacks();
+        await refreshHomeData();
         setLoadingData(false);
       })();
     }
   }, [importUserDataStatus]);
 
-  const refreshPacks = async () => {
-    const packs = await getAllPacks(db);
-    setHymnPacks(packs);
+  const refreshHomeData = async () => {
+    const packs = await get_all_packs(db);
+    const bibles = await get_all_bibles(db);
+    setHomeData({ packs, bibles });
   };
 
   return (
@@ -74,57 +95,96 @@ export default memo(function HomePage() {
             if (item._slide_uuid) {
               toggleFullScreen();
               router.push(
-                `/presentation/${item._hymn_uuid}?startSlide=${item._slide_uuid}`,
+                `/presentation/${item._resource_uuid}?startSlide=${item._slide_uuid}`,
               );
             } else {
-              router.push(`/hymn/${item._hymn_uuid}`);
+              router.push(`/hymn/${item._resource_uuid}`);
             }
           }}
         />
       </View>
       {/* Library Section */}
       <ScrollView contentContainerClassName="gap-y-4 min-h-80">
-        <View className="gap-y-4">
-          <View className="flex flex-row justify-between items-center gap-4">
-            <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
-            <HymnosText className="text-2xl font-medium text-gray-800">
-              مكاتب الترانيم
-            </HymnosText>
-            <Feather name="folder" size={20} className="text-gray-800" />
+        <View className="flex flex-row-reverse gap-x-4 w-full">
+          <View className="gap-y-4 flex-1">
+            <View className="flex flex-row justify-between items-center gap-4">
+              <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
+              <HymnosText className="text-2xl font-medium text-gray-800">
+                الكتاب المقدس
+              </HymnosText>
+              <Feather name="book" size={20} className="text-gray-800" />
+            </View>
+            <HorizontalHymnList
+              data={homeData.bibles}
+              isLoading={loadingData}
+              skeletonElement={renderSkeletons()}
+              emptyResultsElement={
+                <Card
+                  className="group"
+                  onPressCallback={() => router.navigate("/pack/create")}
+                  customView={
+                    <Feather
+                      name="plus"
+                      size={30}
+                      className="text-gray-400 text-center group-hover:scale-125 duration-200 transition ease-in-out"
+                    />
+                  }
+                />
+              }
+              onCardPress={(item) => {
+                router.navigate(`/bible/${item.id}`);
+              }}
+              renderCardDescription={(item) => item.translation.name}
+              renderCardName={(item) =>
+                `الكتاب المقدس (${item.translation.abbr})`
+              }
+            />
           </View>
-          <HorizontalHymnList
-            data={hymnPacks}
-            isLoading={loadingData}
-            skeletonElement={renderSkeletons()}
-            emptyResultsElement={
-              <Card
-                className="group"
-                onPressCallback={() => router.navigate("/pack/create")}
-                customView={
-                  <Feather
-                    name="plus"
-                    size={30}
-                    className="text-gray-400 text-center group-hover:scale-125 duration-200 transition ease-in-out"
-                  />
-                }
-              />
-            }
-            onCardPress={(item) => {
-              router.navigate(`/pack/${item.id}`);
-            }}
-            renderCardDescription={(item) => item.description}
-          />
+
+          <View className="gap-y-4 flex-1">
+            <View className="flex flex-row justify-between items-center gap-4">
+              <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
+              <HymnosText className="text-2xl font-medium text-gray-800">
+                مكاتب الترانيم
+              </HymnosText>
+              <Feather name="folder" size={20} className="text-gray-800" />
+            </View>
+            <HorizontalHymnList
+              data={homeData.packs}
+              isLoading={loadingData}
+              skeletonElement={renderSkeletons()}
+              emptyResultsElement={
+                <Card
+                  className="group"
+                  onPressCallback={() => router.navigate("/pack/create")}
+                  customView={
+                    <Feather
+                      name="plus"
+                      size={30}
+                      className="text-gray-400 text-center group-hover:scale-125 duration-200 transition ease-in-out"
+                    />
+                  }
+                />
+              }
+              onCardPress={(item) => {
+                router.navigate(`/pack/${item.id}`);
+              }}
+              renderCardDescription={(item) => item.description}
+              renderCardName={(item) => item.name}
+            />
+          </View>
         </View>
+
         <View className="gap-y-4">
           <View className="flex flex-row justify-between items-center gap-4">
             <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
             <HymnosText className="text-2xl font-medium text-gray-800">
-              الترانيم السابقه
+              شاهدته مؤخراً
             </HymnosText>
-            <Feather name="music" size={20} className="text-gray-800" />
+            <Feather name="eye" size={20} className="text-gray-800" />
           </View>
           <HorizontalHymnList
-            data={lastViewedHymns}
+            data={lastViewedContent}
             isLoading={loadingData}
             skeletonElement={renderSkeletons()}
             emptyResultsElement={<></>}
@@ -132,9 +192,8 @@ export default memo(function HomePage() {
               toggleFullScreen();
               router.navigate(`/presentation/${item.id}`);
             }}
-            renderCardDescription={(item) =>
-              `المؤلف: ${item.author || "غير محدد"}\nالملحن: ${item.composer || "غير محدد"}`
-            }
+            renderCardDescription={(item) => item.description}
+            renderCardName={(item) => item.name}
           />
         </View>
       </ScrollView>

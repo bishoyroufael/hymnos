@@ -10,19 +10,31 @@ export async function search_slide_columns(db: PGlite, query: string) {
   coalesce(remove_diacritics(header), '')) 
   `;
   const results = await db.query(
-    `SELECT 
-        sc.content,
-        sc.slide_id,
-        s.content_id,
-        h.name AS hymn_name,
-        h.id AS hymn_id,
-      1 - (remove_diacritics($1) <-> ${idx_shared_str}) AS score
-      FROM slide_column sc
-      JOIN slide s ON sc.slide_id = s.id
-      JOIN hymn h ON s.content_id = h.id
-      WHERE remove_diacritics($1) <%${idx_shared_str} 
-      ORDER BY remove_diacritics($1) <->${idx_shared_str} 
-      LIMIT 10;
+    `
+    SELECT 
+    sc.content,
+    sc.slide_id,
+    s.content_id,
+    c.type,
+    CASE 
+        WHEN c.type = 'bible_chapter' THEN CONCAT(bb.name_lang, ' ', bc.number, ': ', s.position + 1, ' (', bt.name, ')')
+        WHEN c.type = 'hymn' THEN h.name
+        ELSE NULL
+    END AS name,
+    1 - (remove_diacritics($1) <-> ${idx_shared_str}) AS score
+    FROM slide_column sc
+    JOIN slide s ON sc.slide_id = s.id
+    JOIN content c ON s.content_id = c.id
+    LEFT JOIN bible_chapter bc ON s.content_id = bc.id AND c.type = 'bible_chapter'
+    LEFT JOIN bible_book bb ON bc.bible_book_id = bb.id
+    LEFT JOIN bible b ON bb.bible_id = b.id
+    LEFT JOIN bible_translation bt ON b.translation_id = bt.id
+    LEFT JOIN hymn h ON s.content_id = h.id AND c.type = 'hymn'
+    WHERE 
+        remove_diacritics($1) <% ${idx_shared_str}
+        AND c.type IN ('bible_chapter', 'hymn')
+    ORDER BY remove_diacritics($1) <-> ${idx_shared_str}
+    LIMIT 10;
       `,
     [query],
   );
@@ -34,9 +46,10 @@ export async function search_slide_columns(db: PGlite, query: string) {
   return results.rows as {
     content: string;
     slide_id: string;
+    content_id: string;
+    type: string;
+    name: string;
     score: number;
-    hymn_name: string;
-    hymn_id: string;
   }[];
 }
 

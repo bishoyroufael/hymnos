@@ -42,13 +42,17 @@ export const usePGlite = () => {
 
         const wasmModule = await WebAssembly.compileStreaming(fetchedWasm);
         const client = new PGlite({
+          // debug: 5,
           wasmModule,
           fsBundle: await fetchedFsBundle.blob(),
-          dataDir: "idb://my-pgdata",
-          extensions: { pg_trgm }
+          dataDir: "idb://hymnos-pgdata",
+          extensions: { pg_trgm },
+          relaxedDurability: true,
         });
         await client.query("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
         await client.query("SET work_mem TO '16MB';");
+        await client.query("SET pg_trgm.similarity_threshold = 0.4;");
+        await client.query("SET maintenance_work_mem TO '1GB';");
 
         setDb(client);
       } catch (err) {
