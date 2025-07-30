@@ -1,11 +1,23 @@
 module.exports = {
   globDirectory: "dist/",
   globPatterns: [
-    "**/*.{css,js,ico,png,html,json,svg,ttf,woff2,woff,eot,wasm,data,gz}",
+    "**/*.{css,js,ico,png,html,json,svg,ttf,woff2,woff,eot,wasm,data,gz,zip}",
   ],
   swDest: "dist/sw.js",
+  maximumFileSizeToCacheInBytes: 10 * 1024 ** 2,
   ignoreURLParametersMatching: [/^utm_/, /^fbclid$/],
   runtimeCaching: [
+    {
+      urlPattern: /\.(?:zip)$/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "data-cache",
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+        },
+      },
+    },
     {
       urlPattern: /\.(?:ttf|woff2?|eot)$/,
       handler: "CacheFirst",
