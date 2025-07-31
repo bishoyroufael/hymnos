@@ -1,5 +1,5 @@
 import HymnosText from "@components/base/HymnosText";
-import React, { Component } from "react";
+import React from "react";
 import { Pressable, PressableProps, View } from "react-native";
 
 interface CardProps extends PressableProps {

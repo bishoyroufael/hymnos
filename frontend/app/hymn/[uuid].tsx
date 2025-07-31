@@ -12,7 +12,6 @@ import { export_hymn, zipBlobsAndDownload } from "@db/utils/export";
 import Feather from "@expo/vector-icons/Feather";
 import { emitError, emitInfo } from "@utils/notification";
 import { shareText } from "@utils/sharing";
-import { toggleFullScreen } from "@utils/ui";
 import { usePGliteContext } from "context/PGliteContext";
 import { router, useLocalSearchParams } from "expo-router";
 import useHymnosState from "global";
@@ -54,7 +53,7 @@ export default function HymnDetails() {
         disabled={isEditingHymn}
         className="p-4 rounded-lg flex-1"
         onPress={() => {
-          toggleFullScreen();
+          // toggleFullScreen();
           router.navigate(`/presentation/${uuid}?startSlide=${item.slide_id}`);
         }}
       >
@@ -250,7 +249,7 @@ export default function HymnDetails() {
         ) : (
           <Pressable
             onPress={() => {
-              toggleFullScreen();
+              // toggleFullScreen();
               router.navigate(`/presentation/${hymn.id}`);
             }}
             className="flex-1 flex justify-center self-center bg-gray-100 rounded-lg hover:bg-gray-200 w-full duration-100"

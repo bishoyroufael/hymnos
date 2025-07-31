@@ -1,6 +1,6 @@
 import HymnosText from "@components/base/HymnosText";
 import React from "react";
-import { View, Text, Modal, Pressable } from "react-native";
+import { Modal, Pressable, View } from "react-native";
 
 interface ConfirmModalProps {
   visible: boolean;

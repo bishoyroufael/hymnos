@@ -1,6 +1,5 @@
 import HymnosText from "@components/base/HymnosText";
 import Menu from "@components/base/Menu";
-import ToolBox from "@components/base/ToolBox";
 import Feather from "@expo/vector-icons/Feather";
 import { usePGliteContext } from "context/PGliteContext";
 import { router } from "expo-router";

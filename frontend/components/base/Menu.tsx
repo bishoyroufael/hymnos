@@ -2,8 +2,8 @@ import ConfirmModal from "@components/base/ConfirmModal";
 import HymnosText from "@components/base/HymnosText";
 import Feather from "@expo/vector-icons/Feather";
 import { useConfirmModal } from "@hooks/useConfirmModal";
-import React, { useEffect, useMemo, useState } from "react";
-import { FlatList, Pressable, ScrollView, View, ViewProps } from "react-native";
+import React, { useMemo, useState } from "react";
+import { FlatList, Pressable, View, ViewProps } from "react-native";
 
 interface MenuItem {
   title: string;

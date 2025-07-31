@@ -1,25 +1,23 @@
+import Card from "@components/base/Card";
 import HymnosText from "@components/base/HymnosText";
+import Logo from "@components/base/Logo";
 import SearchBar from "@components/base/SearchBar";
 import { SearchResultsItem } from "@components/base/SearchResultsList";
+import {
+  get_all_bibles,
+  get_all_packs
+} from "@db/crud/read";
 import { components as OPENAPI } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
 import { HorizontalHymnList, renderSkeletons } from "@fractions/home-screen";
-import { toggleFullScreen } from "@utils/ui";
+import { get_last_viewed_content_details } from "@fractions/home-screen/handlers";
+import { LastViewedCardDetails } from "@fractions/home-screen/types";
 import { usePGliteContext } from "context/PGliteContext";
 import { router } from "expo-router";
 import useHymnosState from "global";
 import React, { memo, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import "../assets/global.css";
-import Card from "@components/base/Card";
-import Logo from "@components/base/Logo";
-import {
-  get_all_bibles,
-  get_all_packs,
-  get_hymns_using_ids,
-} from "@db/crud/read";
-import { LastViewedCardDetails } from "@fractions/home-screen/types";
-import { get_last_viewed_content_details } from "@fractions/home-screen/handlers";
 
 type Pack = OPENAPI["schemas"]["Pack"];
 type BibleView = OPENAPI["schemas"]["BibleView"];
@@ -93,7 +91,7 @@ export default memo(function HomePage() {
           db={db}
           onPressItemCallback={(item: SearchResultsItem) => {
             if (item._slide_uuid) {
-              toggleFullScreen();
+              // toggleFullScreen();
               router.push(
                 `/presentation/${item._resource_uuid}?startSlide=${item._slide_uuid}`,
               );
@@ -105,7 +103,7 @@ export default memo(function HomePage() {
       </View>
       {/* Library Section */}
       <ScrollView contentContainerClassName="gap-y-4 min-h-80">
-        <View className="flex flex-row-reverse gap-x-4 w-full">
+        <View className="flex flex-col gap-x-4 w-full md:flex-row-reverse">
           <View className="gap-y-4 flex-1">
             <View className="flex flex-row justify-between items-center gap-4">
               <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
@@ -189,7 +187,7 @@ export default memo(function HomePage() {
             skeletonElement={renderSkeletons()}
             emptyResultsElement={<></>}
             onCardPress={(item) => {
-              toggleFullScreen();
+              // toggleFullScreen();
               router.navigate(`/presentation/${item.id}`);
             }}
             renderCardDescription={(item) => item.description}

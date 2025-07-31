@@ -1,6 +1,5 @@
-import Loader from "@components/base/Loader";
 import { getFontFamilyFromClassName } from "@hooks/useHymnosFonts";
-import React, { useCallback, useLayoutEffect, useRef } from "react";
+import React, { useCallback } from "react";
 import { TextInput, TextInputProps } from "react-native";
 
 type EditableTextInputProps = TextInputProps & {
@@ -54,7 +53,7 @@ const EditableTextInput = ({
       placeholder={placeholder}
       caretHidden={!isEditing}
       readOnly={!isEditing}
-      numberOfLines={value.split("\n").length}
+      // numberOfLines={value.split("\n").length}
       value={!isEditing && !value && valueIfEmpty ? valueIfEmpty : value}
       onChangeText={(updatedText) => {
         onUpdateText(refKey, updatedText);

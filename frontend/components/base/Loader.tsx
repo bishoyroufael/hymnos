@@ -1,7 +1,6 @@
 import Logo from "@components/base/Logo";
-import Feather from "@expo/vector-icons/Feather";
 import React from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { Text, View } from "react-native";
 
 interface LoaderProps {
   size?: number;

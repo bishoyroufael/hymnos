@@ -1,27 +1,21 @@
 // hooks/useHymnData.ts
-import {
-  get_bible_chapter,
-  get_content_slides,
-  get_content_using_id,
-  get_hymn_using_id,
-} from "@db/crud/read";
-import { useEffect, useMemo, useState } from "react";
+import { get_content_slides } from "@db/crud/read";
+import { useCallback, useEffect, useMemo, useState } from "react";
 // import { Slide } from "@db/legacy_models";
-import { shareText } from "@utils/sharing";
-import { useKeyEvent } from "expo-key-event";
-import { router } from "expo-router";
-import _ from "lodash";
-import { useRef } from "react";
-import { Dimensions, GestureResponderEvent } from "react-native";
-import useHymnosState from "../../global";
+import { upsert_slides_safe } from "@db/crud/update";
 import { ContentType, components as OPENAPI } from "@db/models";
 import { PGlite } from "@electric-sql/pglite/dist/index.cjs";
 import { createEmptySlide } from "@fractions/presentation/handlers";
 import { AbstractData } from "@fractions/presentation/types";
-import { upsert_hymn_safe, upsert_slides_safe } from "@db/crud/update";
 import { emitInfo } from "@utils/notification";
+import { shareText } from "@utils/sharing";
+import { useKeyEvent } from "expo-key-event";
+import { router, useFocusEffect } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
-import { hideAsync } from "expo-splash-screen";
+import _ from "lodash";
+import { BackHandler, Dimensions, GestureResponderEvent } from "react-native";
+import useHymnosState from "../../global";
+import { toggleFullScreen } from "@utils/ui";
 
 type HymnView = OPENAPI["schemas"]["HymnView"];
 type BibleChapterView = OPENAPI["schemas"]["BibleChapterView"];
@@ -246,6 +240,7 @@ export const useUIState = () => {
     useState(false);
   const [isEditToolboxModalOpen, setEditToolboxModalOpen] = useState(false);
 
+  // Toggle full-screen and
   // Force Landscape Orientation
   useMemo(() => {
     async function forceLandscapeMode() {
@@ -254,7 +249,45 @@ export const useUIState = () => {
           ScreenOrientation.WebOrientationLock.LANDSCAPE,
       });
     }
+    toggleFullScreen();
     forceLandscapeMode();
+  }, []);
+
+  useEffect(() => {
+    // https://stackoverflow.com/questions/10706070/how-to-detect-when-a-page-exits-fullscreen
+    function exitHandler(e) {
+      // Go back when user navigates back
+      // from full-screen mode
+      if (
+        // @ts-ignore
+        !document.webkitIsFullScreen &&
+        // @ts-ignore
+        !document.mozFullScreen &&
+        // @ts-ignore
+        !document.msFullscreenElement
+      ) {
+        // Run code on exit
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.navigate("/");
+        }
+      }
+    }
+    document.addEventListener("fullscreenchange", exitHandler, false);
+    document.addEventListener("mozfullscreenchange", exitHandler, false);
+    document.addEventListener("MSFullscreenChange", exitHandler, false);
+    document.addEventListener("webkitfullscreenchange", exitHandler, false);
+    return () => {
+      document.removeEventListener("fullscreenchange", exitHandler, false);
+      document.removeEventListener("mozfullscreenchange", exitHandler, false);
+      document.removeEventListener("MSFullscreenChange", exitHandler, false);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        exitHandler,
+        false,
+      );
+    };
   }, []);
 
   useEffect(() => {
@@ -267,7 +300,10 @@ export const useUIState = () => {
         () => setIsPresentationSettingsIconShown(false),
         3000,
       );
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        // window.removeEventListener('fullscreenchange', handlePopState);
+      };
     }
   }, [
     isPresentationSettingsIconShown,
