@@ -96,6 +96,7 @@ export type components = {
             id: string;
             /** Format: uuid */
             slide_id: string;
+            content_type: components["schemas"]["ContentType"];
             position?: number;
             content?: string;
             header?: string;
@@ -145,9 +146,16 @@ export type components = {
             name_id: string;
             name_lang: string;
             name_lang_abbr?: string;
-            bible: unknown;
+            bible: {
+                /** Format: uuid */
+                id?: string;
+                translation?: components["schemas"]["BibleTranslation"];
+            };
             chapters_count: number;
-            chapters: unknown[];
+            chapters: {
+                id?: string;
+                number?: number;
+            }[];
         };
         BibleChapterView: {
             /** Format: uuid */

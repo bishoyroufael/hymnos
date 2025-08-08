@@ -3,11 +3,8 @@ import HymnosText from "@components/base/HymnosText";
 import Logo from "@components/base/Logo";
 import SearchBar from "@components/base/SearchBar";
 import { SearchResultsItem } from "@components/base/SearchResultsList";
-import {
-  get_all_bibles,
-  get_all_packs
-} from "@db/crud/read";
-import { components as OPENAPI } from "@db/models";
+import { get_all_bibles, get_all_packs } from "@db/crud/read";
+import { ContentType, components as OPENAPI } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
 import { HorizontalHymnList, renderSkeletons } from "@fractions/home-screen";
 import { get_last_viewed_content_details } from "@fractions/home-screen/handlers";
@@ -96,7 +93,12 @@ export default memo(function HomePage() {
                 `/presentation/${item._resource_uuid}?startSlide=${item._slide_uuid}`,
               );
             } else {
-              router.push(`/hymn/${item._resource_uuid}`);
+              if (item._resource_type == ContentType.hymn) {
+                router.push(`/hymn/${item._resource_uuid}`);
+              } else if (item._resource_type == ContentType.bible_book) {
+                router.push(`/book/${item._resource_uuid}`);
+              } else {
+              }
             }
           }}
         />

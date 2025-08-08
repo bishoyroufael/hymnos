@@ -1,4 +1,8 @@
-import { search_hymn, search_slide_columns } from "@db/utils/search";
+import {
+  search_bible,
+  search_hymn,
+  search_slide_columns,
+} from "@db/utils/search";
 import { PGlite } from "@electric-sql/pglite/dist/index.cjs";
 import useHymnosState from "global";
 import { sortBy, uniqBy } from "lodash";
@@ -7,10 +11,15 @@ import { TextInput, View } from "react-native";
 import SearchResultsList, { SearchResultsItem } from "./SearchResultsList";
 import { ContentType } from "@db/models";
 
+
+
+
 const runSearch = async (db: PGlite, searchWord: string) => {
+  if (searchWord.trim().length == 0) return;
   try {
     const raw_slide_results = await search_slide_columns(db, searchWord);
     const raw_hymn_results = await search_hymn(db, searchWord);
+    const bible_results = await search_bible(db, searchWord);
 
     const slides_results = raw_slide_results.map((r) => {
       const sri: SearchResultsItem = {
@@ -30,6 +39,7 @@ const runSearch = async (db: PGlite, searchWord: string) => {
         title: r.name,
         subTitle: `${r.author || "غير محدد"} | ${r.composer || "غير محدد"}`,
         _resource_uuid: r.id,
+        _resource_type: ContentType.hymn,
         titleIconName: "music",
         subTitleIconName: "user",
         score: r.score,
@@ -37,7 +47,11 @@ const runSearch = async (db: PGlite, searchWord: string) => {
       return sri;
     });
 
-    const all_results = [...hymn_results, ...slides_results];
+    const all_results = [...hymn_results, ...slides_results, ...bible_results];
+
+    // unique values are needed since it can happen that
+    // we get two results from the same chorus which gets repeated
+    // in different places of the hymn
     const unique_results = sortBy(
       uniqBy(all_results, (item) => `${item.title}|${item.subTitle}`),
       (item) => 1 - item.score,
@@ -127,6 +141,7 @@ export default memo(function SearchBar({
         onFocus={onFocus}
         onBlur={onBlur}
         onChangeText={onChangeText}
+        
       />
       {showSearchResults && (
         <SearchResultsList

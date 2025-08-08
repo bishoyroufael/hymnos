@@ -142,6 +142,7 @@ CREATE TABLE IF NOT EXISTS slide (
 CREATE TABLE IF NOT EXISTS slide_column (
     id UUID PRIMARY KEY,
     slide_id UUID REFERENCES slide(id) ON DELETE CASCADE,
+    content_type content_type NOT NULL, -- de-normalization for search index optimization
     position INTEGER NOT NULL,
     content TEXT NOT NULL,
     header TEXT,
@@ -163,10 +164,6 @@ CREATE TABLE IF NOT EXISTS tag_assignment (
     content_type content_type NOT NULL,
     PRIMARY KEY (tag_id, content_id, content_type)
 );`;
-
-export const SQL_CREATE_INDEXES_VIEWS = `
-${SQL_INDICES}
-`;
 
 export const SQL_CREATE_VIEWS_FUNCTIONS = `
 ${SQL_SLIDE_VIEW}

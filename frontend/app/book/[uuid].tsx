@@ -63,7 +63,7 @@ export default function BibleBook() {
       <View className="gap-2">
         {/* Title and ToolBox */}
         <View className="flex flex-row-reverse items-center gap-2 flex-wrap">
-          <Feather name="book" size={30} className="text-gray-800" />
+          <Feather name="book-open" size={30} className="text-gray-800" />
           <EditableTextInput
             rtl
             placeholder=""

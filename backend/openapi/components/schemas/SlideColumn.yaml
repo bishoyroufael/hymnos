@@ -6,6 +6,8 @@ properties:
   slide_id:
     type: string
     format: uuid
+  content_type:
+    $ref: "./ContentType.yaml"
   position:
     type: integer
   content:
@@ -15,3 +17,4 @@ properties:
 required:
   - id
   - slide_id
+  - content_type

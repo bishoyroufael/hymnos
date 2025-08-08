@@ -1,27 +1,17 @@
-import { emitError, emitInfo, emitWarning } from "@utils/notification";
-import * as fzstd from "fzstd";
-import useHymnosState from "global";
-import { useCallback } from "react";
+import { SQL_INSERT_DIACRITIC_MAP } from "@db/commands/diacritic";
+import { SQL_REMOVE_DIACRITICS } from "@db/commands/functions/remove_diacritics";
+import { SQL_INDICES } from "@db/commands/indices";
 import {
-  insertContents,
-  insertHymns,
-  insertPackItems,
-  insertPacks,
-  insertSlideColumns,
-  insertSlides,
-} from "@db/utils/string";
-import { PGlite } from "@electric-sql/pglite/dist/index.cjs";
-import {
-  SQL_CREATE_INDEXES_VIEWS,
   SQL_CREATE_VIEWS_FUNCTIONS,
   SQL_INITIAL_MIGRATIONS,
 } from "@db/commands/migrations";
-import { is_database_empty } from "@fractions/home-screen/handlers";
-import { components as OPENAPI } from "@db/models";
-import { SQL_INSERT_DIACRITIC_MAP } from "@db/commands/diacritic";
-import { SQL_REMOVE_DIACRITICS } from "@db/commands/functions/remove_diacritics";
-import { Asset } from "expo-asset";
 import { import_tables_from_zip } from "@db/utils/import";
+import { PGlite } from "@electric-sql/pglite/dist/index.cjs";
+import { is_database_empty } from "@fractions/home-screen/handlers";
+import { emitError, emitInfo, emitWarning } from "@utils/notification";
+import { Asset } from "expo-asset";
+import useHymnosState from "global";
+import { useCallback } from "react";
 
 export function useFetchInitialData(db: PGlite) {
   // -reactive for passing to fetchDb, re-renders <ProgressBar/> only
@@ -71,15 +61,15 @@ async function _import_from_assets(
   await db.exec(SQL_INSERT_DIACRITIC_MAP);
   await db.exec(SQL_REMOVE_DIACRITICS);
 
-  // var s = performance.now();
   syncProgressCallback(50);
   await import_tables_from_zip(db, hymnsTablesZipFile, true);
   syncProgressCallback(75);
   await import_tables_from_zip(db, biblesTablesZipFile, true);
   await db.exec(SQL_CREATE_VIEWS_FUNCTIONS);
-  // var e = performance.now();
+  // var s = performance.now();
   syncProgressCallback(90);
-  await db.exec(SQL_CREATE_INDEXES_VIEWS);
+  await db.exec(SQL_INDICES);
   syncProgressCallback(100);
-  // console.log(`Data import with Indexes took ${(e - s) / 1000}s`);
+  // var e = performance.now();
+  // console.log(`took ${(e - s) / 1000}s`);
 }

@@ -16,20 +16,24 @@ properties:
   name_lang_abbr:
     type: string
   bible:
-    id:
-      type: string
-      format: uuid
-    translation:
-      $ref: "../BibleTranslation.yaml"
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      translation:
+        $ref: "../BibleTranslation.yaml"
   chapters_count:
     type: integer
   chapters:
     type: array
     items:
-      id:
-        type: string
-      number:
-        type: integer
+      type: object
+      properties:
+        id:
+          type: string
+        number:
+          type: integer
 required:
   - id
   - type

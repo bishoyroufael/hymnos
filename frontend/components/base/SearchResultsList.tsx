@@ -1,4 +1,5 @@
 import HymnosText from "@components/base/HymnosText";
+import { ContentType } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
 import React, { memo, useCallback } from "react";
 import { FlatList, Pressable, View, ViewProps } from "react-native";
@@ -9,6 +10,7 @@ export interface SearchResultsItem {
   subTitleIconName: string;
   titleIconName: string;
   _resource_uuid: string;
+  _resource_type?: ContentType;
   _slide_uuid?: string;
   score: number;
 }
