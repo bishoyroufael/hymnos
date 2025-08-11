@@ -72,6 +72,7 @@ export default function HymnPresentation() {
     setCurrSlideIdx,
     isEditingMode,
     setIsPresentationSettingsIconShown,
+    isSettingsMenuOpen,
     setIsSettingsMenuOpen,
   );
 

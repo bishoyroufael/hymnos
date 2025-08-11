@@ -15,6 +15,7 @@ import useHymnosState from "global";
 import React, { memo, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import "../assets/global.css";
+import _ from "lodash";
 
 type Pack = OPENAPI["schemas"]["Pack"];
 type BibleView = OPENAPI["schemas"]["BibleView"];
@@ -51,7 +52,8 @@ export default memo(function HomePage() {
         }
       }
       setHomeData({ packs, bibles });
-      setLastViewedContent(lvContents);
+      // Reverse the array letting recent items appear on the right most side of the horizontal list
+      setLastViewedContent(_.reverse(lvContents));
       setLoadingData(false);
     })();
   }, []);
@@ -145,7 +147,7 @@ export default memo(function HomePage() {
             <View className="flex flex-row justify-between items-center gap-4">
               <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
               <HymnosText className="text-2xl font-medium text-gray-800">
-                مكاتب الترانيم
+                المكاتب
               </HymnosText>
               <Feather name="folder" size={20} className="text-gray-800" />
             </View>

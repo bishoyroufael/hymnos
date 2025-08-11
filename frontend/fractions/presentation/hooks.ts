@@ -83,6 +83,7 @@ export const useSlideNavigation = (
   setCurrSlideIdx: (idx: number | ((prev: number) => number)) => void,
   isEditingMode: boolean,
   setIsPresentationSettingsIconShown: any,
+  isSettingsMenuOpen: boolean,
   setIsSettingsMenuOpen: any,
 ) => {
   const { keyEvent } = useKeyEvent();
@@ -105,7 +106,11 @@ export const useSlideNavigation = (
 
   const handleSlidePress = (e: GestureResponderEvent) => {
     setIsPresentationSettingsIconShown(true);
-    setIsSettingsMenuOpen(false);
+    // Only close the menu if it was open
+    if (isSettingsMenuOpen) {
+      setIsSettingsMenuOpen(false);
+      return;
+    }
     if (
       isEditingMode &&
       ["TEXTAREA", "INPUT"].includes(document.activeElement.tagName) // User is focusing on column to edit
