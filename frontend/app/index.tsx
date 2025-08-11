@@ -107,7 +107,7 @@ export default memo(function HomePage() {
       </View>
       {/* Library Section */}
       <ScrollView contentContainerClassName="gap-y-4 min-h-80">
-        <View className="flex flex-col gap-x-4 w-full md:flex-row-reverse">
+        <View className="flex flex-col gap-y-4 gap-x-4 w-full md:flex-row-reverse">
           <View className="gap-y-4 flex-1">
             <View className="flex flex-row justify-between items-center gap-4">
               <View className="h-0.5 bg-gray-200 flex-1 items-center justify-center"></View>
