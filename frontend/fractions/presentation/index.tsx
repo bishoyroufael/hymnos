@@ -2,12 +2,14 @@ import EditableTextInput from "@components/base/EditableTextInput";
 import { components as OPENAPI } from "@db/models";
 import { AbstractData } from "@fractions/presentation/types";
 import { PresentationSettings } from "global.interfaces";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
   View,
 } from "react-native";
+import * as ScreenOrientation from "expo-screen-orientation";
+import useOrientation from "@hooks/useOrientation";
 
 type SlideColumnView = OPENAPI["schemas"]["SlideColumnView"];
 
@@ -28,6 +30,8 @@ const SlideColumn = ({
   columnData,
   presentationSettings,
 }: SlideColumnProps) => {
+  const { orientation } = useOrientation();
+
   const onChangeTextContent = (_key: string, updatedLineText: string) => {
     // we need to keep track of columns
     setData((prev) => ({
@@ -78,7 +82,7 @@ const SlideColumn = ({
         refKey={"content"}
         isEditing={isEditingMode}
         onUpdateText={onChangeTextContent}
-        sizeChangeDeps={[presentationSettings, columnData.content]}
+        sizeChangeDeps={[presentationSettings, columnData.content, orientation]}
       />
     </View>
   );
