@@ -1,15 +1,14 @@
 import EditableTextInput from "@components/base/EditableTextInput";
 import { components as OPENAPI } from "@db/models";
 import { AbstractData } from "@fractions/presentation/types";
+import useOrientation from "@hooks/useOrientation";
 import { PresentationSettings } from "global.interfaces";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
   View,
 } from "react-native";
-import * as ScreenOrientation from "expo-screen-orientation";
-import useOrientation from "@hooks/useOrientation";
 
 type SlideColumnView = OPENAPI["schemas"]["SlideColumnView"];
 

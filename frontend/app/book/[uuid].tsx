@@ -4,6 +4,7 @@ import Loader from "@components/base/Loader";
 import { get_bible_chapters_paged } from "@db/crud/read";
 import { components as OPENAPI } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
+import useOrientation from "@hooks/useOrientation";
 import { usePGliteContext } from "context/PGliteContext";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -22,6 +23,7 @@ export default function BibleBook() {
   const { db } = usePGliteContext();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [chapters, setChapters] = useState<BibleChaptersPagedView>();
+  const { orientation } = useOrientation();
 
   const numColumns = Dimensions.get("screen").width > 768 ? 5 : 1;
   const PAGE_SIZE = Dimensions.get("screen").width > 768 ? 20 : 10;
@@ -51,7 +53,7 @@ export default function BibleBook() {
         console.log(e);
         router.navigate("/notfound");
       });
-  }, [currentPage]);
+  }, [currentPage, orientation]);
 
   if (!chapters) {
     return <Loader />;

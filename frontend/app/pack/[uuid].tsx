@@ -18,6 +18,7 @@ import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { Dimensions, FlatList, Pressable, View } from "react-native";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
+import useOrientation from "@hooks/useOrientation";
 
 type HymnView = OPENAPI["schemas"]["HymnView"];
 type PackItemView = OPENAPI["schemas"]["PackItemView"];
@@ -40,6 +41,7 @@ export default function HymnPack() {
   const [isEditingPack, setIsEditingPack] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const confirmModal = useConfirmModal();
+  const { orientation } = useOrientation();
 
   const numColumns = Dimensions.get("screen").width > 768 ? 5 : 1;
   const PAGE_SIZE = Dimensions.get("screen").width > 768 ? 20 : 10;
@@ -77,7 +79,9 @@ export default function HymnPack() {
         className="p-4 rounded-lg flex-1"
         onPress={() => {
           router.navigate(
-            item.type == ContentType.hymn ? `/hymn/${item.id}` : `/presentation/${item.id}`,
+            item.type == ContentType.hymn
+              ? `/hymn/${item.id}`
+              : `/presentation/${item.id}`,
           );
         }}
       >
@@ -111,7 +115,7 @@ export default function HymnPack() {
         console.log(e);
         router.navigate("/notfound");
       });
-  }, [currentPage]);
+  }, [currentPage, orientation]);
 
   if (!pack || isExporting) {
     return <Loader />;
