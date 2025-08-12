@@ -4,11 +4,10 @@ import Loader from "@components/base/Loader";
 import { get_bible_chapters_paged } from "@db/crud/read";
 import { components as OPENAPI } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
-import useOrientation from "@hooks/useOrientation";
 import { usePGliteContext } from "context/PGliteContext";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Dimensions, FlatList, Pressable, View } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 
 type BibleChaptersPagedView = OPENAPI["schemas"]["BibleChaptersPagedView"];
 type BibleChapter = OPENAPI["schemas"]["BibleChapter"];
@@ -23,14 +22,13 @@ export default function BibleBook() {
   const { db } = usePGliteContext();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [chapters, setChapters] = useState<BibleChaptersPagedView>();
-  const { orientation } = useOrientation();
 
-  const numColumns = Dimensions.get("screen").width > 768 ? 5 : 1;
-  const PAGE_SIZE = Dimensions.get("screen").width > 768 ? 20 : 10;
+  const numColumns = 10;
+  const PAGE_SIZE = 50;
 
   // 5 columns for md and large else 1 columns
   const renderItem = ({ item }: { item: BibleChapter }) => (
-    <View className="border-2 border-gray-200 hover:border-gray-300 flex flex-row w-full md:w-[18%] items-center p-2 gap-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-lg">
+    <View className="border-2 border-gray-200 hover:border-gray-300 flex flex-row w-20 grow items-center p-2 gap-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-lg">
       <Pressable
         className="p-4 rounded-lg flex-1"
         onPress={() => {
@@ -38,7 +36,7 @@ export default function BibleBook() {
         }}
       >
         {/* todo: figure out what to render for other views */}
-        <HymnosText>{item.number}</HymnosText>
+        <HymnosText className="text-center">{item.number}</HymnosText>
       </Pressable>
     </View>
   );
@@ -53,7 +51,7 @@ export default function BibleBook() {
         console.log(e);
         router.navigate("/notfound");
       });
-  }, [currentPage, orientation]);
+  }, [currentPage]);
 
   if (!chapters) {
     return <Loader />;
@@ -134,7 +132,7 @@ export default function BibleBook() {
           <FlatList
             numColumns={numColumns}
             key={numColumns}
-            columnWrapperClassName={numColumns == 1 ? "" : "justify-between"}
+            columnWrapperClassName={"justify-between flex-wrap flex-1 gap-4"}
             horizontal={false}
             data={chapters.items}
             keyExtractor={(item) => item.id}

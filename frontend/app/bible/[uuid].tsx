@@ -4,11 +4,10 @@ import Loader from "@components/base/Loader";
 import { get_bible_books_paged } from "@db/crud/read";
 import { components as OPENAPI } from "@db/models";
 import Feather from "@expo/vector-icons/Feather";
-import useOrientation from "@hooks/useOrientation";
 import { usePGliteContext } from "context/PGliteContext";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Dimensions, FlatList, Pressable, View } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 
 type BibleBooksPagedView = OPENAPI["schemas"]["BibleBooksPagedView"];
 type BibleBook = OPENAPI["schemas"]["BibleBook"];
@@ -20,16 +19,15 @@ export default function Bible() {
     return null;
   }
 
-  const { orientation } = useOrientation();
   const { db } = usePGliteContext();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [bible, setBible] = useState<BibleBooksPagedView>();
-  const numColumns = Dimensions.get("screen").width > 768 ? 5 : 1;
-  const PAGE_SIZE = Dimensions.get("screen").width > 768 ? 20 : 10;
+  const numColumns = 5;
+  const PAGE_SIZE = 20;
 
   // 5 columns for md and large else 1 columns
   const renderItem = ({ item }: { item: BibleBook }) => (
-    <View className="border-2 border-gray-200 hover:border-gray-300 flex flex-row w-full md:w-[18%] items-center p-2 gap-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-lg">
+    <View className="border-2 border-gray-200 hover:border-gray-300 flex flex-row w-40 grow items-center p-2 gap-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-lg">
       <Pressable
         className="p-4 rounded-lg flex-1"
         onPress={() => {
@@ -52,7 +50,7 @@ export default function Bible() {
         console.log(e);
         router.navigate("/notfound");
       });
-  }, [currentPage, orientation]);
+  }, [currentPage]);
 
   if (!bible) {
     return <Loader />;
@@ -126,7 +124,7 @@ export default function Bible() {
           <FlatList
             numColumns={numColumns}
             key={numColumns}
-            columnWrapperClassName={numColumns == 1 ? "" : "justify-between"}
+            columnWrapperClassName={"justify-between flex-wrap flex-1 gap-4"}
             horizontal={false}
             data={bible.items}
             keyExtractor={(item) => item.id}

@@ -16,9 +16,8 @@ import { usePGliteContext } from "context/PGliteContext";
 import { router, useLocalSearchParams } from "expo-router";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
-import { Dimensions, FlatList, Pressable, View } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
-import useOrientation from "@hooks/useOrientation";
 
 type HymnView = OPENAPI["schemas"]["HymnView"];
 type PackItemView = OPENAPI["schemas"]["PackItemView"];
@@ -41,14 +40,13 @@ export default function HymnPack() {
   const [isEditingPack, setIsEditingPack] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const confirmModal = useConfirmModal();
-  const { orientation } = useOrientation();
 
-  const numColumns = Dimensions.get("screen").width > 768 ? 5 : 1;
-  const PAGE_SIZE = Dimensions.get("screen").width > 768 ? 20 : 10;
+  const numColumns = 5;
+  const PAGE_SIZE = 30;
 
   // 5 columns for md and large else 1 columns
   const renderItem = ({ item }: { item: PackItemView }) => (
-    <View className="border-2 border-gray-200 hover:border-gray-300 flex flex-row w-full md:w-[18%] items-center p-2 gap-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-lg">
+    <View className="border-2 border-gray-200 hover:border-gray-300 flex flex-row w-40 grow items-center p-2 gap-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-lg">
       {isEditingPack && (
         <Pressable
           onPress={() => {
@@ -86,7 +84,7 @@ export default function HymnPack() {
         }}
       >
         {/* todo: figure out what to render for other views */}
-        <HymnosText>{(item.content as HymnView).name}</HymnosText>
+        <HymnosText className="line-clamp-1">{(item.content as HymnView).name}</HymnosText>
       </Pressable>
     </View>
   );
@@ -115,7 +113,7 @@ export default function HymnPack() {
         console.log(e);
         router.navigate("/notfound");
       });
-  }, [currentPage, orientation]);
+  }, [currentPage]);
 
   if (!pack || isExporting) {
     return <Loader />;
@@ -333,7 +331,7 @@ export default function HymnPack() {
             <FlatList
               numColumns={numColumns}
               key={numColumns}
-              columnWrapperClassName={numColumns == 1 ? "" : "justify-between"}
+              columnWrapperClassName={"justify-between flex-wrap flex-1 gap-4"}
               horizontal={false}
               data={pack.items}
               keyExtractor={(item) => item.id}
