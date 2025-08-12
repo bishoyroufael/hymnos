@@ -16,7 +16,6 @@ export async function upsert_slides_safe(
   db: PGlite,
   updated_slides: ContentSlidesView,
 ) {
-  console.log(updated_slides);
   await db.transaction(async (tx) => {
     // Delete all slides and re-insert updated ones for simplicity
     // i.e avoids clashes and constraints errors
