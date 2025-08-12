@@ -227,6 +227,7 @@ export type components = {
         SlideColumnView: {
             id: string;
             position: number;
+            content_type: components["schemas"]["ContentType"];
             header: string;
             content: string;
         };

@@ -23,6 +23,7 @@ SELECT
               SELECT json_agg(
                 json_build_object(
                   'id', sc.id,
+                  'content_type', sc.content_type,
                   'position', sc.position,
                   'header', sc.header,
                   'content', sc.content

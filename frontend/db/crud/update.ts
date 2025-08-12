@@ -16,6 +16,7 @@ export async function upsert_slides_safe(
   db: PGlite,
   updated_slides: ContentSlidesView,
 ) {
+  console.log(updated_slides);
   await db.transaction(async (tx) => {
     // Delete all slides and re-insert updated ones for simplicity
     // i.e avoids clashes and constraints errors
@@ -41,8 +42,8 @@ export async function upsert_slides_safe(
       for (const updated_column of updated_slide.columns) {
         await tx.query(
           `
-          INSERT INTO slide_column (id, slide_id, position, content, header)
-          VALUES ($1,$2,$3,$4,$5)
+          INSERT INTO slide_column (id, slide_id, content_type, position, content, header)
+          VALUES ($1,$2,$3,$4,$5,$6)
           ON CONFLICT(id) DO UPDATE SET
           position=EXCLUDED.position,
           content=EXCLUDED.content,
@@ -51,6 +52,7 @@ export async function upsert_slides_safe(
           [
             updated_column.id,
             updated_slide.slide_id,
+            updated_column.content_type,
             updated_column.position,
             updated_column.content,
             updated_column.header,
@@ -115,12 +117,13 @@ export async function upsert_hymn_safe(db: PGlite, updated_hymn: HymnView) {
           // console.log(columnView);
           await tx.query(
             `
-              INSERT INTO slide_column (id, slide_id, position, content, header)
-              VALUES ($1,$2,$3,$4,$5);
+              INSERT INTO slide_column (id, slide_id, content_type, position, content, header)
+              VALUES ($1,$2,$3,$4,$5,$6);
               `,
             [
               columnView.id,
               affectedSlideId,
+              columnView.content_type,
               columnView.position,
               columnView.content,
               columnView.header,

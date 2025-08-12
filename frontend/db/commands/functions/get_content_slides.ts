@@ -26,6 +26,7 @@ BEGIN
                         json_build_object(
                         'id', sc.id,
                         'position', sc.position,
+                        'content_type', sc.content_type,
                         'header', sc.header,
                         'content', sc.content
                         ) ORDER BY sc.position

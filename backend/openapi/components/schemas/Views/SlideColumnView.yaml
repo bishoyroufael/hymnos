@@ -5,6 +5,8 @@ properties:
     type: string
   position:
     type: integer
+  content_type:
+    $ref: "../ContentType.yaml"
   header:
     type: string
   content:
@@ -12,5 +14,6 @@ properties:
 required:
   - id
   - position
+  - content_type
   - header
   - content
