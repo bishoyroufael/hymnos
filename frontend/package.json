@@ -7,7 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "prebuild": "node auto-version.js",
+    "prebuild": "echo \"EXPO_PUBLIC_GIT_HASH=$(git rev-parse --short HEAD)\" > .env",
     "build:web": "npm run prebuild && rm -rf dist/ && npx expo export -p web -c && npx workbox-cli generateSW workbox-config.js",
     "generate-db-models": "npx openapi-typescript ../backend/openapi/index.yaml --output db/models.ts --enum --export-type"
   },
