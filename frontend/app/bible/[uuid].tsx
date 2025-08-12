@@ -22,8 +22,7 @@ export default function Bible() {
   const { db } = usePGliteContext();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [bible, setBible] = useState<BibleBooksPagedView>();
-  const numColumns = 5;
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = 21;
 
   // 5 columns for md and large else 1 columns
   const renderItem = ({ item }: { item: BibleBook }) => (
@@ -121,16 +120,10 @@ export default function Bible() {
         <HymnosText className="text-2xl font-medium">الأسفار:</HymnosText>
 
         <View className="flex-grow">
-          <FlatList
-            numColumns={numColumns}
-            key={numColumns}
-            columnWrapperClassName={"justify-between flex-wrap flex-1 gap-4"}
-            horizontal={false}
-            data={bible.items}
-            keyExtractor={(item) => item.id}
-            contentContainerClassName="gap-4 flex-1"
-            renderItem={renderItem}
-          />
+          <View className="flex-row flex-wrap gap-4 justify-center">
+            {bible.items.map((item: BibleBook) => renderItem({ item: item }))}
+          </View>
+
           <View className="flex flex-row justify-between items-center p-4">
             <Pressable
               disabled={bible.pagination.is_first_page}

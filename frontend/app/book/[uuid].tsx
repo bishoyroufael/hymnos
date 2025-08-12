@@ -23,12 +23,11 @@ export default function BibleBook() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [chapters, setChapters] = useState<BibleChaptersPagedView>();
 
-  const numColumns = 10;
   const PAGE_SIZE = 50;
 
   // 5 columns for md and large else 1 columns
   const renderItem = ({ item }: { item: BibleChapter }) => (
-    <View className="border-2 border-gray-200 hover:border-gray-300 flex flex-row w-20 grow items-center p-2 gap-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-lg">
+    <View className="border-2 border-gray-200 hover:border-gray-300 flex flex-row w-20 items-center p-2 gap-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-lg">
       <Pressable
         className="p-4 rounded-lg flex-1"
         onPress={() => {
@@ -129,16 +128,12 @@ export default function BibleBook() {
         <HymnosText className="text-2xl font-medium">الاصحاحات:</HymnosText>
 
         <View className="flex-grow">
-          <FlatList
-            numColumns={numColumns}
-            key={numColumns}
-            columnWrapperClassName={"justify-between flex-wrap flex-1 gap-4"}
-            horizontal={false}
-            data={chapters.items}
-            keyExtractor={(item) => item.id}
-            contentContainerClassName="gap-4 flex-1"
-            renderItem={renderItem}
-          />
+          <View className="flex-row flex-wrap gap-4 justify-center">
+            {chapters.items.map((item: BibleChapter) =>
+              renderItem({ item: item }),
+            )}
+          </View>
+
           <View className="flex flex-row justify-between items-center p-4">
             <Pressable
               disabled={chapters.pagination.is_first_page}

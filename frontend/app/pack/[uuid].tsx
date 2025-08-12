@@ -41,8 +41,7 @@ export default function HymnPack() {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const confirmModal = useConfirmModal();
 
-  const numColumns = 5;
-  const PAGE_SIZE = 30;
+  const PAGE_SIZE = 21;
 
   // 5 columns for md and large else 1 columns
   const renderItem = ({ item }: { item: PackItemView }) => (
@@ -84,7 +83,9 @@ export default function HymnPack() {
         }}
       >
         {/* todo: figure out what to render for other views */}
-        <HymnosText className="line-clamp-1">{(item.content as HymnView).name}</HymnosText>
+        <HymnosText className="line-clamp-1">
+          {(item.content as HymnView).name}
+        </HymnosText>
       </Pressable>
     </View>
   );
@@ -328,16 +329,12 @@ export default function HymnPack() {
           </View>
         ) : (
           <View className="flex-grow">
-            <FlatList
-              numColumns={numColumns}
-              key={numColumns}
-              columnWrapperClassName={"justify-between flex-wrap flex-1 gap-4"}
-              horizontal={false}
-              data={pack.items}
-              keyExtractor={(item) => item.id}
-              contentContainerClassName="gap-4 flex-1"
-              renderItem={renderItem}
-            />
+            <View className="flex-row flex-wrap gap-4 justify-center">
+              {pack.items.map((item: PackItemView) =>
+                renderItem({ item: item }),
+              )}
+            </View>
+
             <View className="flex flex-row justify-between items-center p-4">
               <Pressable
                 disabled={pack.pagination.is_first_page}
