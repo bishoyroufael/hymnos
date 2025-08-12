@@ -66,7 +66,7 @@ export default function Header() {
                     itemCustomView: <Feather name="music" size={20} />,
                   },
                   {
-                    title: "مكتبة ترانيم",
+                    title: "مكتبة",
                     onPress: () => {
                       router.navigate("/pack/create");
                       setOpenMenu(null);
@@ -117,6 +117,9 @@ export default function Header() {
                       setOpenMenu(null);
                     },
                     itemCustomView: <Feather name="upload" size={20} />,
+                  },
+                  {
+                    title: `الإصدار: ${process.env.EXPO_PUBLIC_GIT_HASH}`,
                   },
                 ]}
               />

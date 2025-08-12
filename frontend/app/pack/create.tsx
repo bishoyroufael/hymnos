@@ -19,7 +19,7 @@ export default function HymnPack() {
   const { db } = usePGliteContext();
   const [pack, setPack] = useState<PackView | null>({
     id: randomUUID(),
-    name: "مكتبه ترانيم جديده",
+    name: "مكتبة جديده",
     author: "Hymnos App",
     description: "",
     items: [],

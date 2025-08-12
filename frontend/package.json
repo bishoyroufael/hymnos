@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start -c",
+    "start": "echo \"EXPO_PUBLIC_GIT_HASH=$(git rev-parse --short HEAD)\" > .env && expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
