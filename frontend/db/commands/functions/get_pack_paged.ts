@@ -51,6 +51,7 @@ BEGIN
                 WHEN 'hymn' THEN json_build_object('name', h.name, 'author', h.author, 'composer', h.composer)
                 WHEN 'liturgy' THEN json_build_object('name', l.name)
                 WHEN 'bible_chapter' THEN json_build_object('name', CONCAT(bb.name_lang, ' ', bc.number))
+                WHEN 'bible_book' THEN json_build_object('name', bb.name_lang)
             END
         )
         ORDER BY c.created_at
@@ -68,7 +69,8 @@ BEGIN
     LEFT JOIN hymn h ON h.id = c.id AND c.type = 'hymn'
     LEFT JOIN liturgy l ON l.id = c.id AND c.type = 'liturgy'
     LEFT JOIN bible_chapter bc ON bc.id = c.id AND c.type = 'bible_chapter'
-    LEFT JOIN bible_book bb ON bb.id = bc.bible_book_id AND c.type = 'bible_chapter';
+    LEFT JOIN bible_book bb ON (bb.id = bc.bible_book_id AND c.type = 'bible_chapter')
+                        OR (bb.id = c.id AND c.type = 'bible_book');
     
     RETURN json_build_object(
         'id', pack_record.id,

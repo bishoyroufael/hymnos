@@ -78,13 +78,15 @@ export default function HymnPack() {
           router.navigate(
             item.type == ContentType.hymn
               ? `/hymn/${item.id}`
-              : `/presentation/${item.id}`,
+              : item.type == ContentType.bible_book
+                ? `/book/${item.id}`
+                : `/presentation/${item.id}`,
           );
         }}
       >
         {/* todo: figure out what to render for other views */}
         <HymnosText className="line-clamp-1">
-          {(item.content as HymnView).name}
+          {(item.content as { name: string }).name}
         </HymnosText>
       </Pressable>
     </View>

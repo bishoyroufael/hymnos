@@ -77,7 +77,11 @@ export default function BibleBook() {
             size={30}
             className="text-gray-600 hover:text-gray-800 duration-200"
             onPress={() => {
-              router.navigate(`/bible/${chapters.book_data.bible_id}`);
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.navigate(`/bible/${chapters.book_data.bible_id}`);
+              }
             }}
           />
         </View>
