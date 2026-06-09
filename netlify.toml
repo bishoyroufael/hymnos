@@ -1,0 +1,26 @@
+# Netlify configuration for the Hymnos frontend.
+# Monorepo: the deployable app (Vite + React Router SPA, PGlite WASM, PWA) is in frontend/.
+
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"          # relative to `base` -> frontend/dist
+
+[build.environment]
+  # Vite 8 requires Node >=20.19 || >=22.12
+  NODE_VERSION = "22"
+
+# SPA fallback: serve the app shell for client-side routes (deep links / refresh).
+# This is a rewrite (200): existing files (assets, /sw.js, *.wasm, *.data, zips,
+# fonts, icons) are served directly; only paths with no matching file hit index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Let the PWA service worker revalidate promptly instead of being long-cached,
+# so "autoUpdate" picks up new deployments.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
