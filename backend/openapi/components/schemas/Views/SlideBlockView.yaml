@@ -1,0 +1,16 @@
+type: object
+description: A content block within a slide column
+properties:
+  id:
+    type: string
+  position:
+    type: integer
+  content:
+    type: string
+  metadata:
+    $ref: "../BlockStyle.yaml"
+required:
+  - id
+  - position
+  - content
+  - metadata

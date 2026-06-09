@@ -21,6 +21,11 @@ properties:
         type: string
       name_lang_abbr:
         type: string
+    required:
+      - id
+      - name_id
+      - name_lang
+      - name_lang_abbr
   bible:
     type: object
     properties:
@@ -29,6 +34,9 @@ properties:
         format: uuid
       translation:
         $ref: "../BibleTranslation.yaml"
+    required:
+      - id
+      - translation
   slides:
     type: array
     items:

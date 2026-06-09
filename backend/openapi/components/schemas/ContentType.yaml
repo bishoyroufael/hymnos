@@ -1,8 +1,9 @@
 type: string
 enum:
   - hymn
-  - liturgy
-  - liturgy_block
+  - book
+  - book_chapter
+  - book_section
   - bible
   - bible_book
   - bible_chapter

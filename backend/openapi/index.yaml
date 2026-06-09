@@ -9,10 +9,16 @@ components:
       $ref: "./components/schemas/Content.yaml"
     Hymn:
       $ref: "./components/schemas/Hymn.yaml"
-    Liturgy:
-      $ref: "./components/schemas/Liturgy.yaml"
-    LiturgyBlock:
-      $ref: "./components/schemas/LiturgyBlock.yaml"
+    Language:
+      $ref: "./components/schemas/Language.yaml"
+    Book:
+      $ref: "./components/schemas/Book.yaml"
+    BookChapter:
+      $ref: "./components/schemas/BookChapter.yaml"
+    BookChapterLink:
+      $ref: "./components/schemas/BookChapterLink.yaml"
+    BookSection:
+      $ref: "./components/schemas/BookSection.yaml"
     Bible:
       $ref: "./components/schemas/Bible.yaml"
     BibleBook:
@@ -27,8 +33,20 @@ components:
       $ref: "./components/schemas/PackItem.yaml"
     Slide:
       $ref: "./components/schemas/Slide.yaml"
+    SlideRow:
+      $ref: "./components/schemas/SlideRow.yaml"
     SlideColumn:
       $ref: "./components/schemas/SlideColumn.yaml"
+    SlideBlock:
+      $ref: "./components/schemas/SlideBlock.yaml"
+    BlockType:
+      $ref: "./components/schemas/BlockType.yaml"
+    BlockAlign:
+      $ref: "./components/schemas/BlockAlign.yaml"
+    BlockStyle:
+      $ref: "./components/schemas/BlockStyle.yaml"
+    ContentType:
+      $ref: "./components/schemas/ContentType.yaml"
     Tag:
       $ref: "./components/schemas/Tag.yaml"
     TagAssignment:
@@ -49,5 +67,17 @@ components:
       $ref: "./components/schemas/Views/ContentSlidesView.yaml"
     HymnView:
       $ref: "./components/schemas/Views/HymnView.yaml"
+    BookView:
+      $ref: "./components/schemas/Views/BookView.yaml"
+    BookSectionView:
+      $ref: "./components/schemas/Views/BookSectionView.yaml"
     PackView:
       $ref: "./components/schemas/Views/PackView.yaml"
+    SlideView:
+      $ref: "./components/schemas/Views/SlideView.yaml"
+    SlideRowView:
+      $ref: "./components/schemas/Views/SlideRowView.yaml"
+    SlideColumnView:
+      $ref: "./components/schemas/Views/SlideColumnView.yaml"
+    SlideBlockView:
+      $ref: "./components/schemas/Views/SlideBlockView.yaml"

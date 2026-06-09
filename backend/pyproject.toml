@@ -3,7 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "apscheduler>=3.11.0",
     "brotli-asgi>=1.4.0",
@@ -14,8 +14,10 @@ dependencies = [
     "fastapi[standard]>=0.115.11",
     "linkml>=1.9.2",
     "pandas>=2.3.1",
+    "pycryptodome>=3.23.0",
     "pydantic>=2.10.6",
     "pydantic-to-typescript>=2.0.0",
+    "pytest>=8.4.0",
     "zstandard>=0.23.0",
     "zstd>=1.5.6.6",
 ]

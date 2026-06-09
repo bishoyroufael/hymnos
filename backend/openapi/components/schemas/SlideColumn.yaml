@@ -1,20 +1,20 @@
 type: object
+description: A column within a slide row that contains one or more content blocks
 properties:
   id:
     type: string
     format: uuid
-  slide_id:
+  row_id:
     type: string
     format: uuid
-  content_type:
-    $ref: "./ContentType.yaml"
   position:
     type: integer
-  content:
+  language_id:
     type: string
-  header:
-    type: string
+    format: uuid
+    description: Reference to the language for this column (affects text direction)
 required:
   - id
-  - slide_id
-  - content_type
+  - row_id
+  - position
+  - language_id

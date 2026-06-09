@@ -1,19 +1,19 @@
 type: object
-description: A column in a slide
+description: A column in a slide row containing content blocks
 properties:
   id:
     type: string
   position:
     type: integer
-  content_type:
-    $ref: "../ContentType.yaml"
-  header:
-    type: string
-  content:
-    type: string
+  language:
+    $ref: "../Language.yaml"
+    description: Language details for this column
+  blocks:
+    type: array
+    items:
+      $ref: "./SlideBlockView.yaml"
 required:
   - id
   - position
-  - content_type
-  - header
-  - content
+  - language
+  - blocks

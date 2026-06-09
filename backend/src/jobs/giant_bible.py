@@ -3,15 +3,16 @@
 
 from typing import List
 import sqlite3
+from uuid import uuid7
 
 from models.openapi import *
-import uuid
 from tqdm import tqdm
+from utils.languages import get_language_id, get_all_languages
 
 ALLOWED_TRANSLATIONS = [
-    BibleTranslation(id="arb-vd", name="الكتاب المقدس باللغة العربية، فان دايك", abbr="ف.د."),
-    BibleTranslation(id="arbwbtc",name="الكتاب المقدس باللغة العربية - الترجمة المبسطة", abbr=".ت.ع.م"),
-    BibleTranslation(id="eng-kjv", name="King James Version", abbr="KJV")
+    BibleTranslation(id="arb-vd", name="الكتاب المقدس باللغة العربية، فان دايك", abbr="ف.د.", is_default=False),
+    BibleTranslation(id="arbwbtc",name="الكتاب المقدس باللغة العربية - الترجمة المبسطة", abbr=".ت.ع.م", is_default=False),
+    BibleTranslation(id="eng-kjv", name="King James Version", abbr="KJV", is_default=False)
     ]
 
 BOOKS_FULL_NAME_MAP = {
@@ -88,7 +89,11 @@ def get_bibles(db_path: str, translations_ids: List[str]):
     trans_objs = [t for t in ALLOWED_TRANSLATIONS if t.id in translations_ids]
     assert len(trans_objs) == len(translations_ids), f"[err] bad translation ids given {translations_ids} | allowed: {[t.id for t in ALLOWED_TRANSLATIONS]}"
 
-    content_objs: List[Content] = [Content(id=str(uuid.uuid4()), type=ContentType.bible) for i in range(len(trans_objs))]
+    # Set the first translation as default
+    for i, trans in enumerate(trans_objs):
+        trans.is_default = (i == 0)
+
+    content_objs: List[Content] = [Content(id=str(uuid7()), type=ContentType.bible) for _ in range(len(trans_objs))]
     bible_objs: List[Bible]   = [Bible(id=c.id, translation_id=t.id) for c, t in zip(content_objs, trans_objs)]
 
     # Connect to the SQLite database (creates the file if it doesn't exist)
@@ -118,7 +123,9 @@ def get_bibles(db_path: str, translations_ids: List[str]):
     bible_books_objs: List[BibleBook] = []
     bible_books_chapters_objs: List[BibleChapter] = []
     slide_objs: List[Slide] = []
+    slide_rows_objs: List[SlideRow] = []
     slide_columns_objs: List[SlideColumn] = []
+    slide_blocks_objs: List[SlideBlock] = []
     for trans in (pbara := tqdm(translations_ids)):
         pbara.set_description(f"Processing bible translation: {trans}")
         query = f"""
@@ -136,8 +143,8 @@ def get_bibles(db_path: str, translations_ids: List[str]):
             pbarb.set_description(f"Processing bible book: {book_name} | translation: {trans}")
             language_key = translation_language_map[trans]
             book_name_translated = BOOKS_FULL_NAME_MAP[book_name][language_key]
-            content_obj_book = Content(id=str(uuid.uuid4()), type=ContentType.bible_book)
-            book_obj = BibleBook(id=content_obj_book.id, canon_order=canon_order ,bible_id=bible_obj.id, name_id=book_name ,name_lang=book_name_translated)
+            content_obj_book = Content(id=str(uuid7()), type=ContentType.bible_book)
+            book_obj = BibleBook(id=content_obj_book.id, canon_order=canon_order, bible_id=bible_obj.id, name_id=book_name, name_lang=book_name_translated)
 
             content_objs.append(content_obj_book)
             bible_books_objs.append(book_obj)
@@ -152,7 +159,7 @@ def get_bibles(db_path: str, translations_ids: List[str]):
 
             for res in results:
                 chapter_num, = res
-                content_obj_chapter = Content(id=str(uuid.uuid4()), type=ContentType.bible_chapter)
+                content_obj_chapter = Content(id=str(uuid7()), type=ContentType.bible_chapter)
                 chapter_obj = BibleChapter(id=content_obj_chapter.id, bible_book_id=book_obj.id, number=chapter_num)
                 content_objs.append(content_obj_chapter)
                 bible_books_chapters_objs.append(chapter_obj)
@@ -167,18 +174,67 @@ def get_bibles(db_path: str, translations_ids: List[str]):
                 for res in results:
                     verse_text, verse_num = res
 
-                    slide_obj = Slide(id=str(uuid.uuid4()), content_id=chapter_obj.id, position=verse_num-1) # 0-based index
+                    slide_obj = Slide(id=str(uuid7()), content_id=chapter_obj.id, position=verse_num-1) # 0-based index
 
-                    
-                    slide_column = SlideColumn(id=str(uuid.uuid4()), content_type=ContentType.bible_chapter, slide_id=slide_obj.id, position=0, content=verse_text, header=f"{book_name_translated} {chapter_num}: {verse_num}")
+                    # Create SlideRow (horizontal row with 1 column)
+                    slide_row = SlideRow(
+                        id=str(uuid7()),
+                        slide_id=slide_obj.id,
+                        position=0,
+                        columns=1
+                    )
+
+                    # Determine language_id based on translation language
+                    # Map Giant Bible's language names to ISO 639 codes
+                    language_code_map = {
+                        "Arabic": "ar",
+                        "English": "en"
+                    }
+                    lang_code = language_code_map.get(language_key, "en")  # Default to English
+                    language_id = get_language_id(lang_code)
+
+                    # Create SlideColumn (container for blocks)
+                    slide_column = SlideColumn(
+                        id=str(uuid7()),
+                        row_id=slide_row.id,
+                        position=0,
+                        language_id=str(language_id)
+                    )
+
+                    # Create SlideBlocks for header and verse content
+                    # Header block (book chapter:verse reference)
+                    header_block = SlideBlock(
+                        id=str(uuid7()),
+                        column_id=slide_column.id,
+                        content_type=ContentType.bible_chapter,
+                        position=0,
+                        content=f"{book_name_translated} {chapter_num}: {verse_num}",
+                        metadata=BlockStyle(type=BlockType.h3, align=BlockAlign.center_)
+                    )
+
+                    # Content block (verse text)
+                    content_block = SlideBlock(
+                        id=str(uuid7()),
+                        column_id=slide_column.id,
+                        content_type=ContentType.bible_chapter,
+                        position=1,
+                        content=verse_text,
+                        metadata=BlockStyle(type=BlockType.paragraph, align=BlockAlign.center_)
+                    )
+
                     slide_objs.append(slide_obj)
+                    slide_rows_objs.append(slide_row)
                     slide_columns_objs.append(slide_column)
+                    slide_blocks_objs.append(header_block)
+                    slide_blocks_objs.append(content_block)
 
-    return Tables(content=content_objs, 
+    return Tables(content=content_objs,
                 bible_translation=trans_objs,
                 bible=bible_objs,
                 bible_book=bible_books_objs,
                 bible_chapter=bible_books_chapters_objs,
+                slide=slide_objs,
+                slide_row=slide_rows_objs,
                 slide_column=slide_columns_objs,
-                slide=slide_objs
+                slide_block=slide_blocks_objs,
                 )

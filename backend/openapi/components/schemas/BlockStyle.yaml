@@ -1,0 +1,15 @@
+type: object
+description: >-
+  Styling for a slide block, stored as JSONB. Holds the block's semantic type
+  and presentation hints. Extensible: additional fields may be added over time
+  without a schema migration.
+properties:
+  type:
+    $ref: "./BlockType.yaml"
+    description: Semantic block type (h1, h2, h3, paragraph)
+  align:
+    $ref: "./BlockAlign.yaml"
+    description: Text alignment hint (e.g. left, center, right)
+required:
+  - type
+additionalProperties: true

@@ -11,7 +11,7 @@ properties:
   content:
     oneOf:
       - $ref: "./HymnView.yaml"
-      - $ref: "./LiturgyView.yaml"
+      - $ref: "./BookView.yaml"
       - $ref: "./BibleView.yaml"
 required:
   - id

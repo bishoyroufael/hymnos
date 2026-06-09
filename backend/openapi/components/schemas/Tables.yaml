@@ -11,14 +11,26 @@ properties:
     type: array
     items:
       $ref: "./Hymn.yaml"
-  liturgy:
+  language:
     type: array
     items:
-      $ref: "./Liturgy.yaml"
-  liturgy_block:
+      $ref: "./Language.yaml"
+  book:
     type: array
     items:
-      $ref: "./LiturgyBlock.yaml"
+      $ref: "./Book.yaml"
+  book_chapter:
+    type: array
+    items:
+      $ref: "./BookChapter.yaml"
+  book_chapter_link:
+    type: array
+    items:
+      $ref: "./BookChapterLink.yaml"
+  book_section:
+    type: array
+    items:
+      $ref: "./BookSection.yaml"
   bible:
     type: array
     items:
@@ -47,10 +59,18 @@ properties:
     type: array
     items:
       $ref: "./Slide.yaml"
+  slide_row:
+    type: array
+    items:
+      $ref: "./SlideRow.yaml"
   slide_column:
     type: array
     items:
       $ref: "./SlideColumn.yaml"
+  slide_block:
+    type: array
+    items:
+      $ref: "./SlideBlock.yaml"
   tag:
     type: array
     items:

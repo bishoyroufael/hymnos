@@ -1,13 +1,15 @@
 type: object
+description: A complete slide with all its rows
 properties:
   slide_id:
     type: string
   position:
     type: integer
-  columns:
+  slide_rows:
     type: array
     items:
-      $ref: "./SlideColumnView.yaml"
+      $ref: "./SlideRowView.yaml"
 required:
   - slide_id
   - position
+  - slide_rows

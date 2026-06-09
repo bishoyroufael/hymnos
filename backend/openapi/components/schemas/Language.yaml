@@ -1,0 +1,18 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  language_code:
+    type: string
+  variant:
+    type: string
+  name:
+    type: string
+  is_rtl:
+    type: boolean
+    default: false
+required:
+  - id
+  - language_code
+  - name

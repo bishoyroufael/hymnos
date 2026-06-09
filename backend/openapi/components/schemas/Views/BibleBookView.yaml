@@ -23,6 +23,9 @@ properties:
         format: uuid
       translation:
         $ref: "../BibleTranslation.yaml"
+    required:
+      - id
+      - translation
   chapters_count:
     type: integer
   chapters:
@@ -34,6 +37,9 @@ properties:
           type: string
         number:
           type: integer
+      required:
+        - id
+        - number
 required:
   - id
   - type

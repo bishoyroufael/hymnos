@@ -1,0 +1,67 @@
+type: object
+description: Book structure view - includes metadata and structure but NOT slide content (fetch slides separately per section)
+properties:
+  book_id:
+    type: string
+    format: uuid
+  name:
+    type: string
+  author:
+    type: string
+  description:
+    type: string
+  isbn:
+    type: string
+  created_by:
+    type: string
+  chapters:
+    type: array
+    items:
+      type: object
+      properties:
+        chapter_id:
+          type: string
+          format: uuid
+        position:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        created_by:
+          type: string
+        sections:
+          type: array
+          items:
+            type: object
+            properties:
+              section_id:
+                type: string
+                format: uuid
+              position:
+                type: integer
+              name:
+                type: string
+              description:
+                type: string
+              rubric:
+                type: string
+              created_by:
+                type: string
+              slide_count:
+                type: integer
+                description: Number of slides in this section
+            required:
+              - section_id
+              - position
+              - name
+              - slide_count
+      required:
+        - chapter_id
+        - position
+        - name
+        - sections
+required:
+  - book_id
+  - name
+  - chapters
