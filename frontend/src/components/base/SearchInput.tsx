@@ -35,27 +35,12 @@ export default function SearchInput({ onSearch, onInputChange, placeholder = "ب
     onInputChangeRef.current?.(e.target.value);
   };
 
-  const handleClear = () => {
-    setValue("");
-    onInputChangeRef.current?.("");
-  };
-
   return (
     <div className={`relative flex items-center ${className}`}>
-      <FiSearch className="absolute right-3 lg:right-4 w-4 h-4 lg:w-5 lg:h-5 text-base-content/40 pointer-events-none z-10" />
-      <input
-        type="text"
-        dir="rtl"
-        className="input input-bordered input-sm lg:input-lg w-full pr-9 lg:pr-12 pl-8 lg:pl-10"
-        placeholder={placeholder}
-        value={value}
-        onChange={handleChange}
-      />
-      {value ? (
-        <button className="absolute left-2 lg:left-3 btn btn-ghost btn-xs btn-circle" onClick={handleClear} aria-label="مسح البحث">
-          <FiX className="w-3 h-3 lg:w-4 lg:h-4" />
-        </button>
-      ) : null}
+      <label className="input input-bordered input-sm lg:input-lg w-full p-2 lg:p-3">
+        <FiSearch className="text-base-content/40" />
+        <input type="search" dir="rtl" placeholder={placeholder} value={value} onChange={handleChange} />
+      </label>
     </div>
   );
 }

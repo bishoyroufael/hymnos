@@ -67,10 +67,7 @@ export default function SearchBar({ onSelectResult, className = "" }: SearchBarP
       const clickedInFilters = filtersContainerRef.current?.contains(target);
       const clickedInContainer = searchContainerRef.current?.contains(target);
       const targetElement = target as HTMLElement;
-      const clickedOnSearchInput =
-        targetElement.tagName === "INPUT" &&
-        (targetElement as HTMLInputElement).type === "text" &&
-        clickedInContainer;
+      const clickedOnSearchInput = targetElement.tagName === "INPUT" && (targetElement as HTMLInputElement).type === "text" && clickedInContainer;
 
       if (filtersContainerRef.current && (!clickedInFilters || clickedOnSearchInput)) {
         filtersContainerRef.current.removeAttribute("open");
@@ -104,21 +101,21 @@ export default function SearchBar({ onSelectResult, className = "" }: SearchBarP
 
   return (
     <div ref={searchContainerRef} className={`relative w-full ${className}`}>
-      <div className="flex w-full gap-2">
+      <div className="flex w-full join">
         <SearchInput
           key={searchInputKey}
-          className="flex-1"
+          className="flex-1 join-item"
           placeholder="ابحث عن ترنيمة، آية من الكتاب مقدس، أو نص..."
           onSearch={handleSearch}
           onInputChange={handleInputChange}
         />
 
         {/* Filter Toggle Button */}
-        <details className="dropdown dropdown-end" ref={filtersContainerRef}>
-          <summary className="btn btn-sm lg:btn-lg btn-neutral">
-            <FiFilter className="h-4 w-4" />
+        <details className="dropdown dropdown-end join-item" ref={filtersContainerRef}>
+          <summary className="btn btn-sm lg:btn-lg btn-accent">
+            <FiFilter className="h-3 w-3 lg:h-4 lg:w-5" />
           </summary>
-          <div className="flex flex-col gap-2 dropdown-content mt-2 p-4 border border-base-300 rounded-box shadow-lg z-50 w-50 lg:w-64 max-w-68 bg-base-200 max-h-[40vh] overflow-y-auto">
+          <div className="flex flex-col gap-2 dropdown-content mt-2 p-4 border border-base-200 rounded-box shadow-lg z-50 w-50 lg:w-64 max-w-68 bg-base-100 max-h-[40vh] overflow-y-auto">
             <div className="text-sm font-bold">تصفية النتائج</div>
             {FILTER_GROUPS.map(({ group, title }) => (
               <div key={group} className="flex flex-col gap-2">
@@ -157,14 +154,8 @@ export default function SearchBar({ onSelectResult, className = "" }: SearchBarP
           ) : (
             <ul className="menu p-2 w-full">
               {searchResults.map((result, index) => {
-                const TitleIcon =
-                  result.titleIconName === "music" ? FiMusic :
-                  result.titleIconName === "book-open" ? FiBookOpen :
-                  FiAlignRight;
-                const SubtitleIcon =
-                  result.subTitleIconName === "user" ? FiUser :
-                  result.subTitleIconName === "book-open" ? FiBookOpen :
-                  FiBook;
+                const TitleIcon = result.titleIconName === "music" ? FiMusic : result.titleIconName === "book-open" ? FiBookOpen : FiAlignRight;
+                const SubtitleIcon = result.subTitleIconName === "user" ? FiUser : result.subTitleIconName === "book-open" ? FiBookOpen : FiBook;
 
                 return (
                   <li key={`${result._resource_uuid}-${index}`}>

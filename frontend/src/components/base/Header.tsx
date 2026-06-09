@@ -120,7 +120,7 @@ export default function Header() {
           }}
         >
           <summary className={isBiblePage ? "text-base-content font-medium" : "text-base-content/40 hover:text-base-content"}>الكتاب المقدس</summary>
-          <ul className="m-4 w-64 no-scrollbar lg:w-80 max-h-96 overflow-y-auto bg-base-200 rounded-box shadow-lg z-50">
+          <ul className="m-4 w-64 no-scrollbar lg:w-80 max-h-96 overflow-y-auto bg-base-200 rounded-box shadow-lg z-99">
             {loading ? (
               <li className="text-center py-4">
                 <span className="loading loading-spinner loading-sm"></span>

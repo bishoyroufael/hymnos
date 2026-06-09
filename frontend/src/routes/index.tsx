@@ -23,21 +23,21 @@ export default function HomePage() {
   return (
     <div className="flex flex-col items-center min-h-screen py-8">
       <FABCreate />
-      <div className="w-full max-w-6xl px-4 flex flex-col gap-10">
+      <div className="w-full px-4 flex flex-col gap-10">
         {/* Enhanced Hero Section with Background Image */}
         <div className="relative rounded-3xl shadow-2xl flex flex-col gap-6 lg:gap-12 p-8 md:p-26 lg:p-32">
           {/* Background Image with Overlay */}
-          <div className="absolute inset-0 bg-cover bg-center rounded-box" style={{ backgroundImage: "url('/hero.jpg')" }}></div>
+          <div className="absolute inset-0 bg-cover bg-start rounded-box" style={{ backgroundImage: "url('/hero.jpg')" }}></div>
 
           {/* Gradient Overlay for better text readability */}
           <div className="absolute inset-0 bg-linear-to-br from-transparent via-base-100/80 to-transparent rounded-box"></div>
 
           {/* Hero Text */}
           <div className="text-center flex flex-col gap-2 lg:gap-6 fade-in-bottom">
-            <h1 className="text-2xl lg:text-6xl stroke-3 stroke-base-content font-extrabold drop-shadow-2xl text-shadow-lg text-base-content">
+            <h1 className="text-2xl md:text-4xl lg:text-6xl stroke-3 stroke-base-content font-extrabold drop-shadow-2xl text-shadow-lg text-base-content">
               أهلاً بك في هيمنوس
               <sup className="text-2xl align-super">
-                <a href="#footnote-1" className="underline text-blue-800 text-sm font-nor">
+                <a href="#footnote-1" className="underline text-blue-800/80 text-[8px]">
                   1
                 </a>
               </sup>

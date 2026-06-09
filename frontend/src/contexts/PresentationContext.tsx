@@ -25,10 +25,7 @@ interface PresentationProviderProps {
   startSlide?: string;
 }
 
-async function loadPresentation(
-  db: any,
-  uuid: string
-): Promise<{ contentId: string; contentType: string; segments: PresentationSegment[] }> {
+async function loadPresentation(db: any, uuid: string): Promise<{ contentId: string; contentType: string; segments: PresentationSegment[] }> {
   const res = await db.query(`SELECT get_content_slides($1)::json as r`, [uuid]);
   if (res.rows.length === 0) throw new Error("not found");
   const raw = (res.rows[0] as { r: ContentSlidesView }).r;
@@ -172,4 +169,3 @@ export function usePresentation() {
   }
   return context;
 }
-

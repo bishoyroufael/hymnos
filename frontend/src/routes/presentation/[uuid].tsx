@@ -7,6 +7,7 @@ import SlideContent from "../../components/presentation/SlideContent";
 import { Toolbar, PlusButton } from "../../components/presentation/Toolbar";
 import BackgroundModal from "../../components/presentation/BackgroundModal";
 import BookTocDrawer, { BOOK_TOC_DRAWER_ID } from "../../components/presentation/BookTocDrawer";
+import { useFullscreenLandscape } from "@hooks/useFullscreenLandscape";
 import Logo from "../../components/presentation/Logo";
 import Loader from "../../components/base/Loader";
 import useHymnosStore from "../../store";
@@ -37,6 +38,11 @@ function PresentationContent() {
       });
     }
   }, [state.contentType, state.contentId, state.isLoading, db]);
+
+  // Go fullscreen + lock to landscape while the presentation is open. Exiting
+  // fullscreen (e.g. Escape, which the browser eats before our keydown handler)
+  // navigates back — preserving the "Escape leaves the presentation" behaviour.
+  useFullscreenLandscape(() => navigate(-1));
 
   const flatSlides = state.segments.flatMap((s) => s.slides);
   const slidesLength = flatSlides.length;

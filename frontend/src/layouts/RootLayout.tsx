@@ -10,7 +10,7 @@ export default function RootLayout() {
       <Header />
 
       {/* Main Content */}
-      <main className="flex-1 w-10/12 mx-auto">
+      <main className="flex-1 w-11/12 lg:w-10/12 mx-auto">
         <Outlet />
       </main>
 
