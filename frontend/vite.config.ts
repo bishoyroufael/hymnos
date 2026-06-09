@@ -6,6 +6,14 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
+  // PGlite's Emscripten runtime references a bare `process` (e.g. `process.exitCode`)
+  // without a Node-environment guard. Vite only statically replaces `process.env.*`,
+  // so in the production browser bundle `process` is undefined and DB init throws
+  // "process is not defined". Define a minimal global shim — kept free of
+  // `versions.node` so Emscripten still selects the browser code path.
+  define: {
+    process: "(globalThis.process ??= { env: {}, argv: [] })",
+  },
   plugins: [
     react(),
     tailwindcss(),
