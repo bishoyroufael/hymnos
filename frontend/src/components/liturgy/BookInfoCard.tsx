@@ -31,10 +31,12 @@ export default function BookInfoCard({
       <div className="collapse-content">
         <div className="flex flex-col gap-4 pt-2">
           <div className="flex flex-col gap-2">
-            <label className="label">
+            <label className="label" htmlFor="book-name">
               <span className="label-text">اسم الكتاب *</span>
             </label>
             <input
+              id="book-name"
+              name="name"
               type="text"
               placeholder="مثال: الأجبية، الخولاجي"
               className="input input-bordered w-full lg:w-1/2"
@@ -45,10 +47,12 @@ export default function BookInfoCard({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="label">
+            <label className="label" htmlFor="book-author">
               <span className="label-text">المؤلف</span>
             </label>
             <input
+              id="book-author"
+              name="author"
               type="text"
               placeholder="اسم المؤلف (اختياري)"
               className="input input-bordered w-full lg:w-1/2"
@@ -58,10 +62,12 @@ export default function BookInfoCard({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="label">
+            <label className="label" htmlFor="book-description">
               <span className="label-text">الوصف</span>
             </label>
             <textarea
+              id="book-description"
+              name="description"
               placeholder="وصف مختصر للكتاب (اختياري)"
               className="textarea textarea-bordered h-24 w-full lg:w-1/2"
               value={bookDescription}
@@ -70,10 +76,12 @@ export default function BookInfoCard({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="label">
+            <label className="label" htmlFor="book-isbn">
               <span className="label-text">رقم ISBN</span>
             </label>
             <input
+              id="book-isbn"
+              name="isbn"
               type="text"
               placeholder="978-XXXXXXXXXX (اختياري)"
               className="input input-bordered w-full lg:w-1/2"

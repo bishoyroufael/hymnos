@@ -1,5 +1,5 @@
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { useCallback, useEffect, useState } from "react";
+import { useParams, useSearchParams, useNavigate, Navigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePGlite } from "@electric-sql/pglite-react";
 import { toast } from "react-toastify";
 import { PresentationProvider, usePresentation } from "../../contexts/PresentationContext";
@@ -7,7 +7,7 @@ import SlideContent from "../../components/presentation/SlideContent";
 import { Toolbar, PlusButton } from "../../components/presentation/Toolbar";
 import BackgroundModal from "../../components/presentation/BackgroundModal";
 import BookTocDrawer, { BOOK_TOC_DRAWER_ID } from "../../components/presentation/BookTocDrawer";
-import { useFullscreenLandscape } from "@hooks/useFullscreenLandscape";
+import { exitPresentationMode } from "@/utils/fullscreen";
 import Logo from "../../components/presentation/Logo";
 import Loader from "../../components/base/Loader";
 import useHymnosStore from "../../store";
@@ -39,12 +39,7 @@ function PresentationContent() {
     }
   }, [state.contentType, state.contentId, state.isLoading, db]);
 
-  // Go fullscreen + lock to landscape while the presentation is open. Exiting
-  // fullscreen (e.g. Escape, which the browser eats before our keydown handler)
-  // navigates back — preserving the "Escape leaves the presentation" behaviour.
-  useFullscreenLandscape(() => navigate(-1));
-
-  const flatSlides = state.segments.flatMap((s) => s.slides);
+  const flatSlides = useMemo(() => state.segments.flatMap((s) => s.slides), [state.segments]);
   const slidesLength = flatSlides.length;
   const currentSlide = flatSlides[state.currSlideIdx];
   const contentType = state.contentType;
@@ -95,9 +90,8 @@ function PresentationContent() {
     }
   }, [currentSlide]);
 
-  // Info handler
+  // Info handler — fullscreen exit is handled by PresentationPage's unmount cleanup.
   const handleInfo = () => {
-    if (document.fullscreenElement) document.exitFullscreen();
     if (parentBook) {
       navigate(`/book/${parentBook.book_id}`);
     } else {
@@ -190,25 +184,29 @@ function PresentationContent() {
 export default function PresentationPage() {
   const { uuid } = useParams<{ uuid: string }>();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const startSlide = searchParams.get("startSlide") || undefined;
 
-  // Track recently viewed content
-  const setLastViewedContent = useHymnosStore((state) => state.setLastViewedContent);
-  const lastViewedContent = useHymnosStore((state) => state.lastViewedContent);
+  // Navigating away from the presentation route (to any other page) exits
+  // fullscreen and releases the orientation lock. Fullscreen itself is entered
+  // inside the click handlers that lead here — browsers require a user gesture.
+  useEffect(() => {
+    return () => exitPresentationMode();
+  }, []);
 
+  // Track recently viewed content. The current list is read via getState()
+  // inside the effect — subscribing to it here would re-render the page (and
+  // re-run this effect) right after it updates the list itself.
   useEffect(() => {
     if (uuid) {
+      const { lastViewedContent, setLastViewedContent } = useHymnosStore.getState();
       const updatedViewedContent = lastViewedContent.filter((id) => id !== uuid);
       updatedViewedContent.push(uuid);
-      const limitedContent = updatedViewedContent.slice(-15);
-      setLastViewedContent(limitedContent);
+      setLastViewedContent(updatedViewedContent.slice(-15));
     }
-  }, [uuid, setLastViewedContent]);
+  }, [uuid]);
 
   if (!uuid) {
-    navigate("/not-found");
-    return null;
+    return <Navigate to="/not-found" replace />;
   }
 
   return (

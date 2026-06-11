@@ -57,8 +57,12 @@ const useHymnosStore = create<HymnosState>()(
     {
       name: "hymnos-storage",
       storage: createJSONStorage(() => localStorage),
-      // Persist all state
-      partialize: (state) => Object.fromEntries(Object.entries(state)),
+      // Persist only the data fields, not the action functions.
+      partialize: (state) => ({
+        lastViewedContent: state.lastViewedContent,
+        presentationSettings: state.presentationSettings,
+        searchFilters: state.searchFilters,
+      }),
     }
   )
 );

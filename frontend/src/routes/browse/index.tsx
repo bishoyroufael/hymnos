@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef, memo, type ChangeEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { usePGlite } from "@electric-sql/pglite-react";
 import { FiBook, FiMusic, FiPlus, FiChevronRight, FiChevronLeft, FiUser, FiUpload } from "react-icons/fi";
 import type { components } from "@/db/models";
@@ -65,22 +65,18 @@ const HymnList = memo(function HymnList({ hymns, loading, query }: HymnListProps
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" dir="rtl">
       {hymns.map((hymn) => (
-        <div
-          key={hymn.id}
-          className="card bg-base-200 shadow hover:shadow-md hover:bg-base-300 cursor-pointer transition-all"
-          onClick={() => navigate(`/hymn/${hymn.id}`)}
-        >
+        <Link key={hymn.id} to={`/hymn/${hymn.id}`} className="card bg-base-200 shadow hover:shadow-md hover:bg-base-300 cursor-pointer transition-all">
           <div className="card-body gap-1 p-4">
             <div className="flex items-start gap-2">
-              <FiMusic className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+              <FiMusic aria-hidden className="w-4 h-4 mt-0.5 text-primary shrink-0" />
               <h3 className="font-semibold text-base leading-snug">{hymn.name}</h3>
             </div>
             <p className="text-sm text-base-content/60 pr-6 flex items-center gap-1">
-              <FiUser className="w-3 h-3 shrink-0" />
+              <FiUser aria-hidden className="w-3 h-3 shrink-0" />
               {hymn.author ?? "غير محدد"}
             </p>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
@@ -119,20 +115,16 @@ const BookList = memo(function BookList({ books, loading, query }: BookListProps
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" dir="rtl">
       {books.map((book) => (
-        <div
-          key={book.id}
-          className="card bg-base-200 shadow hover:shadow-md hover:bg-base-300 cursor-pointer transition-all"
-          onClick={() => navigate(`/book/${book.id}`)}
-        >
+        <Link key={book.id} to={`/book/${book.id}`} className="card bg-base-200 shadow hover:shadow-md hover:bg-base-300 cursor-pointer transition-all">
           <div className="card-body gap-1 p-4">
             <div className="flex items-start gap-2">
-              <FiBook className="w-4 h-4 mt-0.5 text-secondary shrink-0" />
+              <FiBook aria-hidden className="w-4 h-4 mt-0.5 text-secondary shrink-0" />
               <h3 className="font-semibold text-base leading-snug">{book.name}</h3>
             </div>
             {book.author && <p className="text-sm text-base-content/60 pr-6">{book.author}</p>}
             {book.description && <p className="text-xs text-base-content/40 pr-6 line-clamp-2">{book.description}</p>}
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
@@ -295,7 +287,7 @@ export default function BrowsePage() {
       {activeTab === "hymns" && (
         <div className="flex flex-col gap-4 h-[80vh]">
           <SearchInput onSearch={handleHymnSearch} placeholder="ابحث في الترانيم..." className="w-full" />
-          <div className="overflow-y-auto max-h-[60vh]">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <HymnList hymns={hymns} loading={hymnLoading} query={hymnQuery} />
           </div>
           {!hymnQuery && (
@@ -308,7 +300,7 @@ export default function BrowsePage() {
       {activeTab === "books" && (
         <div className="flex flex-col gap-4 h-[80vh]">
           <SearchInput onSearch={handleBookSearch} placeholder="ابحث في الكتب ..." className="w-full" />
-          <div className="overflow-y-auto max-h-[60vh]">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <BookList books={books} loading={bookLoading} query={bookQuery} />
           </div>
           {!bookQuery && (

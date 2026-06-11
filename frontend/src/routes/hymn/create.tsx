@@ -48,10 +48,12 @@ export default function HymnCreatePage() {
             <h2 className="card-title">معلومات الترنيمة</h2>
 
             <div className="flex flex-col gap-2">
-              <label className="label">
+              <label className="label" htmlFor="hymn-name">
                 <span className="label-text">اسم الترنيمة *</span>
               </label>
               <input
+                id="hymn-name"
+                name="name"
                 type="text"
                 className="input input-bordered w-full"
                 placeholder="مثال: صلاة البحر"
@@ -62,10 +64,12 @@ export default function HymnCreatePage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="label">
+              <label className="label" htmlFor="hymn-author">
                 <span className="label-text">المؤلف</span>
               </label>
               <input
+                id="hymn-author"
+                name="author"
                 type="text"
                 className="input input-bordered w-full"
                 placeholder="اسم المؤلف (اختياري)"
@@ -75,10 +79,12 @@ export default function HymnCreatePage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="label">
+              <label className="label" htmlFor="hymn-composer">
                 <span className="label-text">الملحن</span>
               </label>
               <input
+                id="hymn-composer"
+                name="composer"
                 type="text"
                 className="input input-bordered w-full"
                 placeholder="اسم الملحن (اختياري)"

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import useHymnosStore from "../store";
 import FABCreate from "@/components/base/FAB";
 import { ContentType } from "../db/models";
+import { enterPresentationMode } from "@/utils/fullscreen";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -13,7 +14,11 @@ export default function HomePage() {
   const handleSelectResult = (item: SearchResultsItem) => {
     if (item._resource_type === ContentType.book) {
       navigate(`/book/${item._resource_uuid}`);
-    } else if (item._slide_uuid) {
+      return;
+    }
+    // Heading to the presentation page: request fullscreen inside the click.
+    void enterPresentationMode();
+    if (item._slide_uuid) {
       navigate(`/presentation/${item._resource_uuid}?startSlide=${item._slide_uuid}`);
     } else {
       navigate(`/presentation/${item._resource_uuid}`);

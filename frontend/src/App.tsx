@@ -1,11 +1,12 @@
 import { PGliteProvider } from "@electric-sql/pglite-react";
+import type { PGliteWithLive } from "@electric-sql/pglite/live";
 import { RouterProvider } from "react-router-dom";
 import { cssTransition, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { router } from "./router";
 
 interface AppProps {
-  db: any; // PGlite instance with live extension from createPGliteInstance()
+  db: PGliteWithLive; // PGlite instance with live extension from createPGliteInstance()
 }
 
 const SmoothTransition = cssTransition({

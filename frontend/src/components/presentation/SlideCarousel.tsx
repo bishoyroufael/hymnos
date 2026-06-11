@@ -11,20 +11,22 @@ interface SlideCarouselProps {
 }
 
 export default function SlideCarousel({ slides, onPresent }: SlideCarouselProps) {
-  const [current, setCurrent] = useState(0);
+  const [rawCurrent, setCurrent] = useState(0);
   const total = slides.length;
+  // Clamp so a stale index can't point past the end after slides shrink.
+  const current = Math.min(rawCurrent, total - 1);
 
   const goPrev = () => setCurrent((i) => Math.max(0, i - 1));
   const goNext = () => setCurrent((i) => Math.min(total - 1, i + 1));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") goPrev();
-      else if (e.key === "ArrowRight") goNext();
+      if (e.key === "ArrowLeft") setCurrent((i) => Math.max(0, i - 1));
+      else if (e.key === "ArrowRight") setCurrent((i) => Math.min(total - 1, i + 1));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [total]);
 
   const showDots = total <= 14;
 

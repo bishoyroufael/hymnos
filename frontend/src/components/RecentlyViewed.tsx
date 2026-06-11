@@ -1,9 +1,10 @@
 import { usePGlite } from "@electric-sql/pglite-react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { getLastViewedContentDetails, type LastViewedContentDetails } from "../db/crud/read/localstorage";
 import { FiClock, FiMusic, FiBookOpen, FiExternalLink } from "react-icons/fi";
 import { ContentType } from "@/db/models";
+import { enterPresentationMode } from "@/utils/fullscreen";
 
 interface RecentlyViewedProps {
   contentIds: string[];
@@ -11,44 +12,29 @@ interface RecentlyViewedProps {
 
 export default function RecentlyViewed({ contentIds }: RecentlyViewedProps) {
   const db = usePGlite();
-  const navigate = useNavigate();
-  const [recentContent, setRecentContent] = useState<LastViewedContentDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // null = not loaded yet; loading state is derived instead of set in the effect.
+  const [recentContent, setRecentContent] = useState<LastViewedContentDetails[] | null>(null);
+  const isLoading = recentContent === null && contentIds.length > 0;
+  const items = recentContent ?? [];
 
   useEffect(() => {
-    const fetchRecentContent = async () => {
-      if (!db || contentIds.length === 0) {
-        setIsLoading(false);
-        return;
-      }
+    if (!db || contentIds.length === 0) return;
 
-      setIsLoading(true);
-      try {
-        const contentDetails: LastViewedContentDetails[] = [];
-
-        // Fetch details for each content ID (in reverse order - most recent first)
-        for (const contentId of [...contentIds].reverse()) {
-          const details = await getLastViewedContentDetails(db, contentId);
-          if (details) {
-            contentDetails.push(details);
-          }
-        }
-
-        setRecentContent(contentDetails);
-      } catch (error) {
+    let cancelled = false;
+    // Fetch all details concurrently (most recent first); order is preserved.
+    Promise.all([...contentIds].reverse().map((contentId) => getLastViewedContentDetails(db, contentId)))
+      .then((details) => {
+        if (!cancelled) setRecentContent(details.filter((d): d is LastViewedContentDetails => d !== null));
+      })
+      .catch((error) => {
         console.error("Failed to fetch recently viewed content:", error);
-        setRecentContent([]);
-      } finally {
-        setIsLoading(false);
-      }
+        if (!cancelled) setRecentContent([]);
+      });
+
+    return () => {
+      cancelled = true;
     };
-
-    fetchRecentContent();
   }, [db, contentIds]);
-
-  const handleContentClick = (content: LastViewedContentDetails) => {
-    navigate(`/presentation/${content.id}`);
-  };
 
   const getContentIcon = (contentType: ContentType) => {
     switch (contentType) {
@@ -76,7 +62,7 @@ export default function RecentlyViewed({ contentIds }: RecentlyViewedProps) {
             <div key={i} className="skeleton h-20 w-full rounded-box"></div>
           ))}
         </div>
-      ) : recentContent.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="card bg-base-200 shadow-sm" dir="rtl">
           <div className="card-body text-center py-12">
             <p className="text-base-content/60">لا توجد مشاهدات سابقة</p>
@@ -84,10 +70,11 @@ export default function RecentlyViewed({ contentIds }: RecentlyViewedProps) {
         </div>
       ) : (
         <div className="pb-4 pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-52 lg:max-h-82 overflow-auto">
-          {recentContent.map((content) => (
-            <div
+          {items.map((content) => (
+            <Link
               key={content.id}
-              onClick={() => handleContentClick(content)}
+              to={`/presentation/${content.id}`}
+              onClick={() => void enterPresentationMode()}
               className="card bg-base-200 hover:bg-base-300 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group"
             >
               <div className="card-body p-4" dir="rtl">
@@ -103,10 +90,10 @@ export default function RecentlyViewed({ contentIds }: RecentlyViewedProps) {
                       {content.description}
                     </p>
                   </div>
-                  <FiExternalLink className="w-4 h-4 text-base-content/40 group-hover:text-primary transition-colors shrink-0" />
+                  <FiExternalLink aria-hidden className="w-4 h-4 text-base-content/40 group-hover:text-primary transition-colors shrink-0" />
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

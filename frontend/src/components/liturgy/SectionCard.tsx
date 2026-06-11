@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { FiTrash2, FiPlus } from "react-icons/fi";
 import SubsectionCard, { type SubsectionForm } from "./SubsectionCard";
 
@@ -21,6 +22,8 @@ interface SectionCardProps {
 }
 
 export default function SectionCard({ section, onUpdate, onRemove, onToggle, onAddSubsection, onUpdateSubsection, onRemoveSubsection }: SectionCardProps) {
+  const nameId = useId();
+  const descriptionId = useId();
   return (
     <div className="collapse collapse-arrow bg-base-200 shadow-lg">
       <input type="checkbox" checked={section.isExpanded} onChange={() => onToggle(section.id)} />
@@ -30,22 +33,24 @@ export default function SectionCard({ section, onUpdate, onRemove, onToggle, onA
           <button
             type="button"
             className="btn btn-error btn-sm btn-circle z-50"
+            aria-label="حذف الفصل"
             onClick={(e) => {
               e.stopPropagation();
               onRemove(section.id);
             }}
           >
-            <FiTrash2 className="w-4 h-4" />
+            <FiTrash2 aria-hidden className="w-4 h-4" />
           </button>
         </div>
       </div>
       <div className="collapse-content">
         <div className="flex flex-col gap-4 pt-2">
           <div className="flex flex-col gap-2">
-            <label className="label">
+            <label className="label" htmlFor={nameId}>
               <span className="label-text">اسم الفصل *</span>
             </label>
             <input
+              id={nameId}
               type="text"
               placeholder="مثال: صلاة الساعة الأولى"
               className="input input-bordered input-sm w-full lg:w-2/3"
@@ -56,10 +61,11 @@ export default function SectionCard({ section, onUpdate, onRemove, onToggle, onA
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="label">
+            <label className="label" htmlFor={descriptionId}>
               <span className="label-text">الوصف</span>
             </label>
             <textarea
+              id={descriptionId}
               placeholder="وصف الفصل (اختياري)"
               className="textarea textarea-bordered textarea-sm h-20 w-full lg:w-2/3"
               value={section.description}
