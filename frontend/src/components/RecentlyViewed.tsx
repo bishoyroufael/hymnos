@@ -68,7 +68,7 @@ export default function RecentlyViewed({ contentIds }: RecentlyViewedProps) {
           </div>
         </div>
       ) : (
-        <div className="pb-4 pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-52 lg:max-h-82 overflow-auto">
+        <div className="pb-4 pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-52 lg:max-h-120 overflow-auto">
           {items.map((content) => (
             <Link
               key={content.id}

@@ -73,4 +73,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["@electric-sql/pglite"],
   },
+  server: {
+    host: "0.0.0.0",
+  },
 });
