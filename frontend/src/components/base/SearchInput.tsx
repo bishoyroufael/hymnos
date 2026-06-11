@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { FiSearch, FiX } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
 
 interface SearchInputProps {
   onSearch: (query: string) => void;
@@ -21,9 +21,14 @@ interface SearchInputProps {
 export default function SearchInput({ onSearch, onInputChange, placeholder = "بحث...", debounceMs = 300, className = "" }: SearchInputProps) {
   const [value, setValue] = useState("");
   const onSearchRef = useRef(onSearch);
-  onSearchRef.current = onSearch;
   const onInputChangeRef = useRef(onInputChange);
-  onInputChangeRef.current = onInputChange;
+
+  // Keep latest callbacks without re-arming the debounce timer (refs must not
+  // be written during render).
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+    onInputChangeRef.current = onInputChange;
+  });
 
   useEffect(() => {
     const id = setTimeout(() => onSearchRef.current(value.trim()), debounceMs);
@@ -38,8 +43,8 @@ export default function SearchInput({ onSearch, onInputChange, placeholder = "ب
   return (
     <div className={`relative flex items-center ${className}`}>
       <label className="input input-bordered input-sm lg:input-lg w-full p-2 lg:p-3">
-        <FiSearch className="text-base-content/40" />
-        <input type="search" dir="rtl" placeholder={placeholder} value={value} onChange={handleChange} />
+        <FiSearch aria-hidden className="text-base-content/40" />
+        <input type="search" name="search" dir="rtl" aria-label={placeholder} placeholder={placeholder} value={value} onChange={handleChange} />
       </label>
     </div>
   );

@@ -1,5 +1,5 @@
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { useCallback, useEffect, useState } from "react";
+import { useParams, useSearchParams, useNavigate, Navigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePGlite } from "@electric-sql/pglite-react";
 import { toast } from "react-toastify";
 import { PresentationProvider, usePresentation } from "../../contexts/PresentationContext";
@@ -39,12 +39,7 @@ function PresentationContent() {
     }
   }, [state.contentType, state.contentId, state.isLoading, db]);
 
-  // Go fullscreen + lock to landscape while the presentation is open. Exiting
-  // fullscreen (e.g. Escape, which the browser eats before our keydown handler)
-  // navigates back — preserving the "Escape leaves the presentation" behaviour.
-  useFullscreenLandscape(() => navigate(-1));
-
-  const flatSlides = state.segments.flatMap((s) => s.slides);
+  const flatSlides = useMemo(() => state.segments.flatMap((s) => s.slides), [state.segments]);
   const slidesLength = flatSlides.length;
   const currentSlide = flatSlides[state.currSlideIdx];
   const contentType = state.contentType;
@@ -95,9 +90,8 @@ function PresentationContent() {
     }
   }, [currentSlide]);
 
-  // Info handler
+  // Info handler — fullscreen exit is handled by PresentationPage's unmount cleanup.
   const handleInfo = () => {
-    if (document.fullscreenElement) document.exitFullscreen();
     if (parentBook) {
       navigate(`/book/${parentBook.book_id}`);
     } else {
@@ -193,22 +187,26 @@ export default function PresentationPage() {
   const navigate = useNavigate();
   const startSlide = searchParams.get("startSlide") || undefined;
 
-  // Track recently viewed content
-  const setLastViewedContent = useHymnosStore((state) => state.setLastViewedContent);
-  const lastViewedContent = useHymnosStore((state) => state.lastViewedContent);
+  // Fullscreen + landscape for the lifetime of the presentation; exits on
+  // unmount (any navigation to another page). Exiting fullscreen (Escape,
+  // which the browser consumes before our keydown handler) navigates back —
+  // preserving the "Escape leaves the presentation" behaviour.
+  useFullscreenLandscape(() => navigate(-1));
 
+  // Track recently viewed content. The current list is read via getState()
+  // inside the effect — subscribing to it here would re-render the page (and
+  // re-run this effect) right after it updates the list itself.
   useEffect(() => {
     if (uuid) {
+      const { lastViewedContent, setLastViewedContent } = useHymnosStore.getState();
       const updatedViewedContent = lastViewedContent.filter((id) => id !== uuid);
       updatedViewedContent.push(uuid);
-      const limitedContent = updatedViewedContent.slice(-15);
-      setLastViewedContent(limitedContent);
+      setLastViewedContent(updatedViewedContent.slice(-15));
     }
-  }, [uuid, setLastViewedContent]);
+  }, [uuid]);
 
   if (!uuid) {
-    navigate("/not-found");
-    return null;
+    return <Navigate to="/not-found" replace />;
   }
 
   return (

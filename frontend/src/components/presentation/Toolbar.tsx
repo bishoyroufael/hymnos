@@ -1,10 +1,11 @@
 import { FiInfo, FiShare2, FiEdit, FiTrash2, FiX, FiCheck, FiPlus, FiSettings, FiList, FiImage } from "react-icons/fi";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { usePresentation } from "../../contexts/PresentationContext";
 import { BACKGROUND_MODAL_ID } from "./BackgroundModal";
+import { useAutoHide } from "@hooks/useAutoHide";
 import useHymnosStore from "../../store";
 
-const THEMES =["light", "synthwave", "retro", "cyberpunk", "valentine", "halloween", "black", "luxury", "lemonade", "night", "coffee"];
+const THEMES = ["light", "synthwave", "retro", "cyberpunk", "valentine", "halloween", "black", "luxury", "lemonade", "night", "coffee"];
 const FONT_FAMILIES = ["font-rubik", "font-amiri", "font-cairo", "font-lalezar", "font-lateef", "font-rakkas"];
 
 interface ToolbarProps {
@@ -19,47 +20,8 @@ export function Toolbar({ isBibleChapter, onInfo, onShare, tocDrawerId }: Toolba
   const presentationSettings = useHymnosStore((s) => s.presentationSettings);
   const setPresentationSettings = useHymnosStore((s) => s.setPresentationSettings);
 
-  const [isVisible, setIsVisible] = useState(true);
   const [isHoveringToolbar, setIsHoveringToolbar] = useState(false);
-  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Auto-hide after 3 seconds if not hovering over toolbar
-  useEffect(() => {
-    const resetTimer = () => {
-      // Clear existing timer
-      if (hideTimerRef.current) {
-        clearTimeout(hideTimerRef.current);
-      }
-
-      // Don't hide if hovering over toolbar
-      if (isHoveringToolbar) {
-        return;
-      }
-
-      // Set new timer to hide after 3 seconds
-      hideTimerRef.current = setTimeout(() => {
-        setIsVisible(false);
-      }, 3000);
-    };
-
-    // Show toolbar and reset timer on any mouse movement
-    const handleMouseMove = () => {
-      setIsVisible(true);
-      resetTimer();
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-
-    // Initial timer
-    resetTimer();
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      if (hideTimerRef.current) {
-        clearTimeout(hideTimerRef.current);
-      }
-    };
-  }, [isHoveringToolbar]);
+  const isVisible = useAutoHide(3000, isHoveringToolbar);
 
   if (!isVisible) return null;
 
@@ -121,7 +83,7 @@ export function Toolbar({ isBibleChapter, onInfo, onShare, tocDrawerId }: Toolba
       <div className="flex items-center justify-between px-4 py-2">
         {/* Left Side - Settings Icon with Dropdown */}
         <div className="dropdown">
-          <button tabIndex={0} className="btn btn-ghost btn-circle" title="الإعدادات">
+          <button tabIndex={0} className="btn btn-ghost btn-circle" title="الإعدادات" aria-label="الإعدادات">
             <FiSettings className="w-4 h-4" />
           </button>
           <ul tabIndex={0} className="dropdown-content menu bg-base-200 rounded-box z-1 w-64 p-2 shadow-xl mt-2">
@@ -245,13 +207,13 @@ export function Toolbar({ isBibleChapter, onInfo, onShare, tocDrawerId }: Toolba
         {/* Center - Edit Mode Controls */}
         {state.isEditingMode && (
           <div className="flex gap-2">
-            <button onClick={handleButtonClick(handleDelete)} className="btn btn-sm btn-error" title="حذف الشريحة">
+            <button onClick={handleButtonClick(handleDelete)} className="btn btn-sm btn-error" title="حذف الشريحة" aria-label="حذف الشريحة">
               <FiTrash2 className="w-4 h-4" />
             </button>
-            <button onClick={handleButtonClick(handleCancel)} className="btn btn-sm btn-warning" title="إلغاء">
+            <button onClick={handleButtonClick(handleCancel)} className="btn btn-sm btn-warning" title="إلغاء" aria-label="إلغاء">
               <FiX className="w-4 h-4" />
             </button>
-            <button onClick={handleButtonClick(handleSubmit)} className="btn btn-sm btn-success" title="حفظ">
+            <button onClick={handleButtonClick(handleSubmit)} className="btn btn-sm btn-success" title="حفظ" aria-label="حفظ">
               <FiCheck className="w-4 h-4" />
             </button>
           </div>
@@ -260,17 +222,17 @@ export function Toolbar({ isBibleChapter, onInfo, onShare, tocDrawerId }: Toolba
         {/* Right Side - View Mode Controls */}
         {!state.isEditingMode && !isBibleChapter && (
           <div className="flex gap-2">
-            <button onClick={handleButtonClick(onInfo)} className="btn btn-sm btn-ghost" title="معلومات">
+            <button onClick={handleButtonClick(onInfo)} className="btn btn-sm btn-ghost" title="معلومات" aria-label="معلومات">
               <FiInfo className="w-4 h-4" />
             </button>
-            <button onClick={handleButtonClick(onShare)} className="btn btn-sm btn-ghost" title="مشاركة">
+            <button onClick={handleButtonClick(onShare)} className="btn btn-sm btn-ghost" title="مشاركة" aria-label="مشاركة">
               <FiShare2 className="w-4 h-4" />
             </button>
-            <button onClick={handleButtonClick(handleEdit)} className="btn btn-sm btn-ghost" title="تعديل">
+            <button onClick={handleButtonClick(handleEdit)} className="btn btn-sm btn-ghost" title="تعديل" aria-label="تعديل">
               <FiEdit className="w-4 h-4" />
             </button>
             {tocDrawerId && (
-              <label htmlFor={tocDrawerId} className="btn btn-sm btn-ghost" title="فهرس الكتاب" onClick={(e) => e.stopPropagation()}>
+              <label htmlFor={tocDrawerId} className="btn btn-sm btn-ghost" title="فهرس الكتاب" aria-label="فهرس الكتاب" onClick={(e) => e.stopPropagation()}>
                 <FiList className="w-4 h-4" />
               </label>
             )}
@@ -287,37 +249,7 @@ interface PlusButtonProps {
 }
 
 export function PlusButton({ position, onClick }: PlusButtonProps) {
-  const [isVisible, setIsVisible] = useState(true);
-  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Auto-hide after 3 seconds
-  useEffect(() => {
-    const resetTimer = () => {
-      setIsVisible(true);
-
-      if (hideTimerRef.current) {
-        clearTimeout(hideTimerRef.current);
-      }
-
-      hideTimerRef.current = setTimeout(() => {
-        setIsVisible(false);
-      }, 3000);
-    };
-
-    const handleMouseMove = () => {
-      resetTimer();
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    resetTimer();
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      if (hideTimerRef.current) {
-        clearTimeout(hideTimerRef.current);
-      }
-    };
-  }, []);
+  const isVisible = useAutoHide(3000);
 
   if (!isVisible) return null;
 
@@ -331,6 +263,7 @@ export function PlusButton({ position, onClick }: PlusButtonProps) {
   return (
     <button
       onClick={handleClick}
+      aria-label="إضافة شريحة"
       className={`
         absolute ${positionClass} top-1/2 -translate-y-1/2 z-10
         btn btn-circle btn-primary

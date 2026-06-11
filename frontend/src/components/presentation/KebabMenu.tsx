@@ -19,17 +19,17 @@ export default function KebabMenu({ items, size = "sm" }: KebabMenuProps) {
 
   return (
     <div className="dropdown dropdown-start">
-      <div tabIndex={0} className={`btn btn-ghost btn-circle ${buttonSizeClass} opacity-60 hover:opacity-100`}>
-        <HiDotsHorizontal className={iconSizeClass} />
-      </div>
-      <ul tabIndex={1} className="dropdown-content menu bg-base-100 rounded-box shadow-lg w-52 z-99 p-2">
+      <button type="button" aria-label="خيارات" className={`btn btn-ghost btn-circle ${buttonSizeClass} opacity-60 hover:opacity-100`}>
+        <HiDotsHorizontal aria-hidden className={iconSizeClass} />
+      </button>
+      <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box shadow-lg w-52 z-99 p-2">
         {items.map((item, index) => (
           <li key={index}>
             <button
+              type="button"
               onClick={(e) => {
-                // Close dropdown
-                // @ts-ignore
-                document.activeElement?.blur();
+                // Close the (focus-based daisyUI) dropdown
+                (document.activeElement as HTMLElement | null)?.blur();
 
                 e.stopPropagation();
                 item.onClick();
@@ -41,7 +41,11 @@ export default function KebabMenu({ items, size = "sm" }: KebabMenuProps) {
                 ${item.disabled ? "opacity-50 cursor-not-allowed" : ""}
               `}
             >
-              {item.icon && <span className="shrink-0">{item.icon}</span>}
+              {item.icon && (
+                <span aria-hidden className="shrink-0">
+                  {item.icon}
+                </span>
+              )}
               <span>{item.label}</span>
             </button>
           </li>

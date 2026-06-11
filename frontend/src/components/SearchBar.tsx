@@ -67,7 +67,8 @@ export default function SearchBar({ onSelectResult, className = "" }: SearchBarP
       const clickedInFilters = filtersContainerRef.current?.contains(target);
       const clickedInContainer = searchContainerRef.current?.contains(target);
       const targetElement = target as HTMLElement;
-      const clickedOnSearchInput = targetElement.tagName === "INPUT" && (targetElement as HTMLInputElement).type === "text" && clickedInContainer;
+      // The query field is <input type="search"> (see SearchInput).
+      const clickedOnSearchInput = targetElement.tagName === "INPUT" && (targetElement as HTMLInputElement).type === "search" && clickedInContainer;
 
       if (filtersContainerRef.current && (!clickedInFilters || clickedOnSearchInput)) {
         filtersContainerRef.current.removeAttribute("open");

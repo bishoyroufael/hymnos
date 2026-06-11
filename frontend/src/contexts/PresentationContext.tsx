@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useReducer, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePGlite } from "@electric-sql/pglite-react";
+import type { PGliteWithLive } from "@electric-sql/pglite/live";
 import { toast } from "react-toastify";
 import { presentationReducer, initialState } from "./PresentationContext.reducer";
 import type { PresentationState, PresentationAction, PresentationSegment } from "./PresentationContext.types";
@@ -25,7 +26,7 @@ interface PresentationProviderProps {
   startSlide?: string;
 }
 
-async function loadPresentation(db: any, uuid: string): Promise<{ contentId: string; contentType: string; segments: PresentationSegment[] }> {
+async function loadPresentation(db: PGliteWithLive, uuid: string): Promise<{ contentId: string; contentType: string; segments: PresentationSegment[] }> {
   const res = await db.query(`SELECT get_content_slides($1)::json as r`, [uuid]);
   if (res.rows.length === 0) throw new Error("not found");
   const raw = (res.rows[0] as { r: ContentSlidesView }).r;
@@ -33,17 +34,14 @@ async function loadPresentation(db: any, uuid: string): Promise<{ contentId: str
   if (raw.content_type === "book") {
     const book = await getBook(db, uuid);
     if (!book) throw new Error("book not found");
-    const segments: PresentationSegment[] = [];
-    for (const chapter of book.chapters) {
-      for (const sec of chapter.sections) {
-        const section = await getBookSection(db, sec.section_id);
-        segments.push({
-          content_id: sec.section_id,
-          content_type: "book_section",
-          slides: section?.slides ?? [],
-        });
-      }
-    }
+    // Fetch all section slides concurrently; order is preserved by Promise.all.
+    const sectionIds = book.chapters.flatMap((chapter) => chapter.sections.map((sec) => sec.section_id));
+    const sections = await Promise.all(sectionIds.map((id) => getBookSection(db, id)));
+    const segments: PresentationSegment[] = sectionIds.map((id, i) => ({
+      content_id: id,
+      content_type: "book_section",
+      slides: sections[i]?.slides ?? [],
+    }));
     return { contentId: uuid, contentType: "book", segments };
   }
 
@@ -132,7 +130,7 @@ export function PresentationProvider({ children, uuid, startSlide }: Presentatio
   }, [state.isEditingMode, navigate]);
 
   // Handler for submitting edits and saving to database
-  const submitEdit = async () => {
+  const submitEdit = useCallback(async () => {
     if (state.segments.length === 0) {
       console.error("No presentation data to save");
       toast.error("لا توجد بيانات للحفظ");
@@ -156,9 +154,13 @@ export function PresentationProvider({ children, uuid, startSlide }: Presentatio
       toast.error("تعذّر حفظ الشرائح");
       throw error;
     }
-  };
+  }, [state.segments, db]);
 
-  return <PresentationContext.Provider value={{ state, dispatch, submitEdit }}>{children}</PresentationContext.Provider>;
+  // Memoized so consumers don't re-render when the provider re-renders for
+  // reasons other than a state change (dispatch is stable across renders).
+  const value = useMemo(() => ({ state, dispatch, submitEdit }), [state, submitEdit]);
+
+  return <PresentationContext.Provider value={value}>{children}</PresentationContext.Provider>;
 }
 
 // Custom hook to use the context

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { usePGlite } from "@electric-sql/pglite-react";
 import type { components } from "@db/models";
 import { FiMenu, FiSettings } from "react-icons/fi";
@@ -8,87 +8,46 @@ type BibleBookView = components["schemas"]["BibleBookView"];
 
 export default function Header() {
   const location = useLocation();
-  const navigate = useNavigate();
   const db = usePGlite();
   const [bibleBooks, setBibleBooks] = useState<BibleBookView[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const isHomePage = location.pathname === "/";
   const isBiblePage = location.pathname.startsWith("/bible");
 
-  // Load Bible books once on mount
+  // Load Bible books once on mount — a single query instead of one per book,
+  // which matters on mobile where PGlite round-trips are not free.
   useEffect(() => {
-    if (db && bibleBooks.length === 0) {
-      loadBibleBooks();
-    }
+    if (!db) return;
+    let cancelled = false;
+
+    db.query<{ bible_book: BibleBookView }>(
+      `
+      SELECT v.bible_book
+      FROM view_bible_book_json v
+      JOIN bible_book bb ON bb.id = v.id
+      JOIN bible b ON b.id = bb.bible_id
+      JOIN bible_translation bt ON bt.id = b.translation_id
+      WHERE bt.is_default = true
+      ORDER BY bb.canon_order
+    `,
+    )
+      .then((result) => {
+        if (!cancelled) setBibleBooks(result.rows.map((row) => row.bible_book));
+      })
+      .catch((error) => console.error("Failed to load Bible books:", error))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [db]);
 
-  const loadBibleBooks = async () => {
-    if (!db) return;
-
-    setLoading(true);
-    try {
-      // Get default Bible ID
-      const bibleResult = await db.query<{ id: string }>(`
-        SELECT b.id
-        FROM bible b
-        JOIN bible_translation bt ON b.translation_id = bt.id
-        WHERE bt.is_default = true
-        LIMIT 1
-      `);
-
-      if (bibleResult.rows.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      const bibleId = bibleResult.rows[0].id;
-
-      // Get all Bible book IDs for this Bible
-      const bookIdsResult = await db.query<{ id: string }>(
-        `
-        SELECT id
-        FROM bible_book
-        WHERE bible_id = $1
-        ORDER BY canon_order
-      `,
-        [bibleId],
-      );
-
-      if (bookIdsResult.rows.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      // Fetch Bible book views using the view
-      const bookViews: BibleBookView[] = [];
-      for (const row of bookIdsResult.rows) {
-        const viewResult = await db.query<{ bible_book: BibleBookView }>(
-          `
-          SELECT bible_book
-          FROM view_bible_book_json
-          WHERE id = $1
-        `,
-          [row.id],
-        );
-
-        if (viewResult.rows.length > 0) {
-          bookViews.push(viewResult.rows[0].bible_book);
-        }
-      }
-
-      setBibleBooks(bookViews);
-    } catch (error) {
-      console.error("Failed to load Bible books:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChapterClick = (chapterId: string) => {
-    navigate(`/presentation/${chapterId}`);
-    // Close the drawer on mobile after navigation
-    const drawerCheckbox = document.getElementById("nav-drawer") as HTMLInputElement;
+  // Close the drawer on mobile after navigation
+  const closeDrawer = () => {
+    const drawerCheckbox = document.getElementById("nav-drawer") as HTMLInputElement | null;
     if (drawerCheckbox) {
       drawerCheckbox.checked = false;
     }
@@ -139,9 +98,9 @@ export default function Header() {
                       <ul className="grid grid-cols-6 gap-1 p-2">
                         {book.chapters.map((chapter) => (
                           <li className="items-center" key={chapter.id}>
-                            <a onClick={() => handleChapterClick(chapter.id!)} className="text-center">
+                            <Link to={`/presentation/${chapter.id}`} onClick={closeDrawer} className="text-center">
                               {chapter.number}
-                            </a>
+                            </Link>
                           </li>
                         ))}
                       </ul>
@@ -178,12 +137,12 @@ export default function Header() {
             <h1 className="text-sm lg:text-lg font-bold text-shadow-lg">ϩⲩⲙⲛⲟⲥ</h1>
           </div>
           {/* Settings Button */}
-          <div
-            className="text-left w-1/3"
-            // @ts-ignore
-            onClick={() => document.getElementById("settings_modal")?.showModal()}
-          >
-            <button className="btn btn-ghost btn-sm" aria-label="Settings">
+          <div className="text-left w-1/3">
+            <button
+              className="btn btn-ghost btn-sm"
+              aria-label="الإعدادات"
+              onClick={() => (document.getElementById("settings_modal") as HTMLDialogElement | null)?.showModal()}
+            >
               <FiSettings className="w-4 h-4" />
             </button>
           </div>

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePGlite } from "@electric-sql/pglite-react";
-import { FiBook, FiChevronDown, FiChevronLeft, FiDownload, FiEdit2, FiHash, FiLayers, FiPlay, FiPlus, FiSave, FiTrash2, FiUser, FiX } from "react-icons/fi";
+import { FiBook, FiChevronDown, FiChevronLeft, FiDownload, FiEdit2, FiHash, FiLayers, FiPlay, FiPlus, FiTrash2, FiUser } from "react-icons/fi";
 import { toast } from "react-toastify";
 import type { components } from "@/db/models";
 import { getBook } from "@/db/crud/read/liturgy";
@@ -9,6 +9,9 @@ import { updateBook, updateBookChapter, updateBookSection } from "@/db/crud/upda
 import { deleteBook, deleteBookChapter, deleteBookSection } from "@/db/crud/delete/liturgy";
 import { createBookChapter, createBookSection } from "@/db/crud/create/liturgy";
 import { exportResourceAsZip, downloadBlob } from "@/db/utils/export";
+import DeleteModal from "@/components/base/DeleteModal";
+import InlineField from "@/components/base/InlineField";
+import SaveCancel from "@/components/base/SaveCancel";
 
 type BookView = components["schemas"]["BookView"];
 type BookChapter = NonNullable<BookView["chapters"]>[number];
@@ -18,93 +21,6 @@ type BookSection = NonNullable<BookChapter["sections"]>[number];
 
 function nextPos(items: { position: number }[]) {
   return items.length === 0 ? 1 : Math.max(...items.map((i) => i.position)) + 1;
-}
-
-// ─── sub-components ──────────────────────────────────────────────────────────
-
-function InlineField({
-  label,
-  value,
-  onChange,
-  multiline = false,
-  placeholder = "",
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  multiline?: boolean;
-  placeholder?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs text-base-content/50">{label}</span>
-      {multiline ? (
-        <textarea
-          className="textarea textarea-bordered textarea-sm h-16 w-full"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-        />
-      ) : (
-        <input className="input input-bordered input-sm w-full" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
-      )}
-    </div>
-  );
-}
-
-function SaveCancel({ onSave, onCancel, saving }: { onSave: () => void; onCancel: () => void; saving: boolean }) {
-  return (
-    <div className="flex gap-2 mt-2">
-      <button type="button" className="btn btn-primary btn-sm gap-1" onClick={onSave} disabled={saving}>
-        {saving ? <span className="loading loading-spinner loading-xs" /> : <FiSave className="w-3 h-3" />}
-        حفظ
-      </button>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel} disabled={saving}>
-        <FiX className="w-3 h-3" />
-        إلغاء
-      </button>
-    </div>
-  );
-}
-
-// ─── delete modal ─────────────────────────────────────────────────────────────
-
-function DeleteModal({
-  id,
-  title,
-  message,
-  onConfirm,
-  onCancel,
-}: {
-  id: string;
-  title: string;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    ref.current?.showModal();
-  }, []);
-  return (
-    <dialog ref={ref} id={id} className="modal" onClose={onCancel}>
-      <div className="modal-box" dir="rtl">
-        <h3 className="font-bold text-lg">{title}</h3>
-        <p className="py-4 text-base-content/70">{message}</p>
-        <div className="modal-action">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            إلغاء
-          </button>
-          <button type="button" className="btn btn-error" onClick={onConfirm}>
-            حذف
-          </button>
-        </div>
-      </div>
-      <form method="dialog" className="modal-backdrop">
-        <button>close</button>
-      </form>
-    </dialog>
-  );
 }
 
 // ─── main page ────────────────────────────────────────────────────────────────
@@ -379,10 +295,18 @@ export default function BookPage() {
   };
 
   // ── UI helpers ──
+  const presentSection = (sectionId: string) => {
+    navigate(`/presentation/${uuid}?startSlide=${sectionId}`);
+  };
+
   const toggleChapter = (id: string) =>
     setExpandedChapters((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
 
@@ -465,19 +389,27 @@ export default function BookPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button type="button" className="btn btn-ghost btn-sm btn-square" title="تحميل الكتاب" onClick={handleExport} disabled={exporting}>
-                    {exporting ? <span className="loading loading-spinner loading-xs" /> : <FiDownload className="w-4 h-4" />}
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm btn-square"
+                    title="تحميل الكتاب"
+                    aria-label="تحميل الكتاب"
+                    onClick={handleExport}
+                    disabled={exporting}
+                  >
+                    {exporting ? <span className="loading loading-spinner loading-xs" /> : <FiDownload aria-hidden className="w-4 h-4" />}
                   </button>
-                  <button type="button" className="btn btn-ghost btn-sm btn-square" title="تعديل الكتاب" onClick={startEditBook}>
-                    <FiEdit2 className="w-4 h-4" />
+                  <button type="button" className="btn btn-ghost btn-sm btn-square" title="تعديل الكتاب" aria-label="تعديل الكتاب" onClick={startEditBook}>
+                    <FiEdit2 aria-hidden className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm btn-square text-error"
                     title="حذف الكتاب"
+                    aria-label="حذف الكتاب"
                     onClick={() => setDeleteBookModal(true)}
                   >
-                    <FiTrash2 className="w-4 h-4" />
+                    <FiTrash2 aria-hidden className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -523,8 +455,13 @@ export default function BookPage() {
                   </>
                 ) : (
                   <div className="flex items-center justify-between">
-                    <button type="button" className="flex items-center gap-2 flex-1 text-right" onClick={() => toggleChapter(chapter.chapter_id)}>
-                      <FiLayers className="w-4 h-4 text-primary shrink-0" />
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 flex-1 text-right"
+                      aria-expanded={isExpanded}
+                      onClick={() => toggleChapter(chapter.chapter_id)}
+                    >
+                      <FiLayers aria-hidden className="w-4 h-4 text-primary shrink-0" />
                       <div className="flex flex-col items-start">
                         <span className="font-bold">{chapter.name}</span>
                         {chapter.description && <span className="text-xs text-base-content/50">{chapter.description}</span>}
@@ -539,16 +476,23 @@ export default function BookPage() {
                       </div>
                     </button>
                     <div className="flex gap-1 shrink-0 mr-2">
-                      <button type="button" className="btn btn-ghost btn-xs btn-square" title="تعديل" onClick={() => startEditChapter(chapter)}>
-                        <FiEdit2 className="w-3 h-3" />
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-xs btn-square"
+                        title="تعديل"
+                        aria-label="تعديل الفصل"
+                        onClick={() => startEditChapter(chapter)}
+                      >
+                        <FiEdit2 aria-hidden className="w-3 h-3" />
                       </button>
                       <button
                         type="button"
                         className="btn btn-ghost btn-xs btn-square text-error"
                         title="حذف"
+                        aria-label="حذف الفصل"
                         onClick={() => setDeleteChapterId(chapter.chapter_id)}
                       >
-                        <FiTrash2 className="w-3 h-3" />
+                        <FiTrash2 aria-hidden className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
@@ -589,7 +533,7 @@ export default function BookPage() {
                             <button
                               type="button"
                               className="flex flex-col items-start gap-0.5 flex-1 text-right"
-                              onClick={() => navigate(`/presentation/${uuid}?startSlide=${section.section_id}`)}
+                              onClick={() => presentSection(section.section_id)}
                             >
                               <span className="font-medium text-sm">{section.name}</span>
                               {section.description && <span className="text-xs text-base-content/50">{section.description}</span>}
@@ -599,27 +543,30 @@ export default function BookPage() {
                               <span className="text-xs text-base-content/50">{section.slide_count} شريحة</span>
                               <button
                                 type="button"
-                                className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
                                 title="عرض"
-                                onClick={() => navigate(`/presentation/${uuid}?startSlide=${section.section_id}`)}
+                                aria-label="عرض القسم"
+                                onClick={() => presentSection(section.section_id)}
                               >
-                                <FiPlay className="w-3 h-3 text-primary" />
+                                <FiPlay aria-hidden className="w-3 h-3 text-primary" />
                               </button>
                               <button
                                 type="button"
-                                className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
                                 title="تعديل"
+                                aria-label="تعديل القسم"
                                 onClick={() => startEditSection(section)}
                               >
-                                <FiEdit2 className="w-3 h-3" />
+                                <FiEdit2 aria-hidden className="w-3 h-3" />
                               </button>
                               <button
                                 type="button"
-                                className="btn btn-ghost btn-xs btn-square text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="btn btn-ghost btn-xs btn-square text-error opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
                                 title="حذف"
+                                aria-label="حذف القسم"
                                 onClick={() => setDeleteSectionId(section.section_id)}
                               >
-                                <FiTrash2 className="w-3 h-3" />
+                                <FiTrash2 aria-hidden className="w-3 h-3" />
                               </button>
                             </div>
                           </div>
@@ -724,7 +671,6 @@ export default function BookPage() {
       {/* ── Delete modals ── */}
       {deleteBookModal && (
         <DeleteModal
-          id="delete-book-modal"
           title="حذف الكتاب"
           message={`هل أنت متأكد من حذف "${book.name}"؟ سيتم حذف جميع الفصول والأقسام والشرائح المرتبطة به.`}
           onConfirm={confirmDeleteBook}
@@ -736,7 +682,6 @@ export default function BookPage() {
           const chapter = book.chapters.find((c) => c.chapter_id === deleteChapterId);
           return (
             <DeleteModal
-              id="delete-chapter-modal"
               title="حذف الفصل"
               message={`هل أنت متأكد من حذف "${chapter?.name ?? "هذا الفصل"}"؟ سيتم حذف جميع أقسامه وشرائحه.`}
               onConfirm={confirmDeleteChapter}
@@ -749,7 +694,6 @@ export default function BookPage() {
           const section = book.chapters.flatMap((c) => c.sections).find((s) => s.section_id === deleteSectionId);
           return (
             <DeleteModal
-              id="delete-section-modal"
               title="حذف القسم"
               message={`هل أنت متأكد من حذف "${section?.name ?? "هذا القسم"}"؟ سيتم حذف جميع شرائحه.`}
               onConfirm={confirmDeleteSection}

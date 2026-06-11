@@ -82,12 +82,13 @@ export default function SlideBlock({ block, blockIndex, columnId, totalBlocks }:
       <div className="relative w-full p-6">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="dropdown dropdown-start">
-            <div
-              tabIndex={0}
+            <button
+              type="button"
+              aria-label="إضافة كتلة"
               className="btn btn-circle btn-sm opacity-50 hover:opacity-100 hover:scale-125 ease-in-out transition duration-200 animate-pulse"
             >
-              <FiPlus className="h-4 w-4" />
-            </div>
+              <FiPlus aria-hidden className="h-4 w-4" />
+            </button>
             <div tabIndex={-1} className="dropdown-content z-99 mt-2">
               <CreateBlockMenu
                 onSelectBlockType={(blockType) => {
@@ -95,8 +96,7 @@ export default function SlideBlock({ block, blockIndex, columnId, totalBlocks }:
                     type: "ADD_BLOCK",
                     payload: { columnId, afterBlockIndex: targetIndex, blockType },
                   });
-                  // @ts-ignore
-                  document.activeElement?.blur();
+                  (document.activeElement as HTMLElement | null)?.blur();
                 }}
               />
             </div>

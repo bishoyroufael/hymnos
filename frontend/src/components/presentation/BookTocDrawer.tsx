@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiBook } from "react-icons/fi";
 import type { components } from "@/db/models";
@@ -35,13 +35,10 @@ export default function BookTocDrawer({ book, theme, children }: BookTocDrawerPr
     currentSectionId = state.contentId ?? undefined;
   }
 
-  const initialExpanded = useMemo(
+  // Lazy initializer: computed once on mount, so no memo/deps gymnastics needed.
+  const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(book.chapters.filter((c) => c.sections.some((s) => s.section_id === currentSectionId)).map((c) => c.chapter_id)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
   );
-
-  const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
 
   // Keep the chapter containing the current section always expanded on navigation
   useEffect(() => {
@@ -52,7 +49,11 @@ export default function BookTocDrawer({ book, theme, children }: BookTocDrawerPr
   const toggleChapter = (id: string) =>
     setExpanded((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
 
@@ -103,12 +104,14 @@ export default function BookTocDrawer({ book, theme, children }: BookTocDrawerPr
                   <ul>
                     {chapter.sections.map((section) => (
                       <li key={section.section_id}>
-                        <a
-                          className={`${section.section_id === currentSectionId ? " menu-active" : ""}`}
+                        <button
+                          type="button"
+                          className={`text-right${section.section_id === currentSectionId ? " menu-active" : ""}`}
+                          aria-current={section.section_id === currentSectionId ? "true" : undefined}
                           onClick={() => handleSectionClick(section.section_id)}
                         >
                           {section.name}
-                        </a>
+                        </button>
                       </li>
                     ))}
                   </ul>

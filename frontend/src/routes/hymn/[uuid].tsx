@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePGlite } from "@electric-sql/pglite-react";
-import { FiDownload, FiEdit2, FiMusic, FiSave, FiTrash2, FiUser, FiX } from "react-icons/fi";
+import { FiDownload, FiEdit2, FiMusic, FiTrash2, FiUser } from "react-icons/fi";
 import { toast } from "react-toastify";
 import type { components } from "@/db/models";
 import { getHymnById } from "@/db/crud/read/hymn";
@@ -9,87 +9,11 @@ import { updateHymn } from "@/db/crud/update/hymn";
 import { deleteHymn } from "@/db/crud/delete/hymn";
 import { exportResourceAsZip, downloadBlob } from "@/db/utils/export";
 import SlideCarousel from "@/components/presentation/SlideCarousel";
+import DeleteModal from "@/components/base/DeleteModal";
+import InlineField from "@/components/base/InlineField";
+import SaveCancel from "@/components/base/SaveCancel";
 
 type HymnView = components["schemas"]["HymnView"];
-
-// ─── sub-components ──────────────────────────────────────────────────────────
-
-function InlineField({
-  label,
-  value,
-  onChange,
-  placeholder = "",
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs text-base-content/50">{label}</span>
-      <input
-        className="input input-bordered input-sm w-full"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
-    </div>
-  );
-}
-
-function SaveCancel({ onSave, onCancel, saving }: { onSave: () => void; onCancel: () => void; saving: boolean }) {
-  return (
-    <div className="flex gap-2 mt-2">
-      <button type="button" className="btn btn-primary btn-sm gap-1" onClick={onSave} disabled={saving}>
-        {saving ? <span className="loading loading-spinner loading-xs" /> : <FiSave className="w-3 h-3" />}
-        حفظ
-      </button>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel} disabled={saving}>
-        <FiX className="w-3 h-3" />
-        إلغاء
-      </button>
-    </div>
-  );
-}
-
-function DeleteModal({
-  id,
-  title,
-  message,
-  onConfirm,
-  onCancel,
-}: {
-  id: string;
-  title: string;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    ref.current?.showModal();
-  }, []);
-  return (
-    <dialog ref={ref} id={id} className="modal" onClose={onCancel}>
-      <div className="modal-box" dir="rtl">
-        <h3 className="font-bold text-lg">{title}</h3>
-        <p className="py-4 text-base-content/70">{message}</p>
-        <div className="modal-action">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            إلغاء
-          </button>
-          <button type="button" className="btn btn-error" onClick={onConfirm}>
-            حذف
-          </button>
-        </div>
-      </div>
-      <form method="dialog" className="modal-backdrop">
-        <button>close</button>
-      </form>
-    </dialog>
-  );
-}
 
 // ─── main page ────────────────────────────────────────────────────────────────
 
@@ -250,19 +174,33 @@ export default function HymnViewPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button type="button" className="btn btn-ghost btn-sm btn-square" title="تحميل الترنيمة" onClick={handleExport} disabled={exporting}>
-                    {exporting ? <span className="loading loading-spinner loading-xs" /> : <FiDownload className="w-4 h-4" />}
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm btn-square"
+                    title="تحميل الترنيمة"
+                    aria-label="تحميل الترنيمة"
+                    onClick={handleExport}
+                    disabled={exporting}
+                  >
+                    {exporting ? <span className="loading loading-spinner loading-xs" /> : <FiDownload aria-hidden className="w-4 h-4" />}
                   </button>
-                  <button type="button" className="btn btn-ghost btn-sm btn-square" title="تعديل الترنيمة" onClick={startEditHymn}>
-                    <FiEdit2 className="w-4 h-4" />
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm btn-square"
+                    title="تعديل الترنيمة"
+                    aria-label="تعديل الترنيمة"
+                    onClick={startEditHymn}
+                  >
+                    <FiEdit2 aria-hidden className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm btn-square text-error"
                     title="حذف الترنيمة"
+                    aria-label="حذف الترنيمة"
                     onClick={() => setDeleteModal(true)}
                   >
-                    <FiTrash2 className="w-4 h-4" />
+                    <FiTrash2 aria-hidden className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -297,7 +235,6 @@ export default function HymnViewPage() {
       {/* ── Delete modal ── */}
       {deleteModal && (
         <DeleteModal
-          id="delete-hymn-modal"
           title="حذف الترنيمة"
           message={`هل أنت متأكد من حذف "${hymn.name}"؟ سيتم حذف جميع شرائحها.`}
           onConfirm={confirmDelete}
