@@ -1,0 +1,18 @@
+type: object
+properties:
+  items:
+    type: array
+    items:
+      $ref: "../BibleBook.yaml"
+  pagination:
+    $ref: "./PaginationInfo.yaml"
+  bible_data:
+    $ref: "../Bible.yaml"
+  translation_data:
+    $ref: "../BibleTranslation.yaml"
+
+required:
+  - items
+  - pagination
+  - bible_data
+  - translation_data

@@ -1,0 +1,21 @@
+type: object
+description: A pack containing multiple items.
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+  author:
+    type: string
+  description:
+    type: string
+  created_at:
+    type: string
+    format: date
+  pagination:
+    $ref: "./PaginationInfo.yaml"
+  items:
+    type: array
+    items:
+      $ref: "./PackItemView.yaml"

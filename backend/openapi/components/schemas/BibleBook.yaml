@@ -1,0 +1,21 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  bible_id:
+    type: string
+    format: uuid
+  canon_order:
+    type: integer
+  name_id:
+    type: string
+  name_lang:
+    type: string
+  name_lang_abbr:
+    type: string
+required:
+  - id
+  - bible_id
+  - canon_order
+  - name_lang

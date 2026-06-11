@@ -1,0 +1,83 @@
+openapi: 3.0.0
+paths: {}
+info:
+  title: Hymnos Models API
+  version: 1.0.0
+components:
+  schemas:
+    Content:
+      $ref: "./components/schemas/Content.yaml"
+    Hymn:
+      $ref: "./components/schemas/Hymn.yaml"
+    Language:
+      $ref: "./components/schemas/Language.yaml"
+    Book:
+      $ref: "./components/schemas/Book.yaml"
+    BookChapter:
+      $ref: "./components/schemas/BookChapter.yaml"
+    BookChapterLink:
+      $ref: "./components/schemas/BookChapterLink.yaml"
+    BookSection:
+      $ref: "./components/schemas/BookSection.yaml"
+    Bible:
+      $ref: "./components/schemas/Bible.yaml"
+    BibleBook:
+      $ref: "./components/schemas/BibleBook.yaml"
+    BibleChapter:
+      $ref: "./components/schemas/BibleChapter.yaml"
+    BibleTranslation:
+      $ref: "./components/schemas/BibleTranslation.yaml"
+    Pack:
+      $ref: "./components/schemas/Pack.yaml"
+    PackItem:
+      $ref: "./components/schemas/PackItem.yaml"
+    Slide:
+      $ref: "./components/schemas/Slide.yaml"
+    SlideRow:
+      $ref: "./components/schemas/SlideRow.yaml"
+    SlideColumn:
+      $ref: "./components/schemas/SlideColumn.yaml"
+    SlideBlock:
+      $ref: "./components/schemas/SlideBlock.yaml"
+    BlockType:
+      $ref: "./components/schemas/BlockType.yaml"
+    BlockAlign:
+      $ref: "./components/schemas/BlockAlign.yaml"
+    BlockStyle:
+      $ref: "./components/schemas/BlockStyle.yaml"
+    ContentType:
+      $ref: "./components/schemas/ContentType.yaml"
+    Tag:
+      $ref: "./components/schemas/Tag.yaml"
+    TagAssignment:
+      $ref: "./components/schemas/TagAssignment.yaml"
+    Tables:
+      $ref: "./components/schemas/Tables.yaml"
+    BibleView:
+      $ref: "./components/schemas/Views/BibleView.yaml"
+    BibleBookView:
+      $ref: "./components/schemas/Views/BibleBookView.yaml"
+    BibleChapterView:
+      $ref: "./components/schemas/Views/BibleChapterView.yaml"
+    BibleBooksPagedView:
+      $ref: "./components/schemas/Views/BibleBooksPagedView.yaml"
+    BibleChaptersPagedView:
+      $ref: "./components/schemas/Views/BibleChaptersPagedView.yaml"
+    ContentSlidesView:
+      $ref: "./components/schemas/Views/ContentSlidesView.yaml"
+    HymnView:
+      $ref: "./components/schemas/Views/HymnView.yaml"
+    BookView:
+      $ref: "./components/schemas/Views/BookView.yaml"
+    BookSectionView:
+      $ref: "./components/schemas/Views/BookSectionView.yaml"
+    PackView:
+      $ref: "./components/schemas/Views/PackView.yaml"
+    SlideView:
+      $ref: "./components/schemas/Views/SlideView.yaml"
+    SlideRowView:
+      $ref: "./components/schemas/Views/SlideRowView.yaml"
+    SlideColumnView:
+      $ref: "./components/schemas/Views/SlideColumnView.yaml"
+    SlideBlockView:
+      $ref: "./components/schemas/Views/SlideBlockView.yaml"

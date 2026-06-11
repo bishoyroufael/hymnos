@@ -1,0 +1,14 @@
+type: object
+properties:
+  book_id:
+    type: string
+    format: uuid
+  chapter_id:
+    type: string
+    format: uuid
+  position:
+    type: integer
+required:
+  - book_id
+  - chapter_id
+  - position

@@ -1,0 +1,15 @@
+type: object
+description: A musical piece used in worship.
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+  author:
+    type: string
+  composer:
+    type: string
+required:
+  - id
+  - name

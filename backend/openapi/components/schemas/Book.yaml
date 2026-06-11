@@ -1,0 +1,23 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    description: Name of this book (can be multilingual if book contains multiple languages)
+  author:
+    type: string
+  description:
+    type: string
+  isbn:
+    type: string
+    description: Optional ISBN identifier for published books
+  created_by:
+    type: string
+  created_at:
+    type: string
+    format: date-time
+required:
+  - id
+  - name

@@ -1,0 +1,57 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  type:
+    $ref: "../ContentType.yaml"
+  created_at:
+    type: string
+  number:
+    type: integer
+  book:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name_id:
+        type: string
+      name_lang:
+        type: string
+      name_lang_abbr:
+        type: string
+    required:
+      - id
+      - name_id
+      - name_lang
+      - name_lang_abbr
+  bible:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      translation:
+        $ref: "../BibleTranslation.yaml"
+    required:
+      - id
+      - translation
+  slides:
+    type: array
+    items:
+      $ref: "./SlideView.yaml"
+  display_name:
+    type: string
+  short_display_name:
+    type: string
+required:
+  - id
+  - type
+  - created_at
+  - number
+  - book
+  - bible
+  - slides
+  - display_name
+  - short_display_name

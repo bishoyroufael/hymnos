@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import datetime
 from fastapi_cache.decorator import cache
 from fastapi.responses import FileResponse
-from jobs.convert_tasbehna_job import run_tasbehna_convert_job
+from backend.src.jobs.tasbehna import run_tasbehna_convert_job
 from utils.io import *
 from fastapi_cache.coder import PickleCoder
 

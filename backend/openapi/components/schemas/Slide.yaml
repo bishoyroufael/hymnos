@@ -1,0 +1,13 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  content_id:
+    type: string
+    format: uuid
+  position:
+    type: integer
+required:
+  - id
+  - content_id

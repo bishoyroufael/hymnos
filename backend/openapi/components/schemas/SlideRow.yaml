@@ -1,0 +1,20 @@
+type: object
+description: A horizontal row within a slide that can contain multiple columns
+properties:
+  id:
+    type: string
+    format: uuid
+  slide_id:
+    type: string
+    format: uuid
+  position:
+    type: integer
+  columns:
+    type: integer
+    description: Number of columns in this row
+    default: 1
+required:
+  - id
+  - slide_id
+  - position
+  - columns

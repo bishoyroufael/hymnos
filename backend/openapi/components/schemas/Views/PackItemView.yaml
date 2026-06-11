@@ -1,0 +1,18 @@
+type: object
+description: A pack item showing its type (hymn, bible, liturgy) and id only
+properties:
+  id:
+    type: string
+  type:
+    $ref: "../ContentType.yaml"
+  create_at:
+    type: string
+    format: date
+  content:
+    oneOf:
+      - $ref: "./HymnView.yaml"
+      - $ref: "./BookView.yaml"
+      - $ref: "./BibleView.yaml"
+required:
+  - id
+  - type

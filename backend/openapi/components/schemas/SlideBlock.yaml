@@ -1,0 +1,29 @@
+type: object
+description: A content block within a slide column (e.g., heading, paragraph)
+properties:
+  id:
+    type: string
+    format: uuid
+  column_id:
+    type: string
+    format: uuid
+    description: Reference to the parent slide column
+  content_type:
+    $ref: "./ContentType.yaml"
+    description: Denormalized content type for search optimization
+  position:
+    type: integer
+    description: Order of this block within the column
+  content:
+    type: string
+    description: The actual text content of the block
+  metadata:
+    $ref: "./BlockStyle.yaml"
+    description: Block styling (semantic type, alignment, etc.) stored as JSONB
+required:
+  - id
+  - column_id
+  - content_type
+  - position
+  - content
+  - metadata

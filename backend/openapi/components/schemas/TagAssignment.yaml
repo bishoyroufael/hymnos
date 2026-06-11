@@ -1,0 +1,14 @@
+type: object
+properties:
+  tag_id:
+    type: string
+    format: uuid
+  content_id:
+    type: string
+    format: uuid
+  content_type:
+    $ref: "./ContentType.yaml"
+required:
+  - tag_id
+  - content_id
+  - content_type

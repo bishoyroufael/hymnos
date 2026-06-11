@@ -1,0 +1,243 @@
+/* ========================================
+Font Imports
+======================================== */
+
+/* Primary UI Font - Rubik (Arabic + Latin) */
+@import "@fontsource/rubik/300.css"; /* Light */
+@import "@fontsource/rubik/400.css"; /* Regular */
+@import "@fontsource/rubik/500.css"; /* Medium */
+@import "@fontsource/rubik/600.css"; /* SemiBold */
+@import "@fontsource/rubik/700.css"; /* Bold */
+
+/* Presentation Fonts (for hymn/liturgy display) */
+@import "@fontsource/amiri/700.css"; /* Classical Arabic - Bold */
+@import "@fontsource/cairo/700.css"; /* Modern Arabic - Bold */
+@import "@fontsource/lalezar/400.css"; /* Display Arabic - Regular */
+@import "@fontsource/lateef/400.css"; /* Traditional Arabic - Regular */
+@import "@fontsource/rakkas/400.css"; /* Decorative Arabic - Regular */
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: all;
+}
+
+/* ========================================
+Theme Configuration
+======================================== */
+@theme {
+  /* Font families */
+  --font-rubik: "Rubik", system-ui, -apple-system, sans-serif;
+  --font-amiri: "Amiri", "Rubik", serif;
+  --font-cairo: "Cairo", "Rubik", sans-serif;
+  --font-lalezar: "Lalezar", "Rubik", display;
+  --font-lateef: "Lateef", "Rubik", serif;
+  --font-rakkas: "Rakkas", "Rubik", display;
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
+
+/* Default font for the app */
+body {
+  font-family: var(--font-rubik);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove the 300ms double-tap-to-zoom delay on interactive elements (mobile)
+   while keeping pinch-zoom available. */
+button,
+a,
+label,
+input,
+textarea,
+summary,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* RTL support */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[type="search"]::-webkit-search-cancel-button {
+  @apply w-3 h-3 lg:w-4 lg:h-4;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M6 6L18 18M18 6L6 18%22 stroke=%22black%22 stroke-width=%222%22/></svg>");
+}
+
+:root:root {
+  /* Surfaces & text — light/dark toasts follow the active daisyUI theme */
+  --toastify-color-light: var(--color-base-100);
+  --toastify-color-dark: var(--color-neutral);
+  --toastify-toast-background: var(--color-base-100);
+  --toastify-text-color-light: var(--color-base-content);
+  --toastify-text-color-dark: var(--color-neutral-content);
+
+  /* Semantic accent colors */
+  --toastify-color-info: var(--color-info);
+  --toastify-color-success: var(--color-success);
+  --toastify-color-warning: var(--color-warning);
+  --toastify-color-error: var(--color-error);
+
+  /* Type icons (shown on the base-colored toast) */
+  --toastify-icon-color-info: var(--color-info);
+  --toastify-icon-color-success: var(--color-success);
+  --toastify-icon-color-warning: var(--color-warning);
+  --toastify-icon-color-error: var(--color-error);
+
+  /* Text on colored (theme="colored") toasts */
+  --toastify-text-color-info: var(--color-info-content);
+  --toastify-text-color-success: var(--color-success-content);
+  --toastify-text-color-warning: var(--color-warning-content);
+  --toastify-text-color-error: var(--color-error-content);
+
+  /* Progress bar */
+  --toastify-color-progress-light: var(--color-primary);
+  --toastify-color-progress-dark: var(--color-primary);
+  --toastify-color-progress-info: var(--color-info);
+  --toastify-color-progress-success: var(--color-success);
+  --toastify-color-progress-warning: var(--color-warning);
+  --toastify-color-progress-error: var(--color-error);
+
+  /* Spinner */
+  --toastify-spinner-color: var(--color-base-content);
+  --toastify-spinner-color-empty-area: var(--color-base-300);
+
+  /* Shape & type to match daisyUI */
+  --toastify-font-family: var(--font-rubik);
+  --toastify-toast-bd-radius: var(--radius-box, 0.5rem);
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+/* Presentation font utilities */
+.font-presentation-amiri {
+  font-family: var(--font-amiri);
+}
+
+.font-presentation-cairo {
+  font-family: var(--font-cairo);
+}
+
+.font-presentation-lalezar {
+  font-family: var(--font-lalezar);
+}
+
+.font-presentation-lateef {
+  font-family: var(--font-lateef);
+}
+
+.font-presentation-rakkas {
+  font-family: var(--font-rakkas);
+}
+
+@utility no-scrollbar {
+  @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
+}
+
+[contentEditable]:empty:before {
+  content: attr(data-placeholder);
+  opacity: 0.2;
+}
+
+/* ========================================
+   Animations
+   ======================================== */
+
+.fade-in-bottom {
+  -webkit-animation: fade-in-bottom 0.6s ease-in-out both;
+  animation: fade-in-bottom 0.6s ease-in-out both;
+}
+
+/* ----------------------------------------------
+ * Generated by Animista on 2026-6-8 23:15:35
+ * Licensed under FreeBSD License.
+ * See http://animista.net/license for more info. 
+ * w: http://animista.net, t: @cssanimista
+ * ---------------------------------------------- */
+
+/**
+ * ----------------------------------------
+ * animation fade-in-bottom
+ * ----------------------------------------
+ */
+@-webkit-keyframes fade-in-bottom {
+  0% {
+    -webkit-transform: translateY(50px);
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes fade-in-bottom {
+  0% {
+    -webkit-transform: translateY(50px);
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-out-bottom {
+  -webkit-animation: fade-out-bottom 0.6s ease-in-out both;
+  animation: fade-out-bottom 0.6s ease-in-out both;
+}
+
+/* Honor the user's reduced-motion preference for decorative animations. */
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-bottom,
+  .fade-out-bottom,
+  .animate-pulse {
+    animation: none;
+  }
+}
+
+/* ----------------------------------------------
+ * Generated by Animista on 2026-6-8 23:16:49
+ * Licensed under FreeBSD License.
+ * See http://animista.net/license for more info. 
+ * w: http://animista.net, t: @cssanimista
+ * ---------------------------------------------- */
+
+/**
+ * ----------------------------------------
+ * animation fade-out-bottom
+ * ----------------------------------------
+ */
+@-webkit-keyframes fade-out-bottom {
+  0% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: translateY(50px);
+    transform: translateY(50px);
+    opacity: 0;
+  }
+}
+@keyframes fade-out-bottom {
+  0% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: translateY(50px);
+    transform: translateY(50px);
+    opacity: 0;
+  }
+}

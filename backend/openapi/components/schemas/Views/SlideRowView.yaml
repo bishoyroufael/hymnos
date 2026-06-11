@@ -1,0 +1,18 @@
+type: object
+description: A row in a slide with its columns
+properties:
+  id:
+    type: string
+  position:
+    type: integer
+  columns:
+    type: integer
+  slide_columns:
+    type: array
+    items:
+      $ref: "./SlideColumnView.yaml"
+required:
+  - id
+  - position
+  - columns
+  - slide_columns

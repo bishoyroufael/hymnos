@@ -1,0 +1,10 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  translation_id:
+    type: string
+required:
+  - id
+  - translation_id

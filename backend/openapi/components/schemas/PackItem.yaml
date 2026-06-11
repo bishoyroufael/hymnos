@@ -1,0 +1,11 @@
+type: object
+properties:
+  pack_id:
+    type: string
+    format: uuid
+  content_id:
+    type: string
+    format: uuid
+required:
+  - pack_id
+  - content_id

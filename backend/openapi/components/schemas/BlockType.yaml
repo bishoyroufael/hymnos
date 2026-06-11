@@ -1,0 +1,7 @@
+type: string
+description: Type of content block within a slide column
+enum:
+  - h1
+  - h2
+  - h3
+  - paragraph

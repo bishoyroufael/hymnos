@@ -1,0 +1,77 @@
+# Names are the same in singular form
+# as in the migrations done in pglite
+# on the frontend side
+type: object
+properties:
+  content:
+    type: array
+    items:
+      $ref: "./Content.yaml"
+  hymn:
+    type: array
+    items:
+      $ref: "./Hymn.yaml"
+  language:
+    type: array
+    items:
+      $ref: "./Language.yaml"
+  book:
+    type: array
+    items:
+      $ref: "./Book.yaml"
+  book_chapter:
+    type: array
+    items:
+      $ref: "./BookChapter.yaml"
+  book_chapter_link:
+    type: array
+    items:
+      $ref: "./BookChapterLink.yaml"
+  book_section:
+    type: array
+    items:
+      $ref: "./BookSection.yaml"
+  bible:
+    type: array
+    items:
+      $ref: "./Bible.yaml"
+  bible_book:
+    type: array
+    items:
+      $ref: "./BibleBook.yaml"
+  bible_chapter:
+    type: array
+    items:
+      $ref: "./BibleChapter.yaml"
+  bible_translation:
+    type: array
+    items:
+      $ref: "./BibleTranslation.yaml"
+  pack:
+    type: array
+    items:
+      $ref: "./Pack.yaml"
+  pack_item:
+    type: array
+    items:
+      $ref: "./PackItem.yaml"
+  slide:
+    type: array
+    items:
+      $ref: "./Slide.yaml"
+  slide_row:
+    type: array
+    items:
+      $ref: "./SlideRow.yaml"
+  slide_column:
+    type: array
+    items:
+      $ref: "./SlideColumn.yaml"
+  slide_block:
+    type: array
+    items:
+      $ref: "./SlideBlock.yaml"
+  tag:
+    type: array
+    items:
+      $ref: "./Tag.yaml"

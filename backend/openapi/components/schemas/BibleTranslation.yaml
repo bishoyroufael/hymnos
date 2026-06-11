@@ -1,0 +1,15 @@
+type: object
+properties:
+  id:
+    type: string
+  abbr:
+    type: string
+  name:
+    type: string
+  is_default:
+    type: boolean
+    default: false
+required:
+  - id
+  - abbr
+  - name
