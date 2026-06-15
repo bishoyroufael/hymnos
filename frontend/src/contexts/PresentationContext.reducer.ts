@@ -126,7 +126,10 @@ export const presentationReducer = produce((draft: PresentationState, action: Pr
     // === EDIT MODE ===
     case "ENTER_EDIT_MODE":
       draft.isEditingMode = true;
-      draft.segmentsBackup = JSON.parse(JSON.stringify(draft.segments));
+      // Snapshot by reference, not a deep clone: Immer's structural sharing keeps
+      // this cheap, and untouched segments keep the same reference after edits — so
+      // submitEdit can detect changes with an O(1) reference check.
+      draft.segmentsBackup = draft.segments;
       break;
 
     case "CANCEL_EDIT":

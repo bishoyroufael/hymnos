@@ -10,6 +10,7 @@ export interface PresentationSettings {
   backgroundImage?: string; // base64 data URL, persisted to localStorage; undefined = no background
   backgroundBlur?: number; // CSS blur radius in px applied to the background image (default 0)
   backgroundOpacity?: number; // opacity of the background image layer, 0..1 (default 1)
+  hiddenLanguages?: string[]; // language ids whose slide columns are hidden in view mode
 }
 
 export interface HymnosState {

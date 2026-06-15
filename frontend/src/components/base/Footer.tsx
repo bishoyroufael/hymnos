@@ -9,7 +9,7 @@ export default function Footer() {
           <p className="font-bold font-amiri">"سَبْعَ مَرَّاتٍ فِي النَّهَارِ سَبَّحْتُكَ عَلَى أَحْكَامِ عَدْلِكَ."</p>
           <span className="font-bold font-amiri">(مز ١١٩: ١٦٤)</span>
         </div>
-        <p>Copyright © {new Date().getFullYear()} - All right reserved</p>
+        <p className="opacity-50">Copyright © {new Date().getFullYear()} - All right reserved</p>
       </aside>
       {/* <nav>
         <div className="grid grid-flow-col gap-4">

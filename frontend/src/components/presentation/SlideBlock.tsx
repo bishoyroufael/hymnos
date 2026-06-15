@@ -1,7 +1,6 @@
-import type { CSSProperties } from "react";
 import { FiPlus } from "react-icons/fi";
 import { BlockType } from "../../db/models";
-import { getFullSlideBlockStyle } from "./blockTypeStyles";
+import { getFullSlideBlockClass } from "./blockTypeStyles";
 import CreateBlockMenu from "./CreateBlockMenu";
 import KebabMenu from "./KebabMenu";
 import { useBlockMenu } from "./useBlockMenu";
@@ -20,7 +19,6 @@ export function SlideBlockContent({
   content,
   disabled,
   onChange,
-  style,
   className = "",
   placeholder,
 }: {
@@ -28,7 +26,6 @@ export function SlideBlockContent({
   content: string;
   disabled: boolean;
   onChange?: (e: ContentEditableEvent) => void;
-  style: CSSProperties;
   className?: string;
   placeholder?: string;
 }) {
@@ -39,8 +36,7 @@ export function SlideBlockContent({
       onChange={onChange ?? (() => {})}
       disabled={disabled}
       data-placeholder={placeholder}
-      className={`w-full text-center resize-none shrink-0 overflow-hidden whitespace-pre-wrap block bg-transparent border-none outline-none text-base-content ${className}`}
-      style={style}
+      className={`w-full resize-none shrink-0 overflow-hidden whitespace-pre-wrap block bg-transparent border-none outline-none text-base-content ${className}`}
     />
   );
 }
@@ -122,8 +118,7 @@ export default function SlideBlock({ block, blockIndex, columnId, totalBlocks }:
           disabled={!state.isEditingMode}
           onChange={handleChange}
           placeholder={state.isEditingMode ? "اكتب..." : "لا يوجد محتوي"}
-          style={getFullSlideBlockStyle(block.metadata, presentationSettings.fontSizeScale)}
-          className={`${presentationSettings.fontFamily} ${state.isEditingMode ? "animate-pulse focus:ring-2 focus:ring-current rounded-lg cursor-text" : "cursor-default"}`}
+          className={`${presentationSettings.fontFamily} ${getFullSlideBlockClass(block.metadata)} ${state.isEditingMode ? "animate-pulse focus:ring-2 focus:ring-current rounded-lg cursor-text" : "cursor-default"}`}
         />
       </div>
       {renderBlockDivider("after")}

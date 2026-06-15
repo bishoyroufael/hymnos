@@ -1,9 +1,12 @@
 import { FiInfo, FiShare2, FiEdit, FiTrash2, FiX, FiCheck, FiPlus, FiSettings, FiList, FiImage } from "react-icons/fi";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { usePresentation } from "../../contexts/PresentationContext";
 import { BACKGROUND_MODAL_ID } from "./BackgroundModal";
 import { useAutoHide } from "@hooks/useAutoHide";
 import useHymnosStore from "../../store";
+import type { components } from "../../db/models";
+
+type Language = components["schemas"]["Language"];
 
 const THEMES = ["light", "synthwave", "retro", "cyberpunk", "valentine", "halloween", "black", "luxury", "lemonade", "night", "coffee"];
 const FONT_FAMILIES = ["font-rubik", "font-amiri", "font-cairo", "font-lalezar", "font-lateef", "font-rakkas"];
@@ -23,7 +26,27 @@ export function Toolbar({ isBibleChapter, onInfo, onShare, tocDrawerId }: Toolba
   const [isHoveringToolbar, setIsHoveringToolbar] = useState(false);
   const isVisible = useAutoHide(3000, isHoveringToolbar);
 
+  // Unique languages present across all slide columns (for the language filter).
+  const availableLanguages = useMemo(() => {
+    const byId = new Map<string, Language>();
+    for (const seg of state.segments)
+      for (const slide of seg.slides)
+        for (const row of slide.slide_rows ?? [])
+          for (const col of row.slide_columns ?? []) if (col.language) byId.set(col.language.id, col.language);
+    return [...byId.values()];
+  }, [state.segments]);
+
   if (!isVisible) return null;
+
+  const hiddenLanguages = presentationSettings.hiddenLanguages ?? [];
+  const shownCount = availableLanguages.filter((l) => !hiddenLanguages.includes(l.id)).length;
+  const toggleLanguage = (id: string) => {
+    const isHidden = hiddenLanguages.includes(id);
+    // Keep at least one language selected: don't allow hiding the last visible one.
+    if (!isHidden && shownCount <= 1) return;
+    const next = isHidden ? hiddenLanguages.filter((x) => x !== id) : [...hiddenLanguages, id];
+    setPresentationSettings({ hiddenLanguages: next });
+  };
 
   const increaseFontSize = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -155,6 +178,31 @@ export function Toolbar({ isBibleChapter, onInfo, onShare, tocDrawerId }: Toolba
                 </div>
               </div>
             </li>
+
+            {/* Language filter — hide columns of unneeded languages (shown when 2+ languages) */}
+            {availableLanguages.length > 1 && (
+              <li>
+                <details>
+                  <summary>اللغات</summary>
+                  <ul className="flex flex-col gap-1 p-2">
+                    {availableLanguages.map((lang) => (
+                      <li key={lang.id}>
+                        <label className="flex items-center gap-2 cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="checkbox checkbox-sm"
+                            checked={!hiddenLanguages.includes(lang.id)}
+                            disabled={shownCount <= 1 && !hiddenLanguages.includes(lang.id)}
+                            onChange={() => toggleLanguage(lang.id)}
+                          />
+                          <span>{lang.name}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </li>
+            )}
 
             {/* Background Image */}
             <li>
