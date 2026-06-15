@@ -1,5 +1,5 @@
 import type { components } from "@/db/models";
-import { getPreviewBlockStyle } from "./blockTypeStyles";
+import { getPreviewBlockClass } from "./blockTypeStyles";
 import { SlideBlockContent } from "./SlideBlock";
 
 type SlideView = components["schemas"]["SlideView"];
@@ -18,9 +18,8 @@ export default function PreviewSlide({ slide }: { slide: SlideView }) {
                   blockId={block.id}
                   content={block.content}
                   disabled={true}
-                  style={getPreviewBlockStyle(block.metadata)}
                   placeholder="لا يوجد محتوي"
-                  className="cursor-default"
+                  className={`cursor-default ${getPreviewBlockClass(block.metadata)}`}
                 />
               ))}
             </div>

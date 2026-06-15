@@ -4,6 +4,7 @@ import { useRowMenu } from "./useRowMenu";
 import SlideColumn from "./SlideColumn";
 import type { components } from "../../db/models";
 import { usePresentation } from "../../contexts/PresentationContext";
+import useHymnosStore from "../../store";
 
 type SlideRowView = components["schemas"]["SlideRowView"];
 
@@ -14,6 +15,13 @@ interface SlideRowProps {
 
 export default function SlideRow({ rowData, isOnlyRow }: SlideRowProps) {
   const { state, dispatch } = usePresentation();
+  const hiddenLanguages = useHymnosStore((s) => s.presentationSettings.hiddenLanguages);
+
+  // Hide columns whose language is toggled off (view mode only). Never blank a
+  // row: if every column would be hidden, fall back to showing them all.
+  const hidden = state.isEditingMode ? [] : hiddenLanguages ?? [];
+  const filtered = hidden.length ? rowData.slide_columns.filter((c) => !hidden.includes(c.language.id)) : rowData.slide_columns;
+  const slideColumns = filtered.length ? filtered : rowData.slide_columns;
 
   // Row KebabMenu items
   const rowMenuItems = useRowMenu({
@@ -40,8 +48,8 @@ export default function SlideRow({ rowData, isOnlyRow }: SlideRowProps) {
   );
 
   // Generate column elements with dividers using flatMap
-  const isOnlyColumn = rowData.slide_columns.length <= 1;
-  const columnsWithDividers = rowData.slide_columns.flatMap((column, index, array) => {
+  const isOnlyColumn = slideColumns.length <= 1;
+  const columnsWithDividers = slideColumns.flatMap((column, index, array) => {
     const elements = [<SlideColumn key={column.id} columnData={column} rowId={rowData.id} isOnlyColumn={isOnlyColumn} />];
 
     // Add divider after (except for last item in non-edit mode)

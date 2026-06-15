@@ -73,7 +73,7 @@ export default function BookTocDrawer({ book, theme, children }: BookTocDrawerPr
   };
 
   return (
-    <div data-theme={theme} className="drawer drawer-end h-screen w-full">
+    <div data-theme={theme} className="drawer h-screen w-full">
       <input id={BOOK_TOC_DRAWER_ID} type="checkbox" className="drawer-toggle" />
 
       <div className="drawer-content">{children}</div>

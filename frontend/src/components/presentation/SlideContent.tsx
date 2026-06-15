@@ -1,7 +1,9 @@
+import type { CSSProperties } from "react";
 import { FcAddRow } from "react-icons/fc";
 import SlideRow from "./SlideRow";
 import type { components } from "../../db/models";
 import { usePresentation } from "../../contexts/PresentationContext";
+import useHymnosStore from "../../store";
 
 type SlideView = components["schemas"]["SlideView"];
 
@@ -11,6 +13,7 @@ interface SlideContentProps {
 
 export default function SlideContent({ slide }: SlideContentProps) {
   const { state, dispatch } = usePresentation();
+  const fontSizeScale = useHymnosStore((s) => s.presentationSettings.fontSizeScale);
 
   const renderHorizontalDivider = (row: any, rowIndex: number) => (
     <div key={`row-divider-${row.id}-${rowIndex}`} className="relative w-full h-px divider divider-vertical divider-neutral/50 p-4">
@@ -47,5 +50,12 @@ export default function SlideContent({ slide }: SlideContentProps) {
     rowElements.unshift(renderHorizontalDivider(slide.slide_rows[0], -1));
   }
 
-  return <div className={`w-11/12 h-11/12 p-4 flex flex-col overflow-auto no-scrollbar justify-center-safe`}>{rowElements}</div>;
+  return (
+    <div
+      style={{ "--font-scale": fontSizeScale } as CSSProperties}
+      className={`w-11/12 h-11/12 p-4 flex flex-col overflow-auto no-scrollbar justify-center-safe`}
+    >
+      {rowElements}
+    </div>
+  );
 }

@@ -18,7 +18,10 @@ export async function import_tables_from_zip(db: PGliteWithLive, file: File | Bl
     // Import each CSV file from the zip
     for (const fileName of Object.keys(zipContent.files)) {
       const blob = await zipContent.files[fileName].async("blob");
-      const tableName = fileName.split(".")[0];
+      const split = fileName.split(".");
+      const tableName = split[0];
+      const ext = split[1];
+      if (ext != "csv") continue;
 
       if (should_direct_copy) {
         // Copy directly to table from CSV file

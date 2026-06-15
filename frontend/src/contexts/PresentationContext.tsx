@@ -26,7 +26,10 @@ interface PresentationProviderProps {
   startSlide?: string;
 }
 
-async function loadPresentation(db: PGliteWithLive, uuid: string): Promise<{ contentId: string; contentType: string; segments: PresentationSegment[] }> {
+async function loadPresentation(
+  db: PGliteWithLive,
+  uuid: string,
+): Promise<{ contentId: string; contentType: string; segments: PresentationSegment[] }> {
   const res = await db.query(`SELECT get_content_slides($1)::json as r`, [uuid]);
   if (res.rows.length === 0) throw new Error("not found");
   const raw = (res.rows[0] as { r: ContentSlidesView }).r;
@@ -138,10 +141,15 @@ export function PresentationProvider({ children, uuid, startSlide }: Presentatio
     }
 
     try {
-      for (const seg of state.segments) {
-        if (seg.content_type !== "bible_chapter") {
-          await upsertSlides(db, seg.content_id, seg.content_type as any, seg.slides);
-        }
+      const backup = state.segmentsBackup;
+      for (let i = 0; i < state.segments.length; i++) {
+        const seg = state.segments[i];
+        if (seg.content_type === "bible_chapter") continue;
+
+        // Avoid upserting slides that didn't change.
+        if (backup?.[i]?.slides === seg.slides) continue;
+
+        await upsertSlides(db, seg.content_id, seg.content_type as any, seg.slides);
       }
 
       // Force flush to IndexedDB (needed because relaxedDurability is enabled)
@@ -154,7 +162,7 @@ export function PresentationProvider({ children, uuid, startSlide }: Presentatio
       toast.error("تعذّر حفظ الشرائح");
       throw error;
     }
-  }, [state.segments, db]);
+  }, [state.segments, state.segmentsBackup, db]);
 
   // Memoized so consumers don't re-render when the provider re-renders for
   // reasons other than a state change (dispatch is stable across renders).

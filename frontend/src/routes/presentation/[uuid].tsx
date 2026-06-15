@@ -63,7 +63,7 @@ function PresentationContent() {
         dispatch({ type: "NEXT_SLIDE" });
       }
     },
-    [state.isEditingMode, dispatch]
+    [state.isEditingMode, dispatch],
   );
 
   // Share handler
@@ -117,7 +117,7 @@ function PresentationContent() {
       >
         <div className="flex flex-col gap-4 text-center">
           <Logo />
-          <p>Copyright © {new Date().getFullYear()} - All right reserved</p>
+          <p className="opacity-50">Copyright © {new Date().getFullYear()} - All right reserved</p>
         </div>
       </div>
     );

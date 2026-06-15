@@ -1,7 +1,7 @@
 import { getBibleChapter } from "@/db/crud/read/bible";
 import { getContentById } from "@/db/crud/read/content";
 import { getHymnById } from "@/db/crud/read/hymn";
-import { getBookSection } from "@/db/crud/read/liturgy";
+import { getBook, getBookSection } from "@/db/crud/read/liturgy";
 import { ContentType } from "@/db/models";
 import type { PGliteWithLive } from "@electric-sql/pglite/live";
 
@@ -44,6 +44,16 @@ export async function getLastViewedContentDetails(db: PGliteWithLive, id: string
         `${hymnDetails.author ? `المؤلف: ${hymnDetails.author}` : ""}${hymnDetails.composer ? ` • الملحن: ${hymnDetails.composer}` : ""}`.trim() ||
         "غير محدد",
       contentType: ContentType.hymn,
+    };
+  } else if (content.type === ContentType.book) {
+    const bookDetails = await getBook(db, id);
+    if (!bookDetails) return null;
+
+    return {
+      id: id,
+      name: bookDetails.name || "كتاب",
+      description: bookDetails.description || (bookDetails.author ? `المؤلف: ${bookDetails.author}` : "") || "كتاب",
+      contentType: ContentType.book,
     };
   } else if (content.type === ContentType.book_section) {
     const sectionDetails = await getBookSection(db, id);
