@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface DeleteModalProps {
   title: string;
@@ -17,7 +18,9 @@ export default function DeleteModal({ title, message, onConfirm, onCancel }: Del
   useEffect(() => {
     ref.current?.showModal();
   }, []);
-  return (
+  // Portal to <body> so the dialog isn't a child of any daisyUI `menu` <li> (whose
+  // `li > *` item styling would otherwise position the modal as a menu entry).
+  return createPortal(
     <dialog ref={ref} className="modal" onClose={onCancel}>
       <div className="modal-box" dir="rtl">
         <h3 className="font-bold text-lg">{title}</h3>
@@ -34,6 +37,7 @@ export default function DeleteModal({ title, message, onConfirm, onCancel }: Del
       <form method="dialog" className="modal-backdrop">
         <button>close</button>
       </form>
-    </dialog>
+    </dialog>,
+    document.body
   );
 }

@@ -11,7 +11,7 @@ import { useFullscreenLandscape } from "@hooks/useFullscreenLandscape";
 import Logo from "../../components/presentation/Logo";
 import Loader from "../../components/base/Loader";
 import useHymnosStore from "../../store";
-import { getBook, getBookBySectionId } from "../../db/crud/read/liturgy";
+import { getBook, getBookByNodeId } from "../../db/crud/read/liturgy";
 import type { components } from "../../db/models";
 
 type BookView = components["schemas"]["BookView"];
@@ -32,8 +32,8 @@ function PresentationContent() {
       getBook(db, state.contentId).then((book) => {
         if (book) setParentBook(book);
       });
-    } else if (state.contentType === "book_section") {
-      getBookBySectionId(db, state.contentId).then((book) => {
+    } else if (state.contentType === "book_node") {
+      getBookByNodeId(db, state.contentId).then((book) => {
         if (book) setParentBook(book);
       });
     }
@@ -45,7 +45,7 @@ function PresentationContent() {
   const contentType = state.contentType;
   const isEndSlide = state.currSlideIdx === slidesLength;
   const isBibleChapter = contentType === "bible_chapter";
-  const isBookSection = contentType === "book_section" || contentType === "book";
+  const isBookSection = contentType === "book_node" || contentType === "book";
 
   // Mouse click navigation
   const handleSlideClick = useCallback(

@@ -21,7 +21,11 @@ export interface SearchResultsItem {
 /**
  * Search for slides across different content types
  */
-export async function search_slide_rows(db: PGliteWithLive, query: string, contentTypes: ContentType[] = [ContentType.bible_chapter, ContentType.hymn]) {
+export async function search_slide_rows(
+  db: PGliteWithLive,
+  query: string,
+  contentTypes: ContentType[] = [ContentType.bible_chapter, ContentType.hymn],
+) {
   const idx_shared_str = `remove_diacritics(sb.content)`;
 
   // Build individual queries for each content type
@@ -37,13 +41,12 @@ export async function search_slide_rows(db: PGliteWithLive, query: string, conte
        JOIN bible b ON bb.bible_id = b.id
        JOIN bible_translation bt ON b.translation_id = bt.id
        WHERE bc.id = s.content_id)`;
-    } else if (contentType === ContentType.book_section) {
-      nameQuery = `(SELECT CONCAT(b.name, ' - ', bc.name, ': ', bs_inner.name)
-       FROM book_section bs_inner
-       JOIN book_chapter bc ON bc.id = bs_inner.chapter_id
-       JOIN book_chapter_link bcl ON bcl.chapter_id = bc.id
-       JOIN book b ON b.id = bcl.book_id
-       WHERE bs_inner.id = s.content_id)`;
+    } else if (contentType === ContentType.book_node) {
+      nameQuery = `(SELECT CONCAT(b.name, ' - ', COALESCE(p.name || ' - ', ''), n.name)
+       FROM book_node n
+       JOIN book b ON b.id = n.book_id
+       LEFT JOIN book_node p ON p.id = n.parent_id
+       WHERE n.id = s.content_id)`;
     } else {
       nameQuery = `NULL`;
     }
@@ -140,7 +143,7 @@ export async function search_bible(db: PGliteWithLive, query: string): Promise<S
       ORDER BY remove_diacritics($1) <->${idx_shared_str}
       LIMIT 3;
       `,
-    [book]
+    [book],
   );
 
   const books = results.rows as (BibleBook & { score: number })[];
@@ -157,7 +160,7 @@ export async function search_bible(db: PGliteWithLive, query: string): Promise<S
        JOIN bible b ON bb.bible_id = b.id
        JOIN bible_translation bt ON b.translation_id = bt.id
        WHERE bb.id = $1;`,
-      [bookRow.id]
+      [bookRow.id],
     );
     const meta = metaRes.rows[0];
     if (!meta) continue;
@@ -185,7 +188,7 @@ export async function search_bible(db: PGliteWithLive, query: string): Promise<S
     const slidesRes = await db.query<{ slide_ids: string[] | null }>(
       `SELECT json_agg(id ORDER BY position) AS slide_ids
        FROM slide WHERE content_id = $1;`,
-      [chapter_id]
+      [chapter_id],
     );
     const slideIds = slidesRes.rows[0]?.slide_ids ?? [];
 
@@ -217,7 +220,7 @@ export async function search_bible(db: PGliteWithLive, query: string): Promise<S
              ORDER BY position LIMIT 1),
            ''
          ) AS content;`,
-        [verse_slide_id]
+        [verse_slide_id],
       );
       const verse_content = verseRes.rows[0]?.content || "";
       search_result.titleIconName = "align-right";
@@ -247,33 +250,30 @@ export async function search_book(db: PGliteWithLive, query: string) {
       WHERE remove_diacritics($1) <% ${idx_shared_str}
       ORDER BY remove_diacritics($1) <-> ${idx_shared_str}
       LIMIT 20;`,
-    [query]
+    [query],
   );
   return results.rows as (Book & { score: number })[];
 }
 
 /**
- * Search book metadata: book names/authors AND book section names.
+ * Search book metadata: book names/authors AND book node names.
  * Returns results already mapped to SearchResultsItem format.
  */
 export async function search_book_metadata(db: PGliteWithLive, query: string): Promise<SearchResultsItem[]> {
-  const [bookRows, sectionRows] = await Promise.all([
+  const [bookRows, nodeRows] = await Promise.all([
     search_book(db, query),
-    db.query<{ section_id: string; section_name: string; chapter_name: string; book_name: string; score: number }>(
+    db.query<{ node_id: string; node_name: string; book_name: string; score: number }>(
       `SELECT
-        bs.id AS section_id,
-        bs.name AS section_name,
-        bc.name AS chapter_name,
+        n.id AS node_id,
+        n.name AS node_name,
         b.name AS book_name,
-        1 - (remove_diacritics($1) <-> remove_diacritics(bs.name)) AS score
-       FROM book_section bs
-       JOIN book_chapter bc ON bc.id = bs.chapter_id
-       JOIN book_chapter_link bcl ON bcl.chapter_id = bc.id
-       JOIN book b ON b.id = bcl.book_id
-       WHERE remove_diacritics($1) <% remove_diacritics(bs.name)
-       ORDER BY remove_diacritics($1) <-> remove_diacritics(bs.name)
+        1 - (remove_diacritics($1) <-> remove_diacritics(n.name)) AS score
+       FROM book_node n
+       JOIN book b ON b.id = n.book_id
+       WHERE remove_diacritics($1) <% remove_diacritics(n.name)
+       ORDER BY remove_diacritics($1) <-> remove_diacritics(n.name)
        LIMIT 10;`,
-      [query]
+      [query],
     ),
   ]);
 
@@ -287,17 +287,17 @@ export async function search_book_metadata(db: PGliteWithLive, query: string): P
     score: r.score,
   }));
 
-  const sections: SearchResultsItem[] = sectionRows.rows.map((r) => ({
-    title: r.section_name,
-    subTitle: r.book_name + (r.chapter_name ? ` — ${r.chapter_name}` : ""),
-    _resource_uuid: r.section_id,
-    _resource_type: ContentType.book_section,
+  const nodes: SearchResultsItem[] = nodeRows.rows.map((r) => ({
+    title: r.node_name,
+    subTitle: r.book_name,
+    _resource_uuid: r.node_id,
+    _resource_type: ContentType.book_node,
     titleIconName: "book-open" as const,
     subTitleIconName: "book" as const,
     score: r.score,
   }));
 
-  return [...books, ...sections];
+  return [...books, ...nodes];
 }
 
 /**
@@ -316,7 +316,7 @@ export async function search_hymn(db: PGliteWithLive, query: string) {
       ORDER BY remove_diacritics($1) <->${idx_shared_str}
       LIMIT 10;
       `,
-    [query]
+    [query],
   );
 
   return results.rows as (Hymn & { score: number })[];
@@ -379,9 +379,9 @@ export async function runSearch(db: PGliteWithLive, searchWord: string, filters:
       searchOperations.push("bookMetadata");
     }
 
-    // 6. Search book section slide content
+    // 6. Search book node slide content
     if (filters.bookContent) {
-      promises.push(search_slide_rows(db, searchWord, [ContentType.book_section]));
+      promises.push(search_slide_rows(db, searchWord, [ContentType.book_node]));
       searchOperations.push("bookContent");
     }
 
@@ -409,7 +409,7 @@ export async function runSearch(db: PGliteWithLive, searchWord: string, filters:
               titleIconName: "music" as const,
               subTitleIconName: "user" as const,
               score: r.score,
-            }))
+            })),
           );
           break;
 
@@ -424,7 +424,7 @@ export async function runSearch(db: PGliteWithLive, searchWord: string, filters:
               titleIconName: "align-right" as const,
               subTitleIconName: "music" as const,
               score: r.score,
-            }))
+            })),
           );
           break;
 
@@ -439,7 +439,7 @@ export async function runSearch(db: PGliteWithLive, searchWord: string, filters:
               titleIconName: "align-right" as const,
               subTitleIconName: "book" as const,
               score: r.score,
-            }))
+            })),
           );
           break;
 
@@ -460,11 +460,11 @@ export async function runSearch(db: PGliteWithLive, searchWord: string, filters:
               title: r.content,
               subTitle: r.name,
               _resource_uuid: r.content_id,
-              _resource_type: ContentType.book_section,
+              _resource_type: ContentType.book_node,
               titleIconName: "align-right" as const,
               subTitleIconName: "book-open" as const,
               score: r.score,
-            }))
+            })),
           );
           break;
       }
@@ -476,7 +476,7 @@ export async function runSearch(db: PGliteWithLive, searchWord: string, filters:
     // in different places of the hymn
     const unique_results = sortBy(
       uniqBy(all_results, (item) => `${item.title}|${item.subTitle}`),
-      (item) => 1 - item.score
+      (item) => 1 - item.score,
     );
 
     return unique_results;

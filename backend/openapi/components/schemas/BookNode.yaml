@@ -1,0 +1,33 @@
+type: object
+description: >
+  A single node in a book's hierarchy tree. Self-references via parent_id to allow
+  arbitrary nesting depth (chapter -> section -> sub-section -> ...). Slides may attach
+  to any node via slide.content_id. book_id is denormalized for direct ownership lookup.
+properties:
+  id:
+    type: string
+    format: uuid
+  book_id:
+    type: string
+    format: uuid
+  parent_id:
+    type: string
+    format: uuid
+    description: Parent node id, or null for a top-level node directly under the book
+  position:
+    type: integer
+  name:
+    type: string
+    description: Name of this node
+  description:
+    type: string
+  created_by:
+    type: string
+  created_at:
+    type: string
+    format: date-time
+required:
+  - id
+  - book_id
+  - position
+  - name

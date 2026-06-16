@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { SearchFilters } from "../db/utils/search-types";
 import { DEFAULT_SEARCH_FILTERS } from "../db/utils/search-types";
+import type { CopiedBookNode } from "../db/utils/bookTree";
 
 export interface PresentationSettings {
   theme: string;
@@ -17,11 +18,13 @@ export interface HymnosState {
   lastViewedContent: string[];
   presentationSettings: PresentationSettings;
   searchFilters: SearchFilters;
+  copiedNode: CopiedBookNode | null; // book-node clipboard, persisted so copy/paste works across books
 
   // Actions
   setPresentationSettings: (settings: Partial<PresentationSettings>) => void;
   setLastViewedContent: (contentIds: string[]) => void;
   toggleSearchFilter: (filterKey: keyof SearchFilters) => void;
+  setCopiedNode: (node: CopiedBookNode | null) => void;
 }
 
 const useHymnosStore = create<HymnosState>()(
@@ -35,6 +38,7 @@ const useHymnosStore = create<HymnosState>()(
         fontSizeScale: 1.0, // 100%
       },
       searchFilters: DEFAULT_SEARCH_FILTERS,
+      copiedNode: null,
 
       // Actions
       setPresentationSettings: (newSettings) =>
@@ -46,6 +50,8 @@ const useHymnosStore = create<HymnosState>()(
         })),
 
       setLastViewedContent: (contentIds) => set(() => ({ lastViewedContent: contentIds })),
+
+      setCopiedNode: (node) => set(() => ({ copiedNode: node })),
 
       toggleSearchFilter: (filterKey) =>
         set((state) => ({
@@ -63,6 +69,7 @@ const useHymnosStore = create<HymnosState>()(
         lastViewedContent: state.lastViewedContent,
         presentationSettings: state.presentationSettings,
         searchFilters: state.searchFilters,
+        copiedNode: state.copiedNode,
       }),
     }
   )

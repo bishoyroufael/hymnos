@@ -9,8 +9,9 @@
  *   - slide_column(row_id, position)   -> UNIQUE(row_id, position)
  *   - slide_block(column_id, position) -> UNIQUE(column_id, position)
  *   - pack_item(pack_id, content_id)   -> PRIMARY KEY(pack_id, content_id)
- *   - book_section(chapter_id, ...)    -> UNIQUE(chapter_id, position)
- *   - book_chapter_link(book_id, ...)  -> PK(book_id, chapter_id) + UNIQUE(book_id, position)
+ *   - book_node(book_id, parent_id, ..)-> UNIQUE(book_id, parent_id, position)
+ *                                          (also serves the recursive tree walk:
+ *                                           seed on book_id, recurse on parent_id)
  * Redundant indexes are pure cost here: PGlite persists every index page into
  * IndexedDB, so they bloat startup load, writes, and storage footprint.
  */
@@ -19,11 +20,6 @@ export const SQL_INDICES = `
 -- ===========================
 -- 6. Indexes
 -- ===========================
-
--- book_chapter_link: chapter_id is NOT the leading column of any constraint
--- (PK is (book_id, chapter_id)); needed for section/chapter joins in search.
-CREATE INDEX IF NOT EXISTS idx_book_chapter_link_chapter
-ON book_chapter_link(chapter_id);
 
 -- tag_assignment: content lookups filter (content_id, content_type) but the PK
 -- leads with tag_id, so neither is reachable. Covering index includes tag_id
@@ -50,10 +46,10 @@ ON slide_block
 USING GIST (remove_diacritics(content) gist_trgm_ops)
 WHERE content_type = 'bible_chapter';
 
-CREATE INDEX IF NOT EXISTS trgm_idx_slide_block_book_section
+CREATE INDEX IF NOT EXISTS trgm_idx_slide_block_book_node
 ON slide_block
 USING GIST (remove_diacritics(content) gist_trgm_ops)
-WHERE content_type = 'book_section';
+WHERE content_type = 'book_node';
 
 CREATE INDEX IF NOT EXISTS trgm_idx_hymn
 ON hymn
@@ -75,16 +71,9 @@ USING GIST ((
   coalesce(remove_diacritics(author), '') || ' ' ||
   coalesce(remove_diacritics(description), '')) gist_trgm_ops);
 
-CREATE INDEX IF NOT EXISTS trgm_idx_book_chapter
-ON book_chapter
+CREATE INDEX IF NOT EXISTS trgm_idx_book_node
+ON book_node
 USING GIST ((
   coalesce(remove_diacritics(name), '') || ' ' ||
   coalesce(remove_diacritics(description), '')) gist_trgm_ops);
-
-CREATE INDEX IF NOT EXISTS trgm_idx_book_section
-ON book_section
-USING GIST ((
-  coalesce(remove_diacritics(name), '') || ' ' ||
-  coalesce(remove_diacritics(description), '') || ' ' ||
-  coalesce(remove_diacritics(rubric), '')) gist_trgm_ops);
 `;

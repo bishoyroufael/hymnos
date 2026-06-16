@@ -3,93 +3,63 @@ import { ContentType } from "@/db/models";
 import { uuidv7 } from "uuidv7";
 import { insertInitialSlide } from "./slide";
 
+interface Queryable {
+  query<T extends Record<string, unknown> = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
+}
+
+/** A node in the create-book tree. Children nest to any depth. */
+export interface BookNodeInput {
+  id: string;
+  name: string;
+  description?: string;
+  children?: BookNodeInput[];
+}
+
 export interface BookCreateInput {
   name: string;
   author?: string;
   description?: string;
   isbn?: string;
-  chapters: {
-    id: string;
-    name: string;
-    description?: string;
-    sections: {
-      id: string;
-      name: string;
-      description?: string;
-      rubric?: string;
-    }[];
-  }[];
+  nodes: BookNodeInput[];
 }
 
-/** Creates a full book with chapters and sections in one transaction. Returns the new book ID. */
+/** Inserts a single node row (content + book_node). Leaf nodes get an initial empty slide. */
+async function insertNode(
+  tx: Queryable,
+  bookId: string,
+  parentId: string | null,
+  position: number,
+  node: BookNodeInput,
+): Promise<void> {
+  await tx.query("INSERT INTO content (id, type) VALUES ($1, $2)", [node.id, ContentType.book_node]);
+  await tx.query(
+    "INSERT INTO book_node (id, book_id, parent_id, position, name, description) VALUES ($1, $2, $3, $4, $5, $6)",
+    [node.id, bookId, parentId, position, node.name, node.description ?? null],
+  );
+
+  const children = node.children ?? [];
+  if (children.length === 0) {
+    // A leaf node is where slides live; seed one empty slide so it's presentable.
+    await insertInitialSlide(tx, node.id, ContentType.book_node);
+    return;
+  }
+  for (const [idx, child] of children.entries()) {
+    await insertNode(tx, bookId, node.id, idx + 1, child);
+  }
+}
+
+/** Creates a full book and its node tree in one transaction. Returns the new book ID. */
 export async function createBook(db: PGliteWithLive, input: BookCreateInput): Promise<string> {
   const bookId = uuidv7();
   await db.transaction(async (tx) => {
     await tx.query("INSERT INTO content (id, type) VALUES ($1, $2)", [bookId, ContentType.book]);
     await tx.query(
       "INSERT INTO book (id, name, author, description, isbn) VALUES ($1, $2, $3, $4, $5)",
-      [bookId, input.name, input.author ?? null, input.description ?? null, input.isbn ?? null]
+      [bookId, input.name, input.author ?? null, input.description ?? null, input.isbn ?? null],
     );
-    for (const [idx, chapter] of input.chapters.entries()) {
-      await tx.query("INSERT INTO content (id, type) VALUES ($1, $2)", [chapter.id, ContentType.book_chapter]);
-      await tx.query(
-        "INSERT INTO book_chapter (id, name, description) VALUES ($1, $2, $3)",
-        [chapter.id, chapter.name, chapter.description ?? null]
-      );
-      await tx.query(
-        "INSERT INTO book_chapter_link (book_id, chapter_id, position) VALUES ($1, $2, $3)",
-        [bookId, chapter.id, idx + 1]
-      );
-      for (const [sIdx, section] of chapter.sections.entries()) {
-        await tx.query("INSERT INTO content (id, type) VALUES ($1, $2)", [section.id, ContentType.book_section]);
-        await tx.query(
-          "INSERT INTO book_section (id, chapter_id, position, name, description, rubric) VALUES ($1, $2, $3, $4, $5, $6)",
-          [section.id, chapter.id, sIdx + 1, section.name, section.description ?? null, section.rubric ?? null]
-        );
-        await insertInitialSlide(tx, section.id, ContentType.book_section);
-      }
+    for (const [idx, node] of input.nodes.entries()) {
+      await insertNode(tx, bookId, null, idx + 1, node);
     }
   });
   return bookId;
-}
-
-/** Adds a single chapter to an existing book. Returns the new chapter ID. */
-export async function createBookChapter(
-  db: PGliteWithLive,
-  bookId: string,
-  data: { name: string; description: string | null },
-  position: number
-): Promise<string> {
-  const chapterId = uuidv7();
-  await db.transaction(async (tx) => {
-    await tx.query("INSERT INTO content (id, type) VALUES ($1, $2)", [chapterId, ContentType.book_chapter]);
-    await tx.query(
-      "INSERT INTO book_chapter (id, name, description) VALUES ($1, $2, $3)",
-      [chapterId, data.name, data.description]
-    );
-    await tx.query(
-      "INSERT INTO book_chapter_link (book_id, chapter_id, position) VALUES ($1, $2, $3)",
-      [bookId, chapterId, position]
-    );
-  });
-  return chapterId;
-}
-
-/** Adds a single section to an existing chapter. Returns the new section ID. */
-export async function createBookSection(
-  db: PGliteWithLive,
-  chapterId: string,
-  data: { name: string; description: string | null; rubric: string | null },
-  position: number
-): Promise<string> {
-  const sectionId = uuidv7();
-  await db.transaction(async (tx) => {
-    await tx.query("INSERT INTO content (id, type) VALUES ($1, $2)", [sectionId, ContentType.book_section]);
-    await tx.query(
-      "INSERT INTO book_section (id, chapter_id, position, name, description, rubric) VALUES ($1, $2, $3, $4, $5, $6)",
-      [sectionId, chapterId, position, data.name, data.description, data.rubric]
-    );
-    await insertInitialSlide(tx, sectionId, ContentType.book_section);
-  });
-  return sectionId;
 }

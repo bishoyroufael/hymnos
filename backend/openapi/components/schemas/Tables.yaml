@@ -19,18 +19,10 @@ properties:
     type: array
     items:
       $ref: "./Book.yaml"
-  book_chapter:
+  book_node:
     type: array
     items:
-      $ref: "./BookChapter.yaml"
-  book_chapter_link:
-    type: array
-    items:
-      $ref: "./BookChapterLink.yaml"
-  book_section:
-    type: array
-    items:
-      $ref: "./BookSection.yaml"
+      $ref: "./BookNode.yaml"
   bible:
     type: array
     items:

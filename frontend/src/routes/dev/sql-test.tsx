@@ -17,14 +17,13 @@ interface QueryExecution {
 }
 
 const DEFAULT_QUERIES = {
-  "Test Book View": `SELECT * FROM view_book_json LIMIT 1;`,
-  "Test Book Section View": `SELECT * FROM view_book_section_json LIMIT 5;`,
+  "Test Book Tree": `SELECT get_book_tree((SELECT id FROM content WHERE type = 'book' LIMIT 1));`,
+  "Test Book Nodes": `SELECT * FROM book_node LIMIT 5;`,
   "Count Books": `SELECT COUNT(*) FROM book;`,
-  "Count Book Chapters": `SELECT COUNT(*) FROM book_chapter;`,
-  "Count Book Sections": `SELECT COUNT(*) FROM book_section;`,
-  "Count Slides": `SELECT COUNT(*) FROM slide WHERE content_id IN (SELECT id FROM book_section);`,
+  "Count Book Nodes": `SELECT COUNT(*) FROM book_node;`,
+  "Count Slides": `SELECT COUNT(*) FROM slide WHERE content_id IN (SELECT id FROM book_node);`,
   "All Tables": `SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;`,
-  "Explain Book View": `EXPLAIN ANALYZE SELECT * FROM view_book_json LIMIT 1;`,
+  "Explain Book Tree": `EXPLAIN ANALYZE SELECT get_book_tree((SELECT id FROM content WHERE type = 'book' LIMIT 1));`,
 };
 
 export default function SQLTestPage() {

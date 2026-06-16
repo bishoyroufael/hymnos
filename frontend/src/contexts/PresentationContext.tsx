@@ -7,7 +7,7 @@ import { presentationReducer, initialState } from "./PresentationContext.reducer
 import type { PresentationState, PresentationAction, PresentationSegment } from "./PresentationContext.types";
 import type { components } from "../db/models";
 import { upsertSlides } from "../db/crud/update/slide";
-import { getBook, getBookSection } from "../db/crud/read/liturgy";
+import { getBook, getNodeSlides } from "../db/crud/read/liturgy";
 
 type ContentSlidesView = components["schemas"]["ContentSlidesView"];
 type Language = components["schemas"]["Language"];
@@ -37,13 +37,14 @@ async function loadPresentation(
   if (raw.content_type === "book") {
     const book = await getBook(db, uuid);
     if (!book) throw new Error("book not found");
-    // Fetch all section slides concurrently; order is preserved by Promise.all.
-    const sectionIds = book.chapters.flatMap((chapter) => chapter.sections.map((sec) => sec.section_id));
-    const sections = await Promise.all(sectionIds.map((id) => getBookSection(db, id)));
-    const segments: PresentationSegment[] = sectionIds.map((id, i) => ({
-      content_id: id,
-      content_type: "book_section",
-      slides: sections[i]?.slides ?? [],
+    // nodes come pre-ordered (depth-first); present only the nodes that own slides,
+    // in that order. Fetch their slides concurrently (order preserved by Promise.all).
+    const slideNodes = book.nodes.filter((n) => n.slide_count > 0);
+    const nodeSlides = await Promise.all(slideNodes.map((n) => getNodeSlides(db, n.node_id)));
+    const segments: PresentationSegment[] = slideNodes.map((n, i) => ({
+      content_id: n.node_id,
+      content_type: "book_node",
+      slides: nodeSlides[i] ?? [],
     }));
     return { contentId: uuid, contentType: "book", segments };
   }

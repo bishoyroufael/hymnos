@@ -7,9 +7,10 @@ import { SQL_INIT_DIACRITIC } from "@db/commands/diacritic";
 import { SQL_GET_BIBLE_BOOKS_PAGED } from "@db/commands/functions/get_bible_books_paged";
 import { SQL_GET_BIBLE_CHAPTERS_PAGED } from "@db/commands/functions/get_bible_chapters_paged";
 import { SQL_GET_CONTENT_SLIDES } from "@db/commands/functions/get_content_slides";
+import { SQL_GET_BOOK_TREE } from "@db/commands/functions/get_book_tree";
+import { SQL_GET_BOOK_FULL } from "@db/commands/functions/get_book_full";
 import SQL_GET_PACK_PAGED from "@db/commands/functions/get_pack_paged";
 import SQL_BIBLE_VIEW from "@db/commands/views/bible";
-import SQL_LITURGY_VIEW from "@db/commands/views/liturgy";
 import SQL_HYMN_VIEW from "@db/commands/views/pack";
 import SQL_SLIDE_VIEW from "@db/commands/views/slide";
 
@@ -34,7 +35,7 @@ create schema public;
 
 export const SQL_INITIAL_MIGRATIONS: string = `
 DO $$ BEGIN
-    CREATE TYPE content_type AS ENUM ('hymn', 'book', 'book_chapter', 'book_section', 'bible', 'bible_book', 'bible_chapter');
+    CREATE TYPE content_type AS ENUM ('hymn', 'book', 'book_node', 'bible', 'bible_book', 'bible_chapter');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -107,35 +108,25 @@ CREATE TABLE IF NOT EXISTS book (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Book Chapter: Major divisions (e.g., "Liturgy of the Word", "Prime Hour")
-CREATE TABLE IF NOT EXISTS book_chapter (
+-- Book Node: a single self-referencing tree node, allowing a book to nest to any
+-- depth (chapter -> section -> sub-section -> ...) instead of a fixed 2-level shape.
+-- Slides attach to ANY node via slide.content_id -> content(id); a node may own both
+-- its own slides AND child nodes. book_id is denormalized onto every node so the
+-- owning book is one FK hop away (no recursive ancestry walk for search/export).
+CREATE TABLE IF NOT EXISTS book_node (
     id UUID PRIMARY KEY REFERENCES content(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    description TEXT,
-    created_by TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Book-Chapter Link: Orders chapters within a specific book
-CREATE TABLE IF NOT EXISTS book_chapter_link (
-    book_id UUID REFERENCES book(id) ON DELETE CASCADE,
-    chapter_id UUID REFERENCES book_chapter(id) ON DELETE CASCADE,
-    position INTEGER NOT NULL,
-    PRIMARY KEY (book_id, chapter_id),
-    UNIQUE (book_id, position)
-);
-
--- Book Section: Subdivisions within a chapter (e.g., "Pauline Epistle", "Gospel")
--- This is the leaf level where slides attach (similar to bible_chapter)
-CREATE TABLE IF NOT EXISTS book_section (
-    id UUID PRIMARY KEY REFERENCES content(id) ON DELETE CASCADE,
-    chapter_id UUID REFERENCES book_chapter(id) ON DELETE CASCADE,
+    book_id UUID NOT NULL REFERENCES book(id) ON DELETE CASCADE,
+    parent_id UUID REFERENCES book_node(id) ON DELETE CASCADE, -- NULL = top-level node under the book
     position INTEGER NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
-    rubric TEXT,
     created_by TEXT,
-    UNIQUE (chapter_id, position)
+    created_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT book_node_no_self_parent CHECK (id <> parent_id),
+    -- Siblings (same parent) are uniquely positioned. NULLS NOT DISTINCT makes
+    -- top-level siblings (parent_id IS NULL) collide on duplicate positions within
+    -- the same book, while different books stay independent via book_id.
+    UNIQUE NULLS NOT DISTINCT (book_id, parent_id, position)
 );
 
 -- ===========================
@@ -237,9 +228,10 @@ export const SQL_CREATE_VIEWS_FUNCTIONS = `
 ${SQL_SLIDE_VIEW}
 ${SQL_HYMN_VIEW}
 ${SQL_BIBLE_VIEW}
-${SQL_LITURGY_VIEW}
+${SQL_GET_BOOK_TREE}
 ${SQL_GET_PACK_PAGED}
 ${SQL_GET_BIBLE_BOOKS_PAGED}
 ${SQL_GET_BIBLE_CHAPTERS_PAGED}
 ${SQL_GET_CONTENT_SLIDES}
+${SQL_GET_BOOK_FULL}
 `;

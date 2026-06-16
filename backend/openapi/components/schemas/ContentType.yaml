@@ -2,8 +2,7 @@ type: string
 enum:
   - hymn
   - book
-  - book_chapter
-  - book_section
+  - book_node
   - bible
   - bible_book
   - bible_chapter
