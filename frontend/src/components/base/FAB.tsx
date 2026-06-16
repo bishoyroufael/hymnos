@@ -1,8 +1,8 @@
 import { FiEdit2, FiMusic, FiPlus, FiBook } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useCreateResource } from "./useCreateResource";
 
 export default function FABCreate() {
-  const navigate = useNavigate();
+  const { openBook, openHymn, createModals } = useCreateResource();
 
   return (
     <div className="fab fab-flower">
@@ -17,18 +17,14 @@ export default function FABCreate() {
       </button>
 
       {/* buttons that show up when FAB is open */}
-      <button type="button" className="btn btn-circle btn-lg" onClick={() => navigate("/hymn/create")} title="إنشاء ترنيمة" aria-label="إنشاء ترنيمة">
+      <button type="button" className="btn btn-circle btn-lg" onClick={openHymn} title="إنشاء ترنيمة" aria-label="إنشاء ترنيمة">
         <FiMusic aria-hidden />
       </button>
-      <button
-        type="button"
-        className="btn btn-circle btn-lg"
-        onClick={() => navigate("/liturgy/create")}
-        title="إنشاء كتاب ليتورجي"
-        aria-label="إنشاء كتاب ليتورجي"
-      >
+      <button type="button" className="btn btn-circle btn-lg" onClick={openBook} title="إنشاء كتاب ليتورجي" aria-label="إنشاء كتاب ليتورجي">
         <FiBook aria-hidden />
       </button>
+
+      {createModals}
     </div>
   );
 }

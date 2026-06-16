@@ -20,7 +20,7 @@ export interface SearchFilters {
   /** Search book metadata (name, author, description) */
   bookMetadata: boolean;
 
-  /** Search within book section slide content */
+  /** Search within book node slide content */
   bookContent: boolean;
 }
 

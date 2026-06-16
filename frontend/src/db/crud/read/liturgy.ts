@@ -1,21 +1,22 @@
 import type { components } from "@/db/models";
 import type { PGliteWithLive } from "@electric-sql/pglite/live";
+import { buildEditorTree, type EditorNode, type BookMeta, type FlatEditorNode } from "@/db/utils/bookEditor";
 
 type Book = components["schemas"]["Book"];
 export type BooksPagedResult = { items: Book[]; total: number };
 
 type BookView = components["schemas"]["BookView"];
-type BookSectionView = components["schemas"]["BookSectionView"];
+type ContentSlidesView = components["schemas"]["ContentSlidesView"];
+type SlideView = components["schemas"]["SlideView"];
 
 /**
- * Get book by ID
+ * Get a book with its full node tree (flat, pre-ordered nodes). Slide content is
+ * fetched separately per node via getNodeSlides.
  */
 export async function getBook(db: PGliteWithLive, id: string): Promise<BookView | undefined> {
-  const results = await db.query("SELECT book FROM view_book_json WHERE book_id=$1;", [id]);
-  if (results.rows.length === 0) {
-    return undefined;
-  }
-  return (results.rows[0] as { book: BookView }).book;
+  const results = await db.query("SELECT get_book_tree($1) AS book;", [id]);
+  const book = (results.rows[0] as { book: BookView | null } | undefined)?.book;
+  return book ?? undefined;
 }
 
 /**
@@ -41,29 +42,55 @@ export async function getBooksPaged(
 }
 
 /**
- * Get the parent book of a book section, resolved via the chapter-link table.
+ * Get the parent book of a node. book_id is denormalized on every node, so this is
+ * a single FK hop (no ancestry walk).
  */
-export async function getBookBySectionId(db: PGliteWithLive, sectionId: string): Promise<BookView | undefined> {
+export async function getBookByNodeId(db: PGliteWithLive, nodeId: string): Promise<BookView | undefined> {
   const results = await db.query(
-    `SELECT book FROM view_book_json WHERE book_id = (
-       SELECT bcl.book_id FROM book_chapter_link bcl
-       JOIN book_section bs ON bs.chapter_id = bcl.chapter_id
-       WHERE bs.id = $1
-       LIMIT 1
-     )`,
-    [sectionId]
+    "SELECT get_book_tree(n.book_id) AS book FROM book_node n WHERE n.id = $1",
+    [nodeId]
   );
-  if (results.rows.length === 0) return undefined;
-  return (results.rows[0] as { book: BookView }).book;
+  const book = (results.rows[0] as { book: BookView | null } | undefined)?.book;
+  return book ?? undefined;
 }
 
 /**
- * Get book section by ID
+ * Load a whole book for the editor: metadata + the full node tree WITH every node's
+ * slides, in one query (get_book_full). This is the only read the editor needs — all
+ * edits then happen in local state and saveBookEdit writes the whole book back.
  */
-export async function getBookSection(db: PGliteWithLive, id: string): Promise<BookSectionView | undefined> {
-  const results = await db.query("SELECT section FROM view_book_section_json WHERE section_id=$1;", [id]);
-  if (results.rows.length === 0) {
-    return undefined;
-  }
-  return (results.rows[0] as { section: BookSectionView }).section;
+export async function getBookForEdit(db: PGliteWithLive, bookId: string): Promise<{ meta: BookMeta; nodes: EditorNode[] } | undefined> {
+  const results = await db.query("SELECT get_book_full($1) AS book;", [bookId]);
+  const full = (results.rows[0] as { book: { name: string; author?: string; description?: string; isbn?: string; nodes: FlatEditorNode[] } | null } | undefined)?.book;
+  if (!full) return undefined;
+  return {
+    meta: { name: full.name, author: full.author ?? "", description: full.description ?? "", isbn: full.isbn ?? "" },
+    nodes: buildEditorTree(full.nodes),
+  };
+}
+
+/** Get a node's metadata + its parent node's name + its book's name. Used for recently-viewed labels. */
+export async function getBookNode(
+  db: PGliteWithLive,
+  id: string
+): Promise<{ name: string; description: string | null; parent_name: string | null; book_name: string | null } | undefined> {
+  const results = await db.query<{ name: string; description: string | null; parent_name: string | null; book_name: string | null }>(
+    `SELECT n.name, n.description, p.name AS parent_name, b.name AS book_name
+     FROM book_node n
+     LEFT JOIN book_node p ON p.id = n.parent_id
+     JOIN book b ON b.id = n.book_id
+     WHERE n.id = $1`,
+    [id]
+  );
+  return results.rows[0];
+}
+
+/**
+ * Get the slides attached directly to a single book node, using the generic
+ * get_content_slides function.
+ */
+export async function getNodeSlides(db: PGliteWithLive, nodeId: string): Promise<SlideView[]> {
+  const results = await db.query("SELECT get_content_slides($1)::json AS r;", [nodeId]);
+  const r = (results.rows[0] as { r: ContentSlidesView } | undefined)?.r;
+  return r?.slides ?? [];
 }

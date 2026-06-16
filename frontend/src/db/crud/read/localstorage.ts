@@ -1,7 +1,7 @@
 import { getBibleChapter } from "@/db/crud/read/bible";
 import { getContentById } from "@/db/crud/read/content";
 import { getHymnById } from "@/db/crud/read/hymn";
-import { getBook, getBookSection } from "@/db/crud/read/liturgy";
+import { getBook, getBookNode } from "@/db/crud/read/liturgy";
 import { ContentType } from "@/db/models";
 import type { PGliteWithLive } from "@electric-sql/pglite/live";
 
@@ -55,15 +55,18 @@ export async function getLastViewedContentDetails(db: PGliteWithLive, id: string
       description: bookDetails.description || (bookDetails.author ? `المؤلف: ${bookDetails.author}` : "") || "كتاب",
       contentType: ContentType.book,
     };
-  } else if (content.type === ContentType.book_section) {
-    const sectionDetails = await getBookSection(db, id);
-    if (!sectionDetails) return null;
+  } else if (content.type === ContentType.book_node) {
+    const node = await getBookNode(db, id);
+    if (!node) return null;
 
+    const nodeName = node.name || "قسم";
     return {
       id: id,
-      name: sectionDetails.name || "قسم",
-      description: sectionDetails.description || sectionDetails.rubric || "صلاة",
-      contentType: ContentType.book_section,
+      // Prepend the parent node name for context, e.g. "Liturgy of the Word - Gospel".
+      name: node.parent_name ? `${node.parent_name} - ${nodeName}` : nodeName,
+      // Show the owning book as the subtitle.
+      description: node.book_name || node.description || "صلاة",
+      contentType: ContentType.book_node,
     };
   }
 

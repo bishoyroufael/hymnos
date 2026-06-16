@@ -1,5 +1,8 @@
 type: object
-description: Book structure view - includes metadata and structure but NOT slide content (fetch slides separately per section)
+description: >
+  Book structure view - metadata plus a FLAT list of nodes in pre-order (depth-first)
+  traversal order. Assemble the tree client-side via parent_id; the order also doubles
+  as the presentation reading order. Slide content is fetched separately per node.
 properties:
   book_id:
     type: string
@@ -14,54 +17,40 @@ properties:
     type: string
   created_by:
     type: string
-  chapters:
+  nodes:
     type: array
     items:
       type: object
       properties:
-        chapter_id:
+        node_id:
           type: string
           format: uuid
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Parent node id, or null for a top-level node
         position:
           type: integer
+        depth:
+          type: integer
+          description: 1 for top-level nodes, incrementing with nesting
         name:
           type: string
         description:
           type: string
         created_by:
           type: string
-        sections:
-          type: array
-          items:
-            type: object
-            properties:
-              section_id:
-                type: string
-                format: uuid
-              position:
-                type: integer
-              name:
-                type: string
-              description:
-                type: string
-              rubric:
-                type: string
-              created_by:
-                type: string
-              slide_count:
-                type: integer
-                description: Number of slides in this section
-            required:
-              - section_id
-              - position
-              - name
-              - slide_count
+        slide_count:
+          type: integer
+          description: Number of slides attached directly to this node
       required:
-        - chapter_id
+        - node_id
         - position
+        - depth
         - name
-        - sections
+        - slide_count
 required:
   - book_id
   - name
-  - chapters
+  - nodes

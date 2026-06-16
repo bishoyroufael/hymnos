@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef, memo, type ChangeEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useCreateResource } from "@/components/base/useCreateResource";
 import { usePGlite } from "@electric-sql/pglite-react";
 import { FiBook, FiMusic, FiPlus, FiChevronRight, FiChevronLeft, FiUser, FiUpload } from "react-icons/fi";
 import type { components } from "@/db/models";
@@ -39,7 +40,7 @@ type HymnListProps = {
 };
 
 const HymnList = memo(function HymnList({ hymns, loading, query }: HymnListProps) {
-  const navigate = useNavigate();
+  const { openHymn, createModals } = useCreateResource();
 
   if (loading && hymns.length === 0) {
     return (
@@ -54,11 +55,12 @@ const HymnList = memo(function HymnList({ hymns, loading, query }: HymnListProps
         <FiMusic className="w-12 h-12 mb-4 opacity-30" />
         <p className="mb-4">{query ? "لا توجد نتائج مطابقة" : "لا توجد ترانيم بعد"}</p>
         {!query && (
-          <button className="btn btn-primary btn-sm gap-2" onClick={() => navigate("/hymn/create")}>
+          <button className="btn btn-primary btn-sm gap-2" onClick={openHymn}>
             <FiPlus className="w-4 h-4" />
             إنشاء ترنيمة
           </button>
         )}
+        {createModals}
       </div>
     );
   }
@@ -89,7 +91,7 @@ type BookListProps = {
 };
 
 const BookList = memo(function BookList({ books, loading, query }: BookListProps) {
-  const navigate = useNavigate();
+  const { openBook, createModals } = useCreateResource();
 
   if (loading && books.length === 0) {
     return (
@@ -104,11 +106,12 @@ const BookList = memo(function BookList({ books, loading, query }: BookListProps
         <FiBook className="w-12 h-12 mb-4 opacity-30" />
         <p className="mb-4">{query ? "لا توجد نتائج مطابقة" : "لا توجد كتب بعد"}</p>
         {!query && (
-          <button className="btn btn-primary btn-sm gap-2" onClick={() => navigate("/liturgy/create")}>
+          <button className="btn btn-primary btn-sm gap-2" onClick={openBook}>
             <FiPlus className="w-4 h-4" />
             إنشاء كتاب
           </button>
         )}
+        {createModals}
       </div>
     );
   }

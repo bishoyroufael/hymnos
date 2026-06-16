@@ -51,35 +51,24 @@ export type components = {
             /** Format: date-time */
             created_at?: string;
         };
-        BookChapter: {
+        /** @description A single node in a book's hierarchy tree. Self-references via parent_id to allow arbitrary nesting depth (chapter -> section -> sub-section -> ...). Slides may attach to any node via slide.content_id. book_id is denormalized for direct ownership lookup. */
+        BookNode: {
             /** Format: uuid */
             id: string;
-            /** @description Name of this chapter */
+            /** Format: uuid */
+            book_id: string;
+            /**
+             * Format: uuid
+             * @description Parent node id, or null for a top-level node directly under the book
+             */
+            parent_id?: string;
+            position: number;
+            /** @description Name of this node */
             name: string;
             description?: string;
             created_by?: string;
             /** Format: date-time */
             created_at?: string;
-        };
-        BookChapterLink: {
-            /** Format: uuid */
-            book_id: string;
-            /** Format: uuid */
-            chapter_id: string;
-            position: number;
-        };
-        BookSection: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            chapter_id: string;
-            position: number;
-            /** @description Name of this section (language inherited from parent chapter) */
-            name: string;
-            description?: string;
-            /** @description Liturgical instructions or notes */
-            rubric?: string;
-            created_by?: string;
         };
         Bible: {
             /** Format: uuid */
@@ -215,9 +204,7 @@ export type components = {
             hymn?: components["schemas"]["Hymn"][];
             language?: components["schemas"]["Language"][];
             book?: components["schemas"]["Book"][];
-            book_chapter?: components["schemas"]["BookChapter"][];
-            book_chapter_link?: components["schemas"]["BookChapterLink"][];
-            book_section?: components["schemas"]["BookSection"][];
+            book_node?: components["schemas"]["BookNode"][];
             bible?: components["schemas"]["Bible"][];
             bible_book?: components["schemas"]["BibleBook"][];
             bible_chapter?: components["schemas"]["BibleChapter"][];
@@ -311,7 +298,7 @@ export type components = {
             tags?: string[];
             slides?: components["schemas"]["SlideView"][];
         };
-        /** @description Book structure view - includes metadata and structure but NOT slide content (fetch slides separately per section) */
+        /** @description Book structure view - metadata plus a FLAT list of nodes in pre-order (depth-first) traversal order. Assemble the tree client-side via parent_id; the order also doubles as the presentation reading order. Slide content is fetched separately per node. */
         BookView: {
             /** Format: uuid */
             book_id: string;
@@ -320,36 +307,23 @@ export type components = {
             description?: string;
             isbn?: string;
             created_by?: string;
-            chapters: {
+            nodes: {
                 /** Format: uuid */
-                chapter_id: string;
+                node_id: string;
+                /**
+                 * Format: uuid
+                 * @description Parent node id, or null for a top-level node
+                 */
+                parent_id?: string | null;
                 position: number;
+                /** @description 1 for top-level nodes, incrementing with nesting */
+                depth: number;
                 name: string;
                 description?: string;
                 created_by?: string;
-                sections: {
-                    /** Format: uuid */
-                    section_id: string;
-                    position: number;
-                    name: string;
-                    description?: string;
-                    rubric?: string;
-                    created_by?: string;
-                    /** @description Number of slides in this section */
-                    slide_count: number;
-                }[];
+                /** @description Number of slides attached directly to this node */
+                slide_count: number;
             }[];
-        };
-        /** @description Book section view for quick access to a specific section with its slides */
-        BookSectionView: {
-            /** Format: uuid */
-            section_id: string;
-            position: number;
-            name: string;
-            description?: string;
-            rubric?: string;
-            created_by?: string;
-            slides: components["schemas"]["SlideView"][];
         };
         /** @description A pack containing multiple items. */
         PackView: {
@@ -432,15 +406,14 @@ export enum BlockType {
     paragraph = "paragraph"
 }
 export enum BlockAlign {
-    Center = "Center",
-    Left = "Left",
-    Right = "Right"
+    center = "center",
+    left = "left",
+    right = "right"
 }
 export enum ContentType {
     hymn = "hymn",
     book = "book",
-    book_chapter = "book_chapter",
-    book_section = "book_section",
+    book_node = "book_node",
     bible = "bible",
     bible_book = "bible_book",
     bible_chapter = "bible_chapter"

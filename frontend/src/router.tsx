@@ -8,8 +8,6 @@ import BrowsePage from '@routes/browse/index';
 import PackViewPage from '@routes/pack/[uuid]';
 import PackCreatePage from '@routes/pack/create';
 import HymnViewPage from '@routes/hymn/[uuid]';
-import HymnCreatePage from '@routes/hymn/create';
-import LiturgyCreatePage from '@routes/liturgy/create';
 import BiblePage from '@routes/bible/[uuid]';
 import BookPage from '@routes/book/[uuid]';
 import PresentationPage from '@routes/presentation/[uuid]';
@@ -26,7 +24,6 @@ import SQLTestPage from '@routes/dev/sql-test';
  * - pack/[uuid].tsx → /pack/:uuid
  * - pack/create.tsx → /pack/create
  * - hymn/[uuid].tsx → /hymn/:uuid
- * - hymn/create.tsx → /hymn/create
  * - bible/[uuid].tsx → /bible/:uuid
  * - book/[uuid].tsx → /book/:uuid
  * - presentation/[uuid].tsx → /presentation/:uuid
@@ -69,21 +66,8 @@ export const router = createBrowserRouter([
         path: 'hymn',
         children: [
           {
-            path: 'create',
-            element: <HymnCreatePage />,
-          },
-          {
             path: ':uuid',
             element: <HymnViewPage />,
-          },
-        ],
-      },
-      {
-        path: 'liturgy',
-        children: [
-          {
-            path: 'create',
-            element: <LiturgyCreatePage />,
           },
         ],
       },

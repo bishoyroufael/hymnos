@@ -56,18 +56,15 @@ function hymnQueries(id: string): TableQuery[] {
 }
 
 function bookQueries(id: string): TableQuery[] {
-  const chapterIds = `SELECT chapter_id FROM book_chapter_link WHERE book_id = '${id}'`;
-  // The book itself, all its chapters, and all their sections — every content row in the subtree.
+  // The book itself plus every node in its tree — book_id is denormalized on each node,
+  // so the whole subtree is one flat query (no recursive ancestry walk).
   const allContentIds = `SELECT '${id}'::uuid AS id
-    UNION SELECT chapter_id FROM book_chapter_link WHERE book_id = '${id}'
-    UNION SELECT id FROM book_section WHERE chapter_id IN (${chapterIds})`;
+    UNION SELECT id FROM book_node WHERE book_id = '${id}'`;
   const contentFilter = `content_id IN (${allContentIds})`;
   return [
     { table: "content", query: `SELECT * FROM content WHERE id IN (${allContentIds})` },
     { table: "book", query: `SELECT * FROM book WHERE id = '${id}'` },
-    { table: "book_chapter", query: `SELECT * FROM book_chapter WHERE id IN (${chapterIds})` },
-    { table: "book_chapter_link", query: `SELECT * FROM book_chapter_link WHERE book_id = '${id}'` },
-    { table: "book_section", query: `SELECT * FROM book_section WHERE chapter_id IN (${chapterIds})` },
+    { table: "book_node", query: `SELECT * FROM book_node WHERE book_id = '${id}'` },
     ...slideHierarchyQueries(contentFilter),
     ...tagQueries(contentFilter),
   ];

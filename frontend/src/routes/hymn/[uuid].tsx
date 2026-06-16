@@ -82,7 +82,7 @@ export default function HymnViewPage() {
     try {
       await deleteHymn(db, uuid);
       toast.success("تم حذف الترنيمة");
-      navigate(-1);
+      navigate("/");
     } catch (e) {
       console.error("Failed to delete hymn:", e);
       toast.error("تعذّر حذف الترنيمة");

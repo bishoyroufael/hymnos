@@ -13,12 +13,8 @@ components:
       $ref: "./components/schemas/Language.yaml"
     Book:
       $ref: "./components/schemas/Book.yaml"
-    BookChapter:
-      $ref: "./components/schemas/BookChapter.yaml"
-    BookChapterLink:
-      $ref: "./components/schemas/BookChapterLink.yaml"
-    BookSection:
-      $ref: "./components/schemas/BookSection.yaml"
+    BookNode:
+      $ref: "./components/schemas/BookNode.yaml"
     Bible:
       $ref: "./components/schemas/Bible.yaml"
     BibleBook:
@@ -69,8 +65,6 @@ components:
       $ref: "./components/schemas/Views/HymnView.yaml"
     BookView:
       $ref: "./components/schemas/Views/BookView.yaml"
-    BookSectionView:
-      $ref: "./components/schemas/Views/BookSectionView.yaml"
     PackView:
       $ref: "./components/schemas/Views/PackView.yaml"
     SlideView:

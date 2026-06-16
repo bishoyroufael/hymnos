@@ -1,69 +1,143 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePGlite } from "@electric-sql/pglite-react";
-import { FiBook, FiChevronDown, FiChevronLeft, FiDownload, FiEdit2, FiHash, FiLayers, FiPlay, FiPlus, FiTrash2, FiUser } from "react-icons/fi";
+import { produce } from "immer";
+import { FiBook, FiClipboard, FiDownload, FiEdit2, FiHash, FiList, FiPlus, FiSave, FiTrash2, FiUser } from "react-icons/fi";
 import { toast } from "react-toastify";
-import type { components } from "@/db/models";
-import { getBook } from "@/db/crud/read/liturgy";
-import { updateBook, updateBookChapter, updateBookSection } from "@/db/crud/update/liturgy";
-import { deleteBook, deleteBookChapter, deleteBookSection } from "@/db/crud/delete/liturgy";
-import { createBookChapter, createBookSection } from "@/db/crud/create/liturgy";
+import { getBookForEdit } from "@/db/crud/read/liturgy";
+import { saveBookEdit } from "@/db/crud/update/liturgy";
+import { deleteBook } from "@/db/crud/delete/liturgy";
 import { exportResourceAsZip, downloadBlob } from "@/db/utils/export";
+import { editorHasContent, editorReducer, findNode, toCopied, type EditorNode, type EditorState, type RowAction } from "@/db/utils/bookEditor";
+import useHymnosStore from "@/store";
+import BookNodeRow from "@/components/liturgy/BookNodeRow";
 import DeleteModal from "@/components/base/DeleteModal";
-import InlineField from "@/components/base/InlineField";
-import SaveCancel from "@/components/base/SaveCancel";
+import EditModal from "@/components/base/EditModal";
 
-type BookView = components["schemas"]["BookView"];
-type BookChapter = NonNullable<BookView["chapters"]>[number];
-type BookSection = NonNullable<BookChapter["sections"]>[number];
+const BOOK_FIELDS = [
+  { key: "name", label: "اسم الكتاب", required: true, placeholder: "اسم الكتاب" },
+  { key: "author", label: "المؤلف", placeholder: "اسم المؤلف" },
+  { key: "description", label: "الوصف", multiline: true, placeholder: "وصف الكتاب" },
+  { key: "isbn", label: "رقم ISBN", placeholder: "978-XXXXXXXXXX" },
+];
 
-// ─── helpers ────────────────────────────────────────────────────────────────
-
-function nextPos(items: { position: number }[]) {
-  return items.length === 0 ? 1 : Math.max(...items.map((i) => i.position)) + 1;
-}
-
-// ─── main page ────────────────────────────────────────────────────────────────
+const NODE_FIELDS = [
+  { key: "name", label: "الاسم", required: true, placeholder: "الاسم" },
+  { key: "description", label: "الوصف", multiline: true, placeholder: "الوصف (اختياري)" },
+];
 
 export default function BookPage() {
   const { uuid } = useParams<{ uuid: string }>();
   const db = usePGlite();
   const navigate = useNavigate();
 
-  // ── data state ──
-  const [book, setBook] = useState<BookView | null>(null);
+  const copiedNode = useHymnosStore((s) => s.copiedNode);
+
+  // The entire book lives in local state; edits are local until the user submits.
+  const [draft, setDraft] = useState<EditorState | null>(null);
+  // Latest draft, so the stable `dispatch` can read it (copy/guards) without depending on it.
+  const draftRef = useRef<EditorState | null>(null);
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  // ── UI state ──
-  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
-
-  // editing book metadata
-  const [editingBook, setEditingBook] = useState(false);
-  const [bookEdit, setBookEdit] = useState({ name: "", author: "", description: "", isbn: "" });
-
-  // editing a chapter
-  const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
-  const [chapterEdit, setChapterEdit] = useState({ name: "", description: "" });
-
-  // adding a new chapter
-  const [addingChapter, setAddingChapter] = useState(false);
-  const [newChapter, setNewChapter] = useState({ name: "", description: "" });
-
-  // editing a section
-  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
-  const [sectionEdit, setSectionEdit] = useState({ name: "", description: "", rubric: "" });
-
-  // adding a new section
-  const [addingSectionToChapter, setAddingSectionToChapter] = useState<string | null>(null);
-  const [newSection, setNewSection] = useState({ name: "", description: "", rubric: "" });
-
-  // delete confirmations
+  const [modal, setModal] = useState<null | "editBook" | "addRoot">(null);
   const [deleteBookModal, setDeleteBookModal] = useState(false);
-  const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
-  const [deleteSectionId, setDeleteSectionId] = useState<string | null>(null);
+
+  const counts = useMemo(() => {
+    let nodes = 0;
+    let slides = 0;
+    const walk = (ns: EditorNode[]) =>
+      ns.forEach((n) => {
+        nodes++;
+        slides += n.slides.length;
+        walk(n.children);
+      });
+    if (draft) walk(draft.nodes);
+    return { nodes, slides };
+  }, [draft]);
+
+  // ── load (DB -> local state) ──
+  useEffect(() => {
+    if (!db || !uuid) return;
+    setLoading(true);
+    getBookForEdit(db, uuid)
+      .then((result) => {
+        if (!result) setError("لم يتم العثور على الكتاب");
+        else {
+          setDraft(result);
+          setDirty(false);
+        }
+      })
+      .catch(() => setError("حدث خطأ أثناء تحميل الكتاب"))
+      .finally(() => setLoading(false));
+  }, [db, uuid]);
+
+  // Warn before leaving with unsaved edits.
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  // ── single dispatch for all local edits (stable so memoized rows don't churn) ──
+  const dispatch = useCallback((action: RowAction) => {
+    const store = useHymnosStore.getState();
+
+    if (action.type === "copy") {
+      const node = findNode(draftRef.current?.nodes ?? [], action.id);
+      if (node) {
+        store.setCopiedNode(toCopied(node));
+        toast.success("تم نسخ العنصر");
+      }
+      return;
+    }
+
+    // A leaf with real content can't gain children.
+    if (action.type === "addChild" || action.type === "pasteChild") {
+      const parent = findNode(draftRef.current?.nodes ?? [], action.parentId);
+      if (parent && parent.children.length === 0 && editorHasContent(parent)) {
+        toast.warning("لا يمكن إضافة عناصر فرعية لعقدة تحتوي على شرائح. احذف شرائحها أولاً.");
+        return;
+      }
+    }
+
+    const clip = store.copiedNode;
+    if ((action.type === "pasteChild" || action.type === "pasteRoot") && !clip) return;
+
+    setDraft((d) => (d ? produce(d, (dr) => editorReducer(dr, action, clip)) : d));
+    setDirty(true);
+
+    if (action.type === "pasteChild" || action.type === "pasteRoot") {
+      store.setCopiedNode(null); // consume the clipboard once pasted
+      toast.success("تم لصق العنصر");
+    }
+  }, []);
+
+  // ── submit (local state -> DB) ──
+  const submit = async () => {
+    if (!db || !uuid || !draft) return;
+    setSaving(true);
+    try {
+      await saveBookEdit(db, uuid, draft.meta, draft.nodes);
+      const fresh = await getBookForEdit(db, uuid); // re-sync ids / seeded slides
+      if (fresh) setDraft(fresh);
+      setDirty(false);
+      toast.success("تم حفظ الكتاب");
+    } catch (e) {
+      console.error("Failed to save book:", e);
+      toast.error("تعذّر حفظ الكتاب");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleExport = async () => {
     if (!db || !uuid) return;
@@ -80,235 +154,17 @@ export default function BookPage() {
     }
   };
 
-  // ── load ──
-  const reload = async () => {
-    if (!db || !uuid) return;
-    const result = await getBook(db, uuid);
-    if (result) {
-      setBook(result);
-      setExpandedChapters((prev) => {
-        const next = new Set(prev);
-        result.chapters.forEach((c) => next.add(c.chapter_id));
-        return next;
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (!db || !uuid) return;
-    setLoading(true);
-    getBook(db, uuid)
-      .then((result) => {
-        if (!result) {
-          setError("لم يتم العثور على الكتاب");
-        } else {
-          setBook(result);
-          setExpandedChapters(new Set(result.chapters.map((c) => c.chapter_id)));
-        }
-      })
-      .catch(() => setError("حدث خطأ أثناء تحميل الكتاب"))
-      .finally(() => setLoading(false));
-  }, [db, uuid]);
-
-  // ── book metadata CRUD ──
-  const startEditBook = () => {
-    if (!book) return;
-    setBookEdit({ name: book.name, author: book.author ?? "", description: book.description ?? "", isbn: book.isbn ?? "" });
-    setEditingBook(true);
-  };
-
-  const saveBookEdit = async () => {
-    if (!db || !uuid || !bookEdit.name.trim()) return;
-    setSaving(true);
-    try {
-      await updateBook(db, uuid, {
-        name: bookEdit.name.trim(),
-        author: bookEdit.author.trim() || null,
-        description: bookEdit.description.trim() || null,
-        isbn: bookEdit.isbn.trim() || null,
-      });
-      setEditingBook(false);
-      await reload();
-      toast.success("تم حفظ الكتاب");
-    } catch (e) {
-      console.error("Failed to save book:", e);
-      toast.error("تعذّر حفظ الكتاب");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const confirmDeleteBook = async () => {
-    if (!db || !uuid || !book) return;
-    setSaving(true);
+    if (!db || !uuid) return;
     try {
-      await deleteBook(db, uuid, book.chapters);
+      await deleteBook(db, uuid);
       toast.success("تم حذف الكتاب");
-      navigate(-1);
+      navigate("/");
     } catch (e) {
       console.error("Failed to delete book:", e);
       toast.error("تعذّر حذف الكتاب");
-      setSaving(false);
     }
   };
-
-  // ── chapter CRUD ──
-  const startEditChapter = (chapter: BookChapter) => {
-    setEditingChapterId(chapter.chapter_id);
-    setChapterEdit({ name: chapter.name, description: chapter.description ?? "" });
-    setEditingSectionId(null);
-  };
-
-  const saveChapterEdit = async () => {
-    if (!db || !editingChapterId || !chapterEdit.name.trim()) return;
-    setSaving(true);
-    try {
-      await updateBookChapter(db, editingChapterId, {
-        name: chapterEdit.name.trim(),
-        description: chapterEdit.description.trim() || null,
-      });
-      setEditingChapterId(null);
-      await reload();
-      toast.success("تم حفظ الفصل");
-    } catch (e) {
-      console.error("Failed to save chapter:", e);
-      toast.error("تعذّر حفظ الفصل");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const confirmDeleteChapter = async () => {
-    if (!db || !deleteChapterId || !book) return;
-    const chapter = book.chapters.find((c) => c.chapter_id === deleteChapterId);
-    if (!chapter) return;
-    setSaving(true);
-    try {
-      await deleteBookChapter(db, chapter);
-      setDeleteChapterId(null);
-      await reload();
-      toast.success("تم حذف الفصل");
-    } catch (e) {
-      console.error("Failed to delete chapter:", e);
-      toast.error("تعذّر حذف الفصل");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const saveNewChapter = async () => {
-    if (!db || !uuid || !newChapter.name.trim() || !book) return;
-    setSaving(true);
-    try {
-      const position = nextPos(book.chapters);
-      await createBookChapter(
-        db,
-        uuid,
-        {
-          name: newChapter.name.trim(),
-          description: newChapter.description.trim() || null,
-        },
-        position,
-      );
-      setAddingChapter(false);
-      setNewChapter({ name: "", description: "" });
-      await reload();
-      toast.success("تمت إضافة الفصل");
-    } catch (e) {
-      console.error("Failed to add chapter:", e);
-      toast.error("تعذّر إضافة الفصل");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ── section CRUD ──
-  const startEditSection = (section: BookSection) => {
-    setEditingSectionId(section.section_id);
-    setSectionEdit({ name: section.name, description: section.description ?? "", rubric: section.rubric ?? "" });
-    setEditingChapterId(null);
-  };
-
-  const saveSectionEdit = async () => {
-    if (!db || !editingSectionId || !sectionEdit.name.trim()) return;
-    setSaving(true);
-    try {
-      await updateBookSection(db, editingSectionId, {
-        name: sectionEdit.name.trim(),
-        description: sectionEdit.description.trim() || null,
-        rubric: sectionEdit.rubric.trim() || null,
-      });
-      setEditingSectionId(null);
-      await reload();
-      toast.success("تم حفظ القسم");
-    } catch (e) {
-      console.error("Failed to save section:", e);
-      toast.error("تعذّر حفظ القسم");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const confirmDeleteSection = async () => {
-    if (!db || !deleteSectionId) return;
-    setSaving(true);
-    try {
-      await deleteBookSection(db, deleteSectionId);
-      setDeleteSectionId(null);
-      await reload();
-      toast.success("تم حذف القسم");
-    } catch (e) {
-      console.error("Failed to delete section:", e);
-      toast.error("تعذّر حذف القسم");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const saveNewSection = async (chapterId: string) => {
-    if (!db || !newSection.name.trim() || !book) return;
-    const chapter = book.chapters.find((c) => c.chapter_id === chapterId);
-    if (!chapter) return;
-    setSaving(true);
-    try {
-      const position = nextPos(chapter.sections);
-      await createBookSection(
-        db,
-        chapterId,
-        {
-          name: newSection.name.trim(),
-          description: newSection.description.trim() || null,
-          rubric: newSection.rubric.trim() || null,
-        },
-        position,
-      );
-      setAddingSectionToChapter(null);
-      setNewSection({ name: "", description: "", rubric: "" });
-      await reload();
-      toast.success("تمت إضافة القسم");
-    } catch (e) {
-      console.error("Failed to add section:", e);
-      toast.error("تعذّر إضافة القسم");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ── UI helpers ──
-  const presentSection = (sectionId: string) => {
-    navigate(`/presentation/${uuid}?startSlide=${sectionId}`);
-  };
-
-  const toggleChapter = (id: string) =>
-    setExpandedChapters((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
 
   // ── render states ──
   if (loading) {
@@ -319,7 +175,7 @@ export default function BookPage() {
     );
   }
 
-  if (error || !book) {
+  if (error || !draft) {
     return (
       <div className="p-8 max-w-4xl mx-auto" dir="rtl">
         <div className="alert alert-error">
@@ -332,375 +188,149 @@ export default function BookPage() {
     );
   }
 
-  // ── main render ──
+  const { meta, nodes } = draft;
+
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-8 max-w-4xl mx-auto" dir="rtl">
       {/* ── Book Header ── */}
       <div className="card bg-base-200 shadow-lg">
         <div className="card-body gap-3">
-          {editingBook ? (
-            <>
-              <InlineField
-                label="اسم الكتاب *"
-                value={bookEdit.name}
-                onChange={(v) => setBookEdit((p) => ({ ...p, name: v }))}
-                placeholder="اسم الكتاب"
-              />
-              <InlineField
-                label="المؤلف"
-                value={bookEdit.author}
-                onChange={(v) => setBookEdit((p) => ({ ...p, author: v }))}
-                placeholder="اسم المؤلف"
-              />
-              <InlineField
-                label="الوصف"
-                value={bookEdit.description}
-                onChange={(v) => setBookEdit((p) => ({ ...p, description: v }))}
-                multiline
-                placeholder="وصف الكتاب"
-              />
-              <InlineField
-                label="رقم ISBN"
-                value={bookEdit.isbn}
-                onChange={(v) => setBookEdit((p) => ({ ...p, isbn: v }))}
-                placeholder="978-XXXXXXXXXX"
-              />
-              <SaveCancel onSave={saveBookEdit} onCancel={() => setEditingBook(false)} saving={saving} />
-            </>
-          ) : (
-            <>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <FiBook className="w-8 h-8 mt-1 text-primary shrink-0" />
-                  <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold">{book.name}</h1>
-                    {book.author && (
-                      <p className="flex items-center gap-1 text-base-content/70">
-                        <FiUser className="w-4 h-4" />
-                        {book.author}
-                      </p>
-                    )}
-                    {book.isbn && (
-                      <p className="flex items-center gap-1 text-base-content/50 text-sm">
-                        <FiHash className="w-3 h-3" />
-                        ISBN: {book.isbn}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm btn-square"
-                    title="تحميل الكتاب"
-                    aria-label="تحميل الكتاب"
-                    onClick={handleExport}
-                    disabled={exporting}
-                  >
-                    {exporting ? <span className="loading loading-spinner loading-xs" /> : <FiDownload aria-hidden className="w-4 h-4" />}
-                  </button>
-                  <button type="button" className="btn btn-ghost btn-sm btn-square" title="تعديل الكتاب" aria-label="تعديل الكتاب" onClick={startEditBook}>
-                    <FiEdit2 aria-hidden className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm btn-square text-error"
-                    title="حذف الكتاب"
-                    aria-label="حذف الكتاب"
-                    onClick={() => setDeleteBookModal(true)}
-                  >
-                    <FiTrash2 aria-hidden className="w-4 h-4" />
-                  </button>
-                </div>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <FiBook className="w-8 h-8 mt-1 text-primary shrink-0" />
+              <div className="flex flex-col gap-1">
+                <h1 className="text-3xl font-bold">{meta.name}</h1>
+                {meta.author && (
+                  <p className="flex items-center gap-1 text-base-content/70">
+                    <FiUser className="w-4 h-4" />
+                    {meta.author}
+                  </p>
+                )}
+                {meta.isbn && (
+                  <p className="flex items-center gap-1 text-base-content/50 text-sm">
+                    <FiHash className="w-3 h-3" />
+                    ISBN: {meta.isbn}
+                  </p>
+                )}
               </div>
-              {book.description && <p className="text-base-content/70 text-sm leading-relaxed">{book.description}</p>}
-              <div className="flex items-center gap-4 text-xs text-base-content/50 pt-1">
-                <span>{book.chapters.length} فصل</span>
-                <span>{book.chapters.reduce((a, c) => a + c.sections.length, 0)} قسم</span>
-                <span>{book.chapters.reduce((a, c) => a + c.sections.reduce((b, s) => b + s.slide_count, 0), 0)} شريحة</span>
-              </div>
-            </>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm btn-square"
+                title={dirty ? "احفظ التغييرات أولاً للتحميل" : "تحميل الكتاب"}
+                aria-label="تحميل الكتاب"
+                onClick={handleExport}
+                disabled={exporting || dirty}
+              >
+                {exporting ? <span className="loading loading-spinner loading-xs" /> : <FiDownload aria-hidden className="w-4 h-4" />}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm btn-square"
+                title="تعديل الكتاب"
+                aria-label="تعديل الكتاب"
+                onClick={() => setModal("editBook")}
+              >
+                <FiEdit2 aria-hidden className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm btn-square text-error"
+                title="حذف الكتاب"
+                aria-label="حذف الكتاب"
+                onClick={() => setDeleteBookModal(true)}
+              >
+                <FiTrash2 aria-hidden className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          {meta.description && <p className="text-base-content/70 text-sm leading-relaxed">{meta.description}</p>}
+          <div className="flex items-center gap-4 text-xs text-base-content/50 pt-1">
+            <span>{counts.nodes} عنصر</span>
+            <span>{counts.slides} شريحة</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Node tree ── */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <FiList className="w-5 h-5 text-primary" />
+            فهرس المحتوي
+          </h2>
+          <button type="button" className={`btn btn-sm gap-2 ${dirty ? "btn-primary" : "btn-ghost"}`} onClick={submit} disabled={!dirty || saving}>
+            حفظ
+            {saving ? <span className="loading loading-spinner loading-xs" /> : <FiSave className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {nodes.length === 0 ? (
+          <p className="text-center text-base-content/50 py-6">لا توجد عناصر في هذا الكتاب</p>
+        ) : (
+          <ul className="menu menu-md bg-base-200 rounded-box w-full p-2">
+            {nodes.map((node, i) => (
+              <BookNodeRow
+                key={node.id}
+                node={node}
+                bookId={uuid!}
+                dispatch={dispatch}
+                dirty={dirty}
+                isFirst={i === 0}
+                isLast={i === nodes.length - 1}
+              />
+            ))}
+          </ul>
+        )}
+
+        <div className="flex gap-2">
+          <button type="button" className="btn btn-outline btn-sm gap-2 flex-1 border-dashed" onClick={() => setModal("addRoot")}>
+            <FiPlus className="w-4 h-4" />
+            إضافة عنصر
+          </button>
+          {copiedNode && (
+            <button type="button" className="btn btn-outline btn-sm gap-2 text-primary" onClick={() => dispatch({ type: "pasteRoot" })}>
+              <FiClipboard className="w-4 h-4" />
+              لصق عنصر
+            </button>
           )}
         </div>
       </div>
 
-      {/* ── Chapters ── */}
-      <div className="flex flex-col gap-3">
-        {book.chapters.length === 0 && !addingChapter && <p className="text-center text-base-content/50 py-6">لا توجد فصول في هذا الكتاب</p>}
-
-        {book.chapters.map((chapter) => {
-          const isExpanded = expandedChapters.has(chapter.chapter_id);
-          const isEditingThisChapter = editingChapterId === chapter.chapter_id;
-          const isAddingSectionHere = addingSectionToChapter === chapter.chapter_id;
-
-          return (
-            <div key={chapter.chapter_id} className="card bg-base-200 shadow">
-              {/* Chapter header */}
-              <div className="card-body py-3 px-4">
-                {isEditingThisChapter ? (
-                  <>
-                    <InlineField
-                      label="اسم الفصل *"
-                      value={chapterEdit.name}
-                      onChange={(v) => setChapterEdit((p) => ({ ...p, name: v }))}
-                      placeholder="اسم الفصل"
-                    />
-                    <InlineField
-                      label="الوصف"
-                      value={chapterEdit.description}
-                      onChange={(v) => setChapterEdit((p) => ({ ...p, description: v }))}
-                      placeholder="وصف الفصل"
-                    />
-                    <SaveCancel onSave={saveChapterEdit} onCancel={() => setEditingChapterId(null)} saving={saving} />
-                  </>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 flex-1 text-right"
-                      aria-expanded={isExpanded}
-                      onClick={() => toggleChapter(chapter.chapter_id)}
-                    >
-                      <FiLayers aria-hidden className="w-4 h-4 text-primary shrink-0" />
-                      <div className="flex flex-col items-start">
-                        <span className="font-bold">{chapter.name}</span>
-                        {chapter.description && <span className="text-xs text-base-content/50">{chapter.description}</span>}
-                      </div>
-                      <div className="flex items-center gap-3 mr-auto">
-                        <span className="text-xs text-base-content/50 hidden sm:block">{chapter.sections.length} قسم</span>
-                        {isExpanded ? (
-                          <FiChevronDown className="w-4 h-4 text-base-content/50" />
-                        ) : (
-                          <FiChevronLeft className="w-4 h-4 text-base-content/50" />
-                        )}
-                      </div>
-                    </button>
-                    <div className="flex gap-1 shrink-0 mr-2">
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-xs btn-square"
-                        title="تعديل"
-                        aria-label="تعديل الفصل"
-                        onClick={() => startEditChapter(chapter)}
-                      >
-                        <FiEdit2 aria-hidden className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-xs btn-square text-error"
-                        title="حذف"
-                        aria-label="حذف الفصل"
-                        onClick={() => setDeleteChapterId(chapter.chapter_id)}
-                      >
-                        <FiTrash2 aria-hidden className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Sections */}
-              {isExpanded && (
-                <div className="border-t border-base-300">
-                  {chapter.sections.map((section) => {
-                    const isEditingThisSection = editingSectionId === section.section_id;
-                    return (
-                      <div key={section.section_id} className="border-b border-base-300 last:border-b-0">
-                        {isEditingThisSection ? (
-                          <div className="px-4 py-3 flex flex-col gap-2">
-                            <InlineField
-                              label="اسم القسم *"
-                              value={sectionEdit.name}
-                              onChange={(v) => setSectionEdit((p) => ({ ...p, name: v }))}
-                              placeholder="اسم القسم"
-                            />
-                            <InlineField
-                              label="الوصف"
-                              value={sectionEdit.description}
-                              onChange={(v) => setSectionEdit((p) => ({ ...p, description: v }))}
-                              placeholder="وصف القسم"
-                            />
-                            <InlineField
-                              label="التعليمات الليتورجية (rubric)"
-                              value={sectionEdit.rubric}
-                              onChange={(v) => setSectionEdit((p) => ({ ...p, rubric: v }))}
-                              placeholder="تعليمات (اختياري)"
-                            />
-                            <SaveCancel onSave={saveSectionEdit} onCancel={() => setEditingSectionId(null)} saving={saving} />
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between px-4 py-3 hover:bg-base-300 transition-colors group">
-                            <button
-                              type="button"
-                              className="flex flex-col items-start gap-0.5 flex-1 text-right"
-                              onClick={() => presentSection(section.section_id)}
-                            >
-                              <span className="font-medium text-sm">{section.name}</span>
-                              {section.description && <span className="text-xs text-base-content/50">{section.description}</span>}
-                              {section.rubric && <span className="text-xs text-secondary/70 italic">{section.rubric}</span>}
-                            </button>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs text-base-content/50">{section.slide_count} شريحة</span>
-                              <button
-                                type="button"
-                                className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
-                                title="عرض"
-                                aria-label="عرض القسم"
-                                onClick={() => presentSection(section.section_id)}
-                              >
-                                <FiPlay aria-hidden className="w-3 h-3 text-primary" />
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
-                                title="تعديل"
-                                aria-label="تعديل القسم"
-                                onClick={() => startEditSection(section)}
-                              >
-                                <FiEdit2 aria-hidden className="w-3 h-3" />
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-ghost btn-xs btn-square text-error opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity"
-                                title="حذف"
-                                aria-label="حذف القسم"
-                                onClick={() => setDeleteSectionId(section.section_id)}
-                              >
-                                <FiTrash2 aria-hidden className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Add section form or button */}
-                  {isAddingSectionHere ? (
-                    <div className="px-4 py-3 flex flex-col gap-2 bg-base-100">
-                      <InlineField
-                        label="اسم القسم *"
-                        value={newSection.name}
-                        onChange={(v) => setNewSection((p) => ({ ...p, name: v }))}
-                        placeholder="اسم القسم"
-                      />
-                      <InlineField
-                        label="الوصف"
-                        value={newSection.description}
-                        onChange={(v) => setNewSection((p) => ({ ...p, description: v }))}
-                        placeholder="وصف القسم (اختياري)"
-                      />
-                      <InlineField
-                        label="التعليمات الليتورجية (rubric)"
-                        value={newSection.rubric}
-                        onChange={(v) => setNewSection((p) => ({ ...p, rubric: v }))}
-                        placeholder="تعليمات (اختياري)"
-                      />
-                      <SaveCancel
-                        onSave={() => saveNewSection(chapter.chapter_id)}
-                        onCancel={() => {
-                          setAddingSectionToChapter(null);
-                          setNewSection({ name: "", description: "", rubric: "" });
-                        }}
-                        saving={saving}
-                      />
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-base-content/50 hover:text-base-content hover:bg-base-300 transition-colors"
-                      onClick={() => {
-                        setAddingSectionToChapter(chapter.chapter_id);
-                        setEditingSectionId(null);
-                        setEditingChapterId(null);
-                      }}
-                    >
-                      <FiPlus className="w-3 h-3" />
-                      إضافة قسم
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Add chapter form or button */}
-        {addingChapter ? (
-          <div className="card bg-base-200 shadow">
-            <div className="card-body gap-2">
-              <h3 className="font-bold text-sm">فصل جديد</h3>
-              <InlineField
-                label="اسم الفصل *"
-                value={newChapter.name}
-                onChange={(v) => setNewChapter((p) => ({ ...p, name: v }))}
-                placeholder="اسم الفصل"
-              />
-              <InlineField
-                label="الوصف"
-                value={newChapter.description}
-                onChange={(v) => setNewChapter((p) => ({ ...p, description: v }))}
-                placeholder="وصف الفصل (اختياري)"
-              />
-              <SaveCancel
-                onSave={saveNewChapter}
-                onCancel={() => {
-                  setAddingChapter(false);
-                  setNewChapter({ name: "", description: "" });
-                }}
-                saving={saving}
-              />
-            </div>
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="btn btn-outline btn-sm gap-2 w-full border-dashed"
-            onClick={() => {
-              setAddingChapter(true);
-              setEditingChapterId(null);
-              setEditingBook(false);
-            }}
-          >
-            <FiPlus className="w-4 h-4" />
-            إضافة فصل
-          </button>
-        )}
-      </div>
-
-      {/* ── Delete modals ── */}
+      {/* ── Modals ── */}
+      {modal === "editBook" && (
+        <EditModal
+          title="تعديل الكتاب"
+          fields={BOOK_FIELDS}
+          initial={{ name: meta.name, author: meta.author, description: meta.description, isbn: meta.isbn }}
+          onSave={(v) =>
+            dispatch({
+              type: "editMeta",
+              data: { name: v.name.trim(), author: v.author.trim(), description: v.description.trim(), isbn: v.isbn.trim() },
+            })
+          }
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal === "addRoot" && (
+        <EditModal
+          title="عنصر جديد"
+          saveLabel="إضافة"
+          fields={NODE_FIELDS}
+          initial={{ name: "", description: "" }}
+          onSave={(v) => dispatch({ type: "addRoot", data: { name: v.name.trim(), description: v.description.trim() } })}
+          onClose={() => setModal(null)}
+        />
+      )}
       {deleteBookModal && (
         <DeleteModal
           title="حذف الكتاب"
-          message={`هل أنت متأكد من حذف "${book.name}"؟ سيتم حذف جميع الفصول والأقسام والشرائح المرتبطة به.`}
+          message={`هل أنت متأكد من حذف "${meta.name}"؟ سيتم حذف جميع العناصر والشرائح المرتبطة به.`}
           onConfirm={confirmDeleteBook}
           onCancel={() => setDeleteBookModal(false)}
         />
       )}
-      {deleteChapterId &&
-        (() => {
-          const chapter = book.chapters.find((c) => c.chapter_id === deleteChapterId);
-          return (
-            <DeleteModal
-              title="حذف الفصل"
-              message={`هل أنت متأكد من حذف "${chapter?.name ?? "هذا الفصل"}"؟ سيتم حذف جميع أقسامه وشرائحه.`}
-              onConfirm={confirmDeleteChapter}
-              onCancel={() => setDeleteChapterId(null)}
-            />
-          );
-        })()}
-      {deleteSectionId &&
-        (() => {
-          const section = book.chapters.flatMap((c) => c.sections).find((s) => s.section_id === deleteSectionId);
-          return (
-            <DeleteModal
-              title="حذف القسم"
-              message={`هل أنت متأكد من حذف "${section?.name ?? "هذا القسم"}"؟ سيتم حذف جميع شرائحه.`}
-              onConfirm={confirmDeleteSection}
-              onCancel={() => setDeleteSectionId(null)}
-            />
-          );
-        })()}
     </div>
   );
 }
