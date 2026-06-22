@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { enterPresentationMode, exitPresentationMode, isFullscreen } from "@/utils/fullscreen";
+import { enterPresentationMode, exitPresentationMode, isFullscreen, isFullscreenExitSuppressed } from "@/utils/fullscreen";
 
 /**
  * Keeps the presentation screen in fullscreen + landscape for its lifetime.
@@ -32,6 +32,10 @@ export function useFullscreenLandscape(onExitFullscreen?: () => void): void {
       if (isFullscreen()) {
         entered = true;
       } else if (entered) {
+        // Ignore a transient exit caused by an OS dialog (e.g. the file picker):
+        // the caller restores fullscreen on dialog close, so don't navigate away
+        // and keep the gesture listeners armed (userExited stays false).
+        if (isFullscreenExitSuppressed()) return;
         // The user left fullscreen on purpose — don't force it back on via
         // the gesture listeners, and let the caller react (navigate back).
         userExited = true;
@@ -42,7 +46,9 @@ export function useFullscreenLandscape(onExitFullscreen?: () => void): void {
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
 
     const tryEnter = () => {
-      if (pending || userExited || isFullscreen()) return;
+      // Don't re-enter while a dialog guard is active (e.g. the background modal is
+      // open after a file pick): entering fullscreen now would hide the open dialog.
+      if (pending || userExited || isFullscreen() || isFullscreenExitSuppressed()) return;
       pending = true;
       enterPresentationMode().finally(() => {
         pending = false;

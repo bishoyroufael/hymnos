@@ -2,6 +2,7 @@ import { useRef, type ChangeEvent } from "react";
 import { FiUpload, FiTrash2 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import useHymnosStore from "../../store";
+import { enterPresentationMode, suppressFullscreenExit, releaseFullscreenExit, isFullscreenExitSuppressed } from "@/utils/fullscreen";
 import { BUNDLED_BACKGROUNDS } from "./backgrounds";
 
 export const BACKGROUND_MODAL_ID = "background_modal";
@@ -20,6 +21,23 @@ export default function BackgroundModal() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const backgroundImage = useHymnosStore((s) => s.presentationSettings.backgroundImage);
   const setPresentationSettings = useHymnosStore((s) => s.setPresentationSettings);
+
+  // Opening the OS file dialog can transiently drop fullscreen, which the
+  // presentation would otherwise treat as "leave" and navigate away. Guard that
+  // exit; fullscreen is restored when this modal is dismissed (handleModalClose) —
+  // re-entering while the modal is still open would push the fullscreen layer above
+  // it and hide it.
+  const openFilePicker = () => {
+    suppressFullscreenExit();
+    fileInputRef.current?.click();
+  };
+
+  const handleModalClose = () => {
+    if (isFullscreenExitSuppressed()) {
+      releaseFullscreenExit();
+      enterPresentationMode();
+    }
+  };
 
   const handleUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,12 +71,12 @@ export default function BackgroundModal() {
   };
 
   return (
-    <dialog id={BACKGROUND_MODAL_ID} className="modal">
+    <dialog id={BACKGROUND_MODAL_ID} className="modal" onClose={handleModalClose}>
       <div className="modal-box" dir="rtl">
         <h3 className="font-bold text-lg mb-4">خلفية الشرائح</h3>
 
         {/* Upload from device */}
-        <button type="button" className="btn btn-primary w-full gap-2" onClick={() => fileInputRef.current?.click()}>
+        <button type="button" className="btn btn-primary w-full gap-2" onClick={openFilePicker}>
           <FiUpload className="w-4 h-4" />
           رفع صورة من جهازك
         </button>
