@@ -20,6 +20,20 @@ export function isFullscreen(): boolean {
   return getFullscreenElement() !== null;
 }
 
+// Opening a native OS dialog (e.g. a file picker) can transiently drop fullscreen.
+// Callers wrap such actions with this guard so useFullscreenLandscape ignores that
+// exit (and doesn't navigate away) until the dialog closes.
+let exitSuppressed = false;
+export function suppressFullscreenExit(): void {
+  exitSuppressed = true;
+}
+export function releaseFullscreenExit(): void {
+  exitSuppressed = false;
+}
+export function isFullscreenExitSuppressed(): boolean {
+  return exitSuppressed;
+}
+
 /**
  * Enter fullscreen and lock the screen to landscape.
  *

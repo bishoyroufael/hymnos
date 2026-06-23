@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import { FcAddRow } from "react-icons/fc";
 import SlideRow from "./SlideRow";
 import type { components } from "../../db/models";
@@ -14,9 +14,15 @@ interface SlideContentProps {
 export default function SlideContent({ slide }: SlideContentProps) {
   const { state, dispatch } = usePresentation();
   const fontSizeScale = useHymnosStore((s) => s.presentationSettings.fontSizeScale);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Ensure scrolling is reset to the top upon switching slide if slides are scrollable
+  useLayoutEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [slide.slide_id]);
 
   const renderHorizontalDivider = (row: any, rowIndex: number) => (
-    <div key={`row-divider-${row.id}-${rowIndex}`} className="relative w-full h-px divider divider-vertical divider-neutral/50 p-4">
+    <div key={`row-divider-${row.id}-${rowIndex}`} className="relative w-full h-px divider divider-vertical divider-neutral/50">
       {state.isEditingMode && (
         <button
           onClick={(e) => {
@@ -52,6 +58,7 @@ export default function SlideContent({ slide }: SlideContentProps) {
 
   return (
     <div
+      ref={scrollRef}
       style={{ "--font-scale": fontSizeScale } as CSSProperties}
       className={`w-11/12 h-11/12 p-4 flex flex-col overflow-auto no-scrollbar justify-center-safe`}
     >
