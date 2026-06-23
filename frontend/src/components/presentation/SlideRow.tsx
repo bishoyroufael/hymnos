@@ -31,7 +31,7 @@ export default function SlideRow({ rowData, isOnlyRow }: SlideRowProps) {
   });
 
   const renderVerticalDivider = (colIndex: number) => (
-    <div key={`col-divider-${rowData.id}-${colIndex}`} className="relative w-px divider divider-horizontal divider-neutral/50 p-4">
+    <div key={`col-divider-${rowData.id}-${colIndex}`} className="relative w-px divider divider-horizontal divider-neutral/50">
       {state.isEditingMode && (
         <button
           onClick={(e) => {

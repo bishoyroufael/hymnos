@@ -22,7 +22,7 @@ export default function SlideContent({ slide }: SlideContentProps) {
   }, [slide.slide_id]);
 
   const renderHorizontalDivider = (row: any, rowIndex: number) => (
-    <div key={`row-divider-${row.id}-${rowIndex}`} className="relative w-full h-px divider divider-vertical divider-neutral/50 p-4">
+    <div key={`row-divider-${row.id}-${rowIndex}`} className="relative w-full h-px divider divider-vertical divider-neutral/50">
       {state.isEditingMode && (
         <button
           onClick={(e) => {

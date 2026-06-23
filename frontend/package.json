@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "VITE_GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo 'dev') vite build",
+    "build": "VITE_GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo 'dev') VITE_GIT_HASH_DATE=$(git show -s --format=%cI HEAD 2>/dev/null || echo '') vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-db-models": "openapi-typescript ../backend/openapi/index.yaml --output src/db/models.ts --enum --export-type"

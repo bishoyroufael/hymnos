@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 interface DeleteModalProps {
   title: string;
   message: string;
+  confirmLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -13,7 +14,7 @@ interface DeleteModalProps {
  * showModal() so the browser handles focus trapping and Escape-to-close
  * (which fires onClose → onCancel).
  */
-export default function DeleteModal({ title, message, onConfirm, onCancel }: DeleteModalProps) {
+export default function DeleteModal({ title, message, confirmLabel = "حذف", onConfirm, onCancel }: DeleteModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     ref.current?.showModal();
@@ -30,7 +31,7 @@ export default function DeleteModal({ title, message, onConfirm, onCancel }: Del
             إلغاء
           </button>
           <button type="button" className="btn btn-error" onClick={onConfirm}>
-            حذف
+            {confirmLabel}
           </button>
         </div>
       </div>
